@@ -72,15 +72,25 @@ class App(customtkinter.CTk):
         self.canvas3.grid(row=1, column=1)
         self.goals = []
         for i in range(5):
-            goal = self.canvas3.create_text(50, 50 + i * 60, text=str(i + 1), font=FONT, fill=FONT_COLOR)
+            goal = self.canvas3.create_text(10, 50 + i * 60, text=f"{str(i + 1)}. ", font=("Arial", 20), fill=FONT_COLOR, anchor="w")
             self.goals.append(goal)
 
-        entry_widget = customtkinter.CTkEntry(self, font=("Arial", 20))
-        self.canvas3.create_window(220, 400, window=entry_widget, width=370, height=40)
-        self.button_widget = customtkinter.CTkButton(self, text="+", font=("Arial", 40), fg_color=SECOND_COLOR)
+        self.entry_widget = customtkinter.CTkEntry(self, font=("Arial", 20))
+        self.canvas3.create_window(220, 400, window=self.entry_widget, width=370, height=40)
+        self.button_widget = customtkinter.CTkButton(self, text="+", font=("Arial", 40), fg_color=SECOND_COLOR,
+                                                     command=self.add_goal)
         self.canvas3.create_window(450, 400, window=self.button_widget, height=40, width=40)
 
+    def add_goal(self):
+        value = self.entry_widget.get()
+        for goal in self.goals:
+            x = self.canvas3.itemcget(goal, 'text')
 
+            if len(x) < 4:
+                self.canvas3.itemconfigure(goal)
+                self.canvas3.itemconfigure(goal, text=f"{x}{value}")
+                self.entry_widget.delete(0, 100)
+                break
 
 
 if __name__ == "__main__":
