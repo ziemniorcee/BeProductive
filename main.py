@@ -13,6 +13,7 @@ class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
         self.welcome_window()
+        self.second_window()
 
     def welcome_window(self):
         today = Date()
@@ -29,8 +30,8 @@ class App(customtkinter.CTk):
         self.grid_rowconfigure(1, weight=1)
         self.grid_rowconfigure(2, weight=3)
 
-        label_head = customtkinter.CTkLabel(self, text=f" {date} ", font=FONT, text_color=FONT_COLOR, )
-        label_head.grid(row=0, column=1)
+        self.label_head = customtkinter.CTkLabel(self, text=f" {date} ", font=FONT, text_color=FONT_COLOR, )
+        self.label_head.grid(row=0, column=1)
 
         self.canvas = customtkinter.CTkCanvas(self, width=400, height=300, bg=BG_COLOR, highlightthickness=0)
         self.canvas.grid(row=1, column=1)
@@ -52,9 +53,32 @@ class App(customtkinter.CTk):
         self.main_button.grid(row=2, column=0, columnspan=2)
 
     def second_window(self):
-        self.canvas.delete("all")
+        self.canvas.destroy()
         self.main_button.destroy()
-        self.geometry(f"{500}x{700}")
+        self.label_head.destroy()
+
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(1, weight=0)
+        self.grid_rowconfigure(2, weight=0)
+
+        self.canvas2 = customtkinter.CTkCanvas(self, width=400, height=100, bg=BG_COLOR, highlightthickness=0)
+        self.canvas2.grid(row=0, column=1)
+        self.canvas2.create_text(200, 25, text="GOALS FOR TODAY", font=FONT, fill=FONT_COLOR)
+        img = Image.open("images/line.png")
+        self.img = ImageTk.PhotoImage(img)
+        self.canvas2.create_image(200, 50, image=self.img)
+
+        self.canvas3 = customtkinter.CTkCanvas(self, width=500, height=600, bg=BG_COLOR, highlightthickness=0)
+        self.canvas3.grid(row=1, column=1)
+        self.goals = []
+        for i in range(5):
+            goal = self.canvas3.create_text(50, 50 + i * 60, text=str(i + 1), font=FONT, fill=FONT_COLOR)
+            self.goals.append(goal)
+
+        entry_widget = customtkinter.CTkEntry(self, font=("Arial", 20))
+        self.canvas3.create_window(220, 400, window=entry_widget, width=370, height=40)
+        self.button_widget = customtkinter.CTkButton(self, text="+", font=("Arial", 40), fg_color=SECOND_COLOR)
+        self.canvas3.create_window(450, 400, window=self.button_widget, height=40, width=40)
 
 
 
