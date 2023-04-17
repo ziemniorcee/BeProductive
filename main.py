@@ -13,7 +13,6 @@ class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
         self.welcome_window()
-        self.second_window()
 
     def welcome_window(self):
         today = Date()
