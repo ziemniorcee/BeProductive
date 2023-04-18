@@ -19,7 +19,7 @@ class Date:
 
 class Weather:
     """Class for returning weather contitions"""
-    def __init__(self, h):
+    def __init__(self):
         self.OMW_Endpoint = "https://api.openweathermap.org/data/2.8/onecall"
         self.api_key = "27fddb32ad49da904b460c57943f6d92"
         self.weather_params = {
@@ -30,7 +30,9 @@ class Weather:
             "exclude": "minutely,hourly,daily",
         }
         self.degree_sign = u'\N{DEGREE SIGN}'
-        self.hour = h
+
+        self.today = datetime.datetime.now()
+        self.hour = self.today.hour
 
         self.get_weather()
         self.image1()
