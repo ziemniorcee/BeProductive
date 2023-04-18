@@ -2,6 +2,7 @@ import customtkinter
 from Data import Date, Weather
 from PIL import Image, ImageTk
 from settings import *
+from actions import *
 
 
 class App(customtkinter.CTk):
@@ -10,6 +11,7 @@ class App(customtkinter.CTk):
 
         self.title("Better Tomorrow")
         self.geometry(f"{500}x{700}")
+        self.accept_works = 0
 
         self.welcome_window()
 
@@ -17,7 +19,8 @@ class App(customtkinter.CTk):
         today = Date()
         weather_data = Weather()
 
-        self.l_date = customtkinter.CTkLabel(self, text=f" {today.day} ", font=FONT, text_color=COL_FONT, width=500, height=50)
+        self.l_date = customtkinter.CTkLabel(self, text=f" {today.day} ", font=FONT, text_color=COL_FONT, width=500,
+                                             height=50)
         self.l_date.grid(row=0, column=0)
 
         self.c_weather = customtkinter.CTkCanvas(self, width=500, height=400, bg=COL_1, highlightthickness=0)
@@ -25,7 +28,8 @@ class App(customtkinter.CTk):
 
         self.c_weather.create_image(250, 150, image=self.create_image(weather_data.image, 300, 300))
         self.c_weather.create_image(250, 150, image=self.img)
-        self.c_weather.create_text(250, 150, text=f"{weather_data.temperature[0]}", font=FONT, fill=COL_FONT)
+        xdxd = self.c_weather.create_text(250, 150, text=f"{weather_data.temperature[0]}", font=FONT, fill=COL_FONT)
+
         self.c_weather.create_text(250, 180, text=f"Feels like: {weather_data.temperature[1]}", font=("Arial", 15),
                                    fill=COL_FONT)
 
@@ -52,20 +56,29 @@ class App(customtkinter.CTk):
         self.create_goals()
 
         self.e_todo = customtkinter.CTkEntry(self, font=("Arial", 20))
+        self.e_todo.focus()
         self.c_todos.create_window(220, 400, window=self.e_todo, width=370, height=40)
         self.b_add = customtkinter.CTkButton(self, text="+", font=("Arial", 40), fg_color=COL_2,
                                              command=self.add_goal)
+
+
         self.c_todos.create_window(450, 400, window=self.b_add, height=40, width=40)
         self.e_todo.bind('<Return>', self.add_goal)
 
-        reg = self.register(self.callback)
+        reg = self.register(self.limit_input)
         self.e_todo.configure(validate="key", validatecommand=(reg, '%P'))
+
+        for i in range(1, 6):
+            self.c_todos.tag_bind(str(i), '<Enter>', self.strike_on)
+            self.c_todos.tag_bind(str(i), '<Leave>', self.strike_off)
+            self.c_todos.tag_bind(str(i), '<Button-1>', self.del_goal)
+        self.flag = 0
 
     def create_goals(self):
         self.goals = []
         for i in range(5):
             goal = self.c_todos.create_text(10, 50 + i * 60, text=f"{str(i + 1)}. ", font=("Arial", 20),
-                                            fill=COL_FONT, anchor="w")
+                                            fill=COL_FONT, anchor="w", tags=str(i))
             self.goals.append(goal)
 
     def add_goal(self, *_):
@@ -74,22 +87,52 @@ class App(customtkinter.CTk):
             x = self.c_todos.itemcget(goal, 'text')
 
             if len(x) < 4:
-                self.c_todos.itemconfigure(goal)
+                y = self.c_todos.itemconfigure(goal)
+                print(type(y))
                 self.c_todos.itemconfigure(goal, text=f"{x}{value}")
                 self.e_todo.delete(0, 100)
                 break
 
-        if len(self.c_todos.itemcget(self.goals[4], 'text')) > 3:
+        flag = 1
+        for i in range(5):
+            if len(self.c_todos.itemcget(self.goals[i], 'text')) < 4:
+                flag = 0
+        if flag == 1:
             self.accept_goals()
             self.e_todo.unbind("<Return>")
 
-    def callback(self, input1):
+    def limit_input(self, input1):
         if len(input1) < 30:
             return True
         else:
             return False
 
+    def strike_on(self, event):
+        widget_name = event.widget.find_withtag("current")[0]
+        self.text = self.c_todos.itemcget(widget_name, 'text')
+        font = ("Arial", 20, "overstrike", "bold")
+        if len(self.text) > 3 and self.flag == 0:
+            self.c_todos.itemconfigure(widget_name, font=font)
+            self.flag = 1
+
+    def strike_off(self, event):
+        widget_name = event.widget.find_withtag("current")[0]
+
+        font = ("Arial", 20)
+        if self.flag == 1:
+            self.c_todos.itemconfigure(widget_name, font=font)
+            self.flag = 0
+
+    def del_goal(self, event):
+        widget_name = event.widget.find_withtag("current")[0]
+        self.text = self.c_todos.itemcget(widget_name, 'text')
+        self.c_todos.itemconfigure(widget_name, text=self.text[:3])
+
+        self.hide_accept()
+        self.e_todo.bind("<Return>", self.add_goal)
+
     def accept_goals(self):
+        self.accept_works = 1
         self.e_todo.configure(state="disabled")
         self.b_add.configure(state="disabled")
         self.c_accept = customtkinter.CTkCanvas(self, width=500, height=150, bg=COL_1, highlightthickness=0)
@@ -99,9 +142,15 @@ class App(customtkinter.CTk):
         self.b_yes = customtkinter.CTkButton(self, text="Yes", font=("Arial", 30), fg_color=COL_2)
         self.c_accept.create_window(150, 100, window=self.b_yes, height=40, width=150)
 
-        self.b_no = customtkinter.CTkButton(self, text="No", font=("Arial", 30), fg_color=COL_1,
-                                            border_color=COL_2, border_width=5)
-        self.c_accept.create_window(350, 100, window=self.b_no, height=40, width=150)
+        self.b_cancel = customtkinter.CTkButton(self, text="Clear all", font=("Arial", 30), fg_color=COL_1,
+                                                border_color=COL_2, border_width=5, command=self.cancel_goals)
+        self.c_accept.create_window(350, 100, window=self.b_cancel, height=40, width=150)
+
+    def hide_accept(self):
+        self.e_todo.configure(state="normal")
+        self.b_add.configure(state="normal")
+        if self.accept_works:
+            self.c_accept.grid_remove()
 
     def create_image(self, file, x, y):
         img = Image.open(file)
@@ -109,6 +158,11 @@ class App(customtkinter.CTk):
         self.img = ImageTk.PhotoImage(img)
         return self.img
 
+    def cancel_goals(self):
+        for goal in self.goals:
+            x = self.c_todos.itemcget(goal, 'text')
+            self.c_todos.itemconfigure(goal, text=x[:3])
+        self.hide_accept()
 
 if __name__ == "__main__":
     app = App()
