@@ -61,7 +61,6 @@ class App(customtkinter.CTk):
         self.b_add = customtkinter.CTkButton(self, text="+", font=("Arial", 40), fg_color=COL_2,
                                              command=self.add_goal)
 
-
         self.c_todos.create_window(450, 400, window=self.b_add, height=40, width=40)
         self.e_todo.bind('<Return>', self.add_goal)
 
@@ -163,6 +162,7 @@ class App(customtkinter.CTk):
             x = self.c_todos.itemcget(goal, 'text')
             self.c_todos.itemconfigure(goal, text=x[:3])
         self.hide_accept()
+
 
 if __name__ == "__main__":
     app = App()
