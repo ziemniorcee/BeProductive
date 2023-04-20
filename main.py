@@ -9,6 +9,8 @@ class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
+        self.images = []
+        self.img_id = 0
         self.title("Better Tomorrow")
         self.geometry(f"{500}x{700}")
         self.accept_works = 0
@@ -27,8 +29,8 @@ class App(customtkinter.CTk):
         self.c_weather.grid(row=1, column=0)
 
         self.c_weather.create_image(250, 150, image=self.create_image(weather_data.image, 300, 300))
-        self.c_weather.create_image(250, 150, image=self.img)
-        xdxd = self.c_weather.create_text(250, 150, text=f"{weather_data.temperature[0]}", font=FONT, fill=COL_FONT)
+
+        self.c_weather.create_text(250, 150, text=f"{weather_data.temperature[0]}", font=FONT, fill=COL_FONT)
 
         self.c_weather.create_text(250, 180, text=f"Feels like: {weather_data.temperature[1]}", font=("Arial", 15),
                                    fill=COL_FONT)
@@ -46,7 +48,7 @@ class App(customtkinter.CTk):
         # 1st block
         self.c_head = customtkinter.CTkCanvas(self, width=500, height=100, bg=COL_1, highlightthickness=0)
         self.c_head.grid(row=0, column=0)
-        self.c_head.create_text(250, 25, text="GOALS FOR TODAY", font=FONT, fill=COL_FONT)
+        self.text_head = self.c_head.create_text(250, 25, text="GOALS FOR TODAY", font=FONT, fill=COL_FONT)
 
         self.c_head.create_image(250, 50, image=self.create_image("images/line.png", 450, 100))
 
@@ -72,6 +74,16 @@ class App(customtkinter.CTk):
             self.c_todos.tag_bind(str(i), '<Leave>', self.strike_off)
             self.c_todos.tag_bind(str(i), '<Button-1>', self.del_goal)
         self.flag = 0
+
+    def third_screen(self):
+        self.c_todos.destroy()
+        self.c_accept.destroy()
+
+        self.c_head.itemconfigure(self.text_head, text="Create focus blocks")
+
+        self.c_clock = customtkinter.CTkCanvas(self, width=500, height=500, bg=COL_1, highlightthickness=0)
+        self.c_clock.grid(row=1, column=0)
+        self.c_clock.create_image(250, 250, image=self.create_image("images/clock.png", 500, 500))
 
     def create_goals(self):
         self.goals = []
@@ -138,7 +150,8 @@ class App(customtkinter.CTk):
         self.c_accept.grid(row=2, column=0)
 
         self.c_accept.create_text(250, 25, text="These are my goals", font=FONT, fill=COL_FONT)
-        self.b_yes = customtkinter.CTkButton(self, text="Yes", font=("Arial", 30), fg_color=COL_2)
+        self.b_yes = customtkinter.CTkButton(self, text="Yes", font=("Arial", 30), fg_color=COL_2,
+                                             command=self.third_screen)
         self.c_accept.create_window(150, 100, window=self.b_yes, height=40, width=150)
 
         self.b_cancel = customtkinter.CTkButton(self, text="Clear all", font=("Arial", 30), fg_color=COL_1,
@@ -152,10 +165,12 @@ class App(customtkinter.CTk):
             self.c_accept.grid_remove()
 
     def create_image(self, file, x, y):
+
         img = Image.open(file)
         img = img.resize((x, y))
-        self.img = ImageTk.PhotoImage(img)
-        return self.img
+        self.images.append(ImageTk.PhotoImage(img))
+        self.img_id += 1
+        return self.images[self.img_id - 1]
 
     def cancel_goals(self):
         for goal in self.goals:
