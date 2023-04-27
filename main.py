@@ -14,13 +14,15 @@ class App(customtkinter.CTk):
         self.geometry(f"{500}x{700}")
         self.accept_works = 0
         self.round1 = 0
-
+        self.hour = 0
+        self.direction = 1
+        self.reverse = 0
         self.last = 0
 
         self.welcome_window()
-        # self.second_window()
-        # self.accept_goals()
-        # self.third_screen()
+        self.second_window()
+        self.accept_goals()
+        self.third_screen()
 
     def welcome_window(self):
         today = Date()
@@ -100,58 +102,41 @@ class App(customtkinter.CTk):
         self.c_clock.tag_bind("meta", "<B1-Motion>", self.move)
 
     def move(self, e):
-
-        angle = 0
-        if e.y <= 250 and e.x >= 250:
-            a = 250 - e.y
-            b = e.x - 250
-            if a == 0:
-                angle = 90
-            else:
-                tangens = b / a
-                angle = math.degrees(math.atan(tangens))
-        elif e.y >= 250 and e.x >= 250:
-            a = e.y - 250
-            b = e.x - 250
-
-            if b == 0:
-                angle = 180
-            else:
-                tangens = a / b
-                angle = math.degrees(math.atan(tangens)) + 90
-        elif e.y >= 250 and e.x <= 250 and self.round1 != 0:
-            a = e.y - 250
-            b = 250 - e.x
-
-            if a == 0:
-                angle = 270
-            else:
-                tangens = b / a
-                angle = math.degrees(math.atan(tangens)) + 180
-        elif e.y <= 250 and e.x <= 250 and self.round1 != 0:
-            a = 250 - e.y
-            b = 250 - e.x
-
-            if a == 0:
-                angle = 0
-            else:
-                tangens = a / b
-                angle = math.degrees(math.atan(tangens)) + 270
-
-        if angle > self.last:
+        angle = calculate_angle(e.x, e.y, self.round1, self.hour)
+        if self.last > angle > 330:
+            self.direction = 0
             self.round1 = 1
-        else:
-            self.round1 = 0
-        if self.last > 330:
-            self.round1 += 1
+        elif self.last < angle:
+            self.direction = 1
+        if self.direction:
+            if angle > 90 and self.round1 == 0:
+                self.round1 = 1
+            elif self.round1 == 1 and angle < 70 and self.hour == 0:
 
+                self.round1 = 0
+            elif self.round1 == 1 and angle > 270:
+                self.round1 = 2
+            elif self.round1 == 2 and 0 < angle < 90:
+                self.hour += 1
+                self.round1 = 1
+        else:
+
+            if angle > 300 and self.reverse == 0 and self.hour > 0:
+                self.reverse = 1
+                self.hour -= 1
+            elif self.reverse == 1 and angle < 180 and self.hour > 0:
+                self.reverse = 0
+            elif self.hour == 0 and angle < 90:
+                self.round1 = 0
+            else:
+                self.round1 = 1
         self.img = Image.open("images/hand2.png")
-        print(angle)
+
         self.img = ImageTk.PhotoImage(self.img.rotate(-angle))
 
         self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
         self.last = angle
-        self.timer.configure(text=f"{int(angle/6)}:00")
+        self.timer.configure(text=f"{self.hour}:{int(angle / 6)}:00")
 
     def create_goals(self):
         self.goals = []
