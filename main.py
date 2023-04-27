@@ -94,10 +94,8 @@ class App(customtkinter.CTk):
         self.c_clock.create_image(250, 250, image=create_imagetk("images/clock.png", 500, 500))
         print(f"img_id {img_id}")
 
-
         self.img = ImageTk.PhotoImage(file="images/hand2.png")
         self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
-
 
         self.c_clock.tag_bind("meta", "<B1-Motion>", self.move)
 
@@ -144,7 +142,7 @@ class App(customtkinter.CTk):
             self.round1 = 1
         else:
             self.round1 = 0
-        if self.last  > 330:
+        if self.last > 330:
             self.round1 += 1
 
         self.img = Image.open("images/hand2.png")
@@ -153,6 +151,7 @@ class App(customtkinter.CTk):
 
         self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
         self.last = angle
+        self.timer.configure(text=f"{int(angle/6)}:00")
 
     def create_goals(self):
         self.goals = []
@@ -232,8 +231,6 @@ class App(customtkinter.CTk):
         self.b_add.configure(state="normal")
         if self.accept_works:
             self.c_accept.grid_remove()
-
-
 
     def cancel_goals(self):
         for goal in self.goals:
