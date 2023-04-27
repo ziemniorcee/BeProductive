@@ -10,11 +10,12 @@ class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
-        self.images = []
-        self.img_id = 0
         self.title("Better Tomorrow")
         self.geometry(f"{500}x{700}")
         self.accept_works = 0
+        self.round1 = 0
+
+        self.last = 0
 
         self.welcome_window()
         # self.second_window()
@@ -32,7 +33,7 @@ class App(customtkinter.CTk):
         self.c_weather = customtkinter.CTkCanvas(self, width=500, height=400, bg=COL_1, highlightthickness=0)
         self.c_weather.grid(row=1, column=0)
 
-        self.c_weather.create_image(250, 150, image=self.create_image(weather_data.image, 300, 300))
+        self.c_weather.create_image(250, 150, image=create_imagetk(weather_data.image, 300, 300))
 
         self.c_weather.create_text(250, 150, text=f"{weather_data.temperature[0]}", font=FONT, fill=COL_FONT)
 
@@ -50,11 +51,11 @@ class App(customtkinter.CTk):
         self.l_date.destroy()
 
         # 1st block
-        self.c_head = customtkinter.CTkCanvas(self, width=500, height=50, bg=COL_1, highlightthickness=0)
+        self.c_head = customtkinter.CTkCanvas(self, width=500, height=60, bg=COL_1, highlightthickness=0)
         self.c_head.grid(row=0, column=0)
         self.text_head = self.c_head.create_text(250, 25, text="GOALS FOR TODAY", font=FONT, fill=COL_FONT)
 
-        self.c_head.create_image(250, 50, image=self.create_image("images/line.png", 450, 100))
+        self.c_head.create_image(250, 50, image=create_imagetk("images/line.png", 450, 100))
 
         # 2nd block
         self.c_todos = customtkinter.CTkCanvas(self, width=500, height=450, bg=COL_1, highlightthickness=0)
@@ -84,20 +85,24 @@ class App(customtkinter.CTk):
         self.c_accept.destroy()
 
         self.c_head.itemconfigure(self.text_head, text="Create focus blocks")
-        self.timer = customtkinter.CTkLabel(self, text="00:00", font=FONT, text_color=COL_FONT, width=500,
+        self.timer = customtkinter.CTkLabel(self, text="00:00", font=FONT_TIMER, text_color=COL_FONT, width=500,
                                             height=50)
         self.timer.grid(row=1, column=0)
         self.c_clock = customtkinter.CTkCanvas(self, width=500, height=500, bg=COL_1, highlightthickness=0)
         # self.c_clock.create_text(100, 10, text="xdxd")
         self.c_clock.grid(row=2, column=0)
-        self.c_clock.create_image(250, 250, image=self.create_image("images/clock.png", 500, 500))
+        self.c_clock.create_image(250, 250, image=create_imagetk("images/clock.png", 500, 500))
+        print(f"img_id {img_id}")
+
 
         self.img = ImageTk.PhotoImage(file="images/hand2.png")
         self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
 
+
         self.c_clock.tag_bind("meta", "<B1-Motion>", self.move)
 
     def move(self, e):
+
         angle = 0
         if e.y <= 250 and e.x >= 250:
             a = 250 - e.y
@@ -116,7 +121,7 @@ class App(customtkinter.CTk):
             else:
                 tangens = a / b
                 angle = math.degrees(math.atan(tangens)) + 90
-        elif e.y >= 250 and e.x <= 250:
+        elif e.y >= 250 and e.x <= 250 and self.round1 != 0:
             a = e.y - 250
             b = 250 - e.x
 
@@ -125,7 +130,7 @@ class App(customtkinter.CTk):
             else:
                 tangens = b / a
                 angle = math.degrees(math.atan(tangens)) + 180
-        elif e.y <= 250 and e.x <= 250:
+        elif e.y <= 250 and e.x <= 250 and self.round1 != 0:
             a = 250 - e.y
             b = 250 - e.x
 
@@ -135,11 +140,19 @@ class App(customtkinter.CTk):
                 tangens = a / b
                 angle = math.degrees(math.atan(tangens)) + 270
 
+        if angle > self.last:
+            self.round1 = 1
+        else:
+            self.round1 = 0
+        if self.last  > 330:
+            self.round1 += 1
+
         self.img = Image.open("images/hand2.png")
         print(angle)
         self.img = ImageTk.PhotoImage(self.img.rotate(-angle))
 
         self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
+        self.last = angle
 
     def create_goals(self):
         self.goals = []
@@ -220,16 +233,7 @@ class App(customtkinter.CTk):
         if self.accept_works:
             self.c_accept.grid_remove()
 
-    def create_image(self, file, x, y, angle=0):
 
-        img = Image.open(file)
-        img = img.resize((x, y))
-        if angle != 0:
-            self.images.append(ImageTk.PhotoImage(img.rotate(angle)))
-        else:
-            self.images.append(ImageTk.PhotoImage(img))
-        self.img_id += 1
-        return self.images[self.img_id - 1]
 
     def cancel_goals(self):
         for goal in self.goals:

@@ -4,3 +4,4 @@ COL_FONT = "#fcf7ff"
 
 
 FONT = ("Arial", 30)
+FONT_TIMER = ("Arial", 50)
