@@ -60,5 +60,5 @@ def calculate_angle(x, y, r1, hour):
         else:
             tangens = a / b
             angle = math.degrees(math.atan(tangens)) + 270
-    print(int(angle))
+
     return angle

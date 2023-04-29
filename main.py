@@ -18,6 +18,7 @@ class App(customtkinter.CTk):
         self.direction = 1
         self.reverse = 0
         self.last = 0
+        self.flag_hour = 0
 
         self.welcome_window()
         self.second_window()
@@ -103,33 +104,41 @@ class App(customtkinter.CTk):
 
     def move(self, e):
         angle = calculate_angle(e.x, e.y, self.round1, self.hour)
-        if self.last > angle > 330:
+
+        if angle > 90 and angle < 180:
+            self.flag_hour = 0
+        if self.last > angle:
             self.direction = 0
             self.round1 = 1
+            if self.last - angle > 200:
+                self.hour+=1
         elif self.last < angle:
             self.direction = 1
         if self.direction:
             if angle > 90 and self.round1 == 0:
                 self.round1 = 1
             elif self.round1 == 1 and angle < 70 and self.hour == 0:
-
                 self.round1 = 0
             elif self.round1 == 1 and angle > 270:
                 self.round1 = 2
-            elif self.round1 == 2 and 0 < angle < 90:
-                self.hour += 1
+            elif self.round1 == 2 and angle < 90 and self.last > 330:
+                if self.flag_hour ==0:
+                    # self.hour += 1
+                    self.flag_hour = 1
                 self.round1 = 1
+
         else:
 
             if angle > 300 and self.reverse == 0 and self.hour > 0:
                 self.reverse = 1
                 self.hour -= 1
+                self.flag_hour = 0
             elif self.reverse == 1 and angle < 180 and self.hour > 0:
                 self.reverse = 0
             elif self.hour == 0 and angle < 90:
                 self.round1 = 0
-            else:
-                self.round1 = 1
+        print(self.direction)
+
         self.img = Image.open("images/hand2.png")
 
         self.img = ImageTk.PhotoImage(self.img.rotate(-angle))
