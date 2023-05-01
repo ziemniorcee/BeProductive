@@ -4,6 +4,7 @@ from PIL import Image, ImageTk
 from settings import *
 import math
 from actions import *
+from clock import Clock
 
 
 class App(customtkinter.CTk):
@@ -13,12 +14,8 @@ class App(customtkinter.CTk):
         self.title("Better Tomorrow")
         self.geometry(f"{500}x{700}")
         self.accept_works = 0
-        self.round1 = 0
-        self.hour = 0
-        self.direction = 1
-        self.reverse = 0
-        self.last = 0
-        self.flag_hour = 0
+        self.clock = Clock()
+
 
         self.welcome_window()
         self.second_window()
@@ -88,11 +85,10 @@ class App(customtkinter.CTk):
         self.c_accept.destroy()
 
         self.c_head.itemconfigure(self.text_head, text="Create focus blocks")
-        self.timer = customtkinter.CTkLabel(self, text="00:00", font=FONT_TIMER, text_color=COL_FONT, width=500,
+        self.timer = customtkinter.CTkLabel(self, text="00:00:00", font=FONT_TIMER, text_color=COL_FONT, width=500,
                                             height=50)
         self.timer.grid(row=1, column=0)
         self.c_clock = customtkinter.CTkCanvas(self, width=500, height=500, bg=COL_1, highlightthickness=0)
-        # self.c_clock.create_text(100, 10, text="xdxd")
         self.c_clock.grid(row=2, column=0)
         self.c_clock.create_image(250, 250, image=create_imagetk("images/clock.png", 500, 500))
         print(f"img_id {img_id}")
@@ -103,36 +99,13 @@ class App(customtkinter.CTk):
         self.c_clock.tag_bind("meta", "<B1-Motion>", self.move)
 
     def move(self, e):
-        angle = calculate_angle(e.x, e.y, self.round1, self.hour)
-
-        if self.last > angle:
-            self.direction = 0
-            self.round1 = 1
-            if self.last - angle > 200:
-                self.hour += 1
-        elif self.last < angle:
-            self.direction = 1
-
-        if self.direction:
-            if angle > 90 and self.round1 == 0:
-                self.round1 = 1
-        else:
-            if angle > 300 and self.reverse == 0 and self.hour > 0:
-                self.reverse = 1
-                self.hour -= 1
-            elif self.reverse == 1 and angle < 180 and self.hour > 0:
-                self.reverse = 0
-            elif self.hour == 0 and angle < 90:
-                self.round1 = 0
-
+        self.clock.calculate_angle(e.x, e.y)
 
         self.img = Image.open("images/hand2.png")
-
-        self.img = ImageTk.PhotoImage(self.img.rotate(-angle))
-
+        self.img = ImageTk.PhotoImage(self.img.rotate(-self.clock.angle))
         self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
-        self.last = angle
-        self.timer.configure(text=f"{self.hour}:{int(angle / 6)}:00")
+
+        self.timer.configure(text=self.clock.clock_time())
 
     def create_goals(self):
         self.goals = []
