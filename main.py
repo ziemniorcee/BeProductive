@@ -10,17 +10,17 @@ from clock import Clock
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
-
         self.title("Better Tomorrow")
-        self.geometry(f"{500}x{700}")
+        self.attributes("-fullscreen", True)
+
         self.accept_works = 0
         self.clock = Clock()
+        self.click = 0
+        self.go = 0
 
-
+        self.sc_width = self.winfo_screenwidth()
+        self.sc_height = self.winfo_height()
         self.welcome_window()
-        self.second_window()
-        self.accept_goals()
-        self.third_screen()
 
     def welcome_window(self):
         today = Date()
@@ -97,15 +97,35 @@ class App(customtkinter.CTk):
         self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
 
         self.c_clock.tag_bind("meta", "<B1-Motion>", self.move)
+        self.c_clock.tag_bind("meta", "<Button-1>", self.press)
+        self.c_clock.tag_bind("meta", "<ButtonRelease-1>", self.unpress)
 
     def move(self, e):
-        self.clock.calculate_angle(e.x, e.y)
 
+        if self.click:
+            self.clock.calculate_angle(e.x, e.y)
+
+            self.img = Image.open("images/hand2_c.png")
+            self.img = ImageTk.PhotoImage(self.img.rotate(-self.clock.angle))
+            self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
+
+            self.timer.configure(text=self.clock.clock_time())
+            self.clock.dot_validation()
+
+    def press(self, e):
+        x = self.clock.dot_pos[0]
+        y = self.clock.dot_pos[1]
+        if x + 17 > e.x > x - 17 and y + 17 > e.y > y - 17:
+            self.img = Image.open("images/hand2_c.png")
+            self.img = ImageTk.PhotoImage(self.img.rotate(-self.clock.angle))
+            self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
+            self.click = 1
+
+    def unpress(self, e):
+        self.click = 0
         self.img = Image.open("images/hand2.png")
         self.img = ImageTk.PhotoImage(self.img.rotate(-self.clock.angle))
         self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
-
-        self.timer.configure(text=self.clock.clock_time())
 
     def create_goals(self):
         self.goals = []
@@ -195,4 +215,5 @@ class App(customtkinter.CTk):
 
 if __name__ == "__main__":
     app = App()
+
     app.mainloop()
