@@ -11,6 +11,8 @@ class Clock:
         self.reverse = 0
         self.angle = 0
 
+        self.dot_pos = (250, 163)
+
     def calculate_angle(self, x, y):
         """Return angle based on cursor """
         if y <= 250 and x >= 250:
@@ -49,7 +51,7 @@ class Clock:
                 tangens = a / b
                 self.angle = math.degrees(math.atan(tangens)) + 270
 
-        return self.angle
+        return int(self.angle)
 
     def clock_time(self):
         """returns time based on angle"""
@@ -82,3 +84,9 @@ class Clock:
         if self.minutes < 10:
             prompt_minutes = "0"+prompt_minutes
         return f"{prompt_hour}:{prompt_minutes}:00"
+
+    def dot_validation(self):
+        y = int(math.cos(math.radians(self.angle))*87)
+        x = int(math.sin(math.radians(self.angle))*87)
+
+        self.dot_pos = (250 + x, 250 - y)
