@@ -12,9 +12,10 @@ class Date:
 
     def get_date(self):
         """assing to self.day date in format (YYYY month DD)"""
-        months = ["January", "February", "March", "April", "May", "June", "July",
-                  "August", "September", "October", "November", "December"]
-        self.day = f"{self.today.year} {months[self.today.month - 1]} {self.today.day}"
+        # months = ["January", "February", "March", "April", "May", "June", "July",
+        #           "August", "September", "October", "November", "December"]
+        # self.day = f"{self.today.year} {months[self.today.month - 1]} {self.today.day}"
+        self.day = self.today.date()
 
 
 class Weather:

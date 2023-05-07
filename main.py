@@ -1,10 +1,10 @@
 import customtkinter
+from PIL import ImageFont, ImageTk,Image
+
 from Data import Date, Weather
-from PIL import Image, ImageTk
-from settings import *
-import math
 from actions import *
 from clock import Clock
+from settings import *
 
 
 class App(customtkinter.CTk):
@@ -17,88 +17,161 @@ class App(customtkinter.CTk):
         self.clock = Clock()
         self.click = 0
         self.go = 0
+        self.goals = []
+        self.height = 0
+        self.last = 0
 
         self.sc_width = self.winfo_screenwidth()
-        self.sc_height = self.winfo_height()
+        self.sc_height = self.winfo_screenheight()
         self.welcome_window()
 
     def welcome_window(self):
         today = Date()
         weather_data = Weather()
 
-        self.l_date = customtkinter.CTkLabel(self, text=f" {today.day} ", font=FONT, text_color=COL_FONT, width=500,
-                                             height=50)
-        self.l_date.grid(row=0, column=0)
+        self.c_sidebar = customtkinter.CTkCanvas(self, width=400, height=self.sc_height,
+                                                 bg="black", highlightthickness=0)
+        self.c_sidebar.grid(row=0, column=0)
+        self.b_dayinfo = customtkinter.CTkButton(self, text="Day start", font=("Arial", 40), fg_color=COL_2,
+                                                 bg_color=COL_2, hover_color="black", border_color=COL_2,
+                                                 border_width=10)
+        self.c_sidebar.create_window(200, 100, window=self.b_dayinfo, width=300, height=100)
+        self.c_sidebar.create_image(200, 1300, image=create_imagetk("images/line.png", 350, 100))
+        self.c_sidebar.create_text(260, 1370, text=f" {today.day} ", font=FONT, fill=COL_FONT)
+        self.c_sidebar.create_image(90, 1370, image=create_imagetk(weather_data.image, 150, 150))
 
-        self.c_weather = customtkinter.CTkCanvas(self, width=500, height=400, bg=COL_1, highlightthickness=0)
-        self.c_weather.grid(row=1, column=0)
+        self.c_main = customtkinter.CTkCanvas(self, width=2160, height=self.sc_height, bg=COL_1, highlightthickness=0)
+        self.c_main.grid(row=0, column=1)
+        self.weather1 = self.c_main.create_image(1080, 250, image=create_imagetk(weather_data.image, 500, 500))
+        self.weather2 = self.c_main.create_text(1080, 220, text=f" {weather_data.temperature[0]}", font=FONT,
+                                                fill=COL_FONT)
+        self.weather3 = self.c_main.create_text(1080, 260, text=f"Feels like: {weather_data.temperature[1]}",
+                                                font=("Arial", 15),
+                                                fill=COL_FONT)
+        self.b_start = customtkinter.CTkButton(self, text="Plan your day", fg_color="transparent", font=("Arial", 50),
+                                               border_width=12, border_color=COL_2,
+                                               text_color=("gray10", "#DCE4EE"), command=self.second_window,
+                                               corner_radius=100)
+        self.c_main.create_window(1080, 800, window=self.b_start, width=400, height=150)
 
-        self.c_weather.create_image(250, 150, image=create_imagetk(weather_data.image, 300, 300))
-
-        self.c_weather.create_text(250, 150, text=f"{weather_data.temperature[0]}", font=FONT, fill=COL_FONT)
-
-        self.c_weather.create_text(250, 180, text=f"Feels like: {weather_data.temperature[1]}", font=("Arial", 15),
-                                   fill=COL_FONT)
-
-        self.b_start = customtkinter.CTkButton(self, text="Start your day", fg_color="transparent", font=FONT,
-                                               border_width=2, border_color=COL_2,
-                                               text_color=("gray10", "#DCE4EE"), command=self.second_window)
-        self.b_start.grid(row=2, column=0)
+        self.b_exit = customtkinter.CTkButton(self, text="×", font=("Arial", 60), fg_color="black", bg_color="black",
+                                              hover_color="red", command=lambda: self.quit())
+        self.c_main.create_window(2135, 25, window=self.b_exit, width=50, height=50)
 
     def second_window(self):
-        self.c_weather.destroy()
+        self.c_main.itemconfigure(self.weather1, state='hidden')
+        self.c_main.itemconfigure(self.weather2, state='hidden')
+        self.c_main.itemconfigure(self.weather3, state='hidden')
         self.b_start.destroy()
-        self.l_date.destroy()
 
-        # 1st block
-        self.c_head = customtkinter.CTkCanvas(self, width=500, height=60, bg=COL_1, highlightthickness=0)
-        self.c_head.grid(row=0, column=0)
-        self.text_head = self.c_head.create_text(250, 25, text="GOALS FOR TODAY", font=FONT, fill=COL_FONT)
-
-        self.c_head.create_image(250, 50, image=create_imagetk("images/line.png", 450, 100))
-
-        # 2nd block
-        self.c_todos = customtkinter.CTkCanvas(self, width=500, height=450, bg=COL_1, highlightthickness=0)
-        self.c_todos.grid(row=1, column=0)
-        self.create_goals()
+        self.head1 = self.c_main.create_text(1080, 60, text="Create goals for today", font=FONT, fill=COL_FONT)
+        self.head2 = self.c_main.create_image(1080, 100, image=create_imagetk("images/line.png", 450, 150))
+        self.arrow = self.c_main.create_image(75, 750, image=create_imagetk("images/arrow.png", ))
+        # noinspection PyArgumentList
+        self.arrow2 = self.c_main.create_text(20, 750, text="Importance", font=FONT, fill=COL_FONT, anchor="nw",
+                                              angle=90)
+        print(self.arrow2)
 
         self.e_todo = customtkinter.CTkEntry(self, font=("Arial", 20))
-        self.e_todo.focus()
-        self.c_todos.create_window(220, 400, window=self.e_todo, width=370, height=40)
-        self.b_add = customtkinter.CTkButton(self, text="+", font=("Arial", 40), fg_color=COL_2,
-                                             command=self.add_goal)
+        self.c_main.create_window(1030, 1365, window=self.e_todo, width=1760, height=50)
+        self.b_add = customtkinter.CTkButton(self, text="+", font=("Arial", 60), fg_color=COL_2,
+                                             command=self.add_goal, border_width=5, hover_color=COL_1,
+                                             border_color=COL_2)
+        self.c_main.create_window(75, 1365, window=self.b_add, height=50, width=50)
 
-        self.c_todos.create_window(450, 400, window=self.b_add, height=40, width=40)
+        self.b_yes = customtkinter.CTkButton(self, text="It's all", font=("Arial", 30), fg_color=COL_2,
+                                             hover_color=COL_1, border_color=COL_2, border_width=5,
+                                             command=self.third_screen)
+        self.c_main.create_window(2035, 1365, window=self.b_yes, width=150, height=50)
+
         self.e_todo.bind('<Return>', self.add_goal)
 
         reg = self.register(self.limit_input)
         self.e_todo.configure(validate="key", validatecommand=(reg, '%P'))
 
-        for i in range(1, 6):
-            self.c_todos.tag_bind(str(i), '<Enter>', self.strike_on)
-            self.c_todos.tag_bind(str(i), '<Leave>', self.strike_off)
-            self.c_todos.tag_bind(str(i), '<Button-1>', self.del_goal)
-        self.flag = 0
-
     def third_screen(self):
-        self.c_todos.destroy()
-        self.c_accept.destroy()
+        # Create focus blocks
 
-        self.c_head.itemconfigure(self.text_head, text="Create focus blocks")
-        self.timer = customtkinter.CTkLabel(self, text="00:00:00", font=FONT_TIMER, text_color=COL_FONT, width=500,
-                                            height=50)
-        self.timer.grid(row=1, column=0)
-        self.c_clock = customtkinter.CTkCanvas(self, width=500, height=500, bg=COL_1, highlightthickness=0)
-        self.c_clock.grid(row=2, column=0)
-        self.c_clock.create_image(250, 250, image=create_imagetk("images/clock.png", 500, 500))
-        print(f"img_id {img_id}")
+        self.c_main.itemconfigure(self.arrow, state='hidden')
+        self.e_todo.destroy()
+        self.b_add.destroy()
+        self.b_yes.destroy()
 
-        self.img = ImageTk.PhotoImage(file="images/hand2.png")
-        self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
+        self.c_main.itemconfigure(self.head1, text="Create focus blocks")
+        # self.timer = customtkinter.CTkLabel(self, text="00:00:00", font=FONT_TIMER, text_color=COL_FONT, width=500,
+        #                                     height=50)
+        # self.timer.grid(row=1, column=0)
+        # self.c_clock = customtkinter.CTkCanvas(self, width=500, height=500, bg=COL_1, highlightthickness=0)
+        # self.c_clock.grid(row=2, column=0)
+        # self.c_clock.create_image(250, 250, image=create_imagetk("images/clock.png", 500, 500))
+        #
+        # self.img = ImageTk.PhotoImage(file="images/hand2.png")
+        # self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
+        #
+        # self.c_clock.tag_bind("meta", "<B1-Motion>", self.move)
+        # self.c_clock.tag_bind("meta", "<Button-1>", self.press)
+        # self.c_clock.tag_bind("meta", "<ButtonRelease-1>", self.unpress)
 
-        self.c_clock.tag_bind("meta", "<B1-Motion>", self.move)
-        self.c_clock.tag_bind("meta", "<Button-1>", self.press)
-        self.c_clock.tag_bind("meta", "<ButtonRelease-1>", self.unpress)
+
+
+    def add_goal(self, *_):
+
+        value = self.e_todo.get()
+        if value != "":
+            i = len(self.goals) + 1
+
+            goal = self.c_main.create_text(150, 140 + i * 60, text=f"{value}",
+                                           font=("Arial", 20),
+                                           fill=COL_FONT, anchor="w", tags=f"todo{i}")
+
+            self.goals.append(goal)
+
+            self.c_main.tag_bind(f"todo{i}", '<Enter>', self.strike_on)
+            self.c_main.tag_bind(f"todo{i}", '<Leave>', self.strike_off)
+            self.c_main.tag_bind(f"todo{i}", '<Button-1>', self.del_goal)
+            self.flag = 0
+            self.last = str(goal)
+
+            self.e_todo.delete(0, len(value))
+
+    def limit_input(self, input1):
+
+        font = ImageFont.truetype("arial.ttf", 20)
+        box = font.getbbox(input1)
+
+        if box[2] < 1740:
+            return True
+        else:
+            return False
+
+    def strike_on(self, event):
+        widget_name = event.widget.find_withtag("current")[0]
+
+        self.text = self.c_main.itemcget(widget_name, 'text')
+        font = ("Arial", 20, "overstrike", "bold")
+
+        self.c_main.itemconfigure(widget_name, font=font)
+        self.flag = 1
+
+    def strike_off(self, event):
+        widget_name = event.widget.find_withtag("current")[0]
+
+        font = ("Arial", 20)
+        if self.flag == 1:
+            self.c_main.itemconfigure(widget_name, font=font)
+            self.flag = 0
+
+    def del_goal(self, event):
+        widget_name = event.widget.find_withtag("current")[0]
+
+        index = self.goals.index(widget_name)
+
+        for i in range(index, len(self.goals) - 1):
+            next_text = self.c_main.itemcget(self.goals[i + 1], 'text')
+            self.c_main.itemconfigure(self.goals[i], text=next_text)
+
+        self.c_main.delete(self.goals[-1])
+        self.goals.remove(self.goals[-1])
 
     def move(self, e):
 
@@ -127,93 +200,6 @@ class App(customtkinter.CTk):
         self.img = ImageTk.PhotoImage(self.img.rotate(-self.clock.angle))
         self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
 
-    def create_goals(self):
-        self.goals = []
-        for i in range(5):
-            goal = self.c_todos.create_text(10, 50 + i * 60, text=f"{str(i + 1)}. ", font=("Arial", 20),
-                                            fill=COL_FONT, anchor="w", tags=str(i))
-            self.goals.append(goal)
-
-    def add_goal(self, *_):
-        value = self.e_todo.get()
-        for goal in self.goals:
-            x = self.c_todos.itemcget(goal, 'text')
-
-            if len(x) < 4:
-                y = self.c_todos.itemconfigure(goal)
-                print(type(y))
-                self.c_todos.itemconfigure(goal, text=f"{x}{value}")
-                self.e_todo.delete(0, 100)
-                break
-
-        flag = 1
-        for i in range(5):
-            if len(self.c_todos.itemcget(self.goals[i], 'text')) < 4:
-                flag = 0
-        if flag == 1:
-            self.accept_goals()
-            self.e_todo.unbind("<Return>")
-
-    def limit_input(self, input1):
-        if len(input1) < 30:
-            return True
-        else:
-            return False
-
-    def strike_on(self, event):
-        widget_name = event.widget.find_withtag("current")[0]
-        self.text = self.c_todos.itemcget(widget_name, 'text')
-        font = ("Arial", 20, "overstrike", "bold")
-        if len(self.text) > 3 and self.flag == 0:
-            self.c_todos.itemconfigure(widget_name, font=font)
-            self.flag = 1
-
-    def strike_off(self, event):
-        widget_name = event.widget.find_withtag("current")[0]
-
-        font = ("Arial", 20)
-        if self.flag == 1:
-            self.c_todos.itemconfigure(widget_name, font=font)
-            self.flag = 0
-
-    def del_goal(self, event):
-        widget_name = event.widget.find_withtag("current")[0]
-        self.text = self.c_todos.itemcget(widget_name, 'text')
-        self.c_todos.itemconfigure(widget_name, text=self.text[:3])
-
-        self.hide_accept()
-        self.e_todo.bind("<Return>", self.add_goal)
-
-    def accept_goals(self):
-        self.accept_works = 1
-        self.e_todo.configure(state="disabled")
-        self.b_add.configure(state="disabled")
-        self.c_accept = customtkinter.CTkCanvas(self, width=500, height=150, bg=COL_1, highlightthickness=0)
-        self.c_accept.grid(row=2, column=0)
-
-        self.c_accept.create_text(250, 25, text="These are my goals", font=FONT, fill=COL_FONT)
-        self.b_yes = customtkinter.CTkButton(self, text="Yes", font=("Arial", 30), fg_color=COL_2,
-                                             command=self.third_screen)
-        self.c_accept.create_window(150, 100, window=self.b_yes, height=40, width=150)
-
-        self.b_cancel = customtkinter.CTkButton(self, text="Clear all", font=("Arial", 30), fg_color=COL_1,
-                                                border_color=COL_2, border_width=5, command=self.cancel_goals)
-        self.c_accept.create_window(350, 100, window=self.b_cancel, height=40, width=150)
-
-    def hide_accept(self):
-        self.e_todo.configure(state="normal")
-        self.b_add.configure(state="normal")
-        if self.accept_works:
-            self.c_accept.grid_remove()
-
-    def cancel_goals(self):
-        for goal in self.goals:
-            x = self.c_todos.itemcget(goal, 'text')
-            self.c_todos.itemconfigure(goal, text=x[:3])
-        self.hide_accept()
-
-
 if __name__ == "__main__":
     app = App()
-
     app.mainloop()
