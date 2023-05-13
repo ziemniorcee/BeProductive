@@ -1,5 +1,5 @@
 import customtkinter
-from PIL import ImageFont, ImageTk,Image
+from PIL import ImageFont, ImageTk, Image
 
 from Data import Date, Weather
 from actions import *
@@ -20,6 +20,8 @@ class App(customtkinter.CTk):
         self.goals = []
         self.height = 0
         self.last = 0
+        self.positions = []
+
 
         self.sc_width = self.winfo_screenwidth()
         self.sc_height = self.winfo_screenheight()
@@ -84,7 +86,15 @@ class App(customtkinter.CTk):
                                              command=self.third_screen)
         self.c_main.create_window(2035, 1365, window=self.b_yes, width=150, height=50)
 
+        self.dots = self.c_main.create_image(125, 210, image=create_imagetk("images/dots.png"), tags=("dots",))
+        self.c_main.itemconfigure(self.dots, state='hidden')
+
+        self.c_main.tag_bind("dots", "<B1-Motion>", self.move_dots)
+        self.c_main.tag_bind("dots", "<Button-1>", self.press_dots)
+        self.c_main.tag_bind("dots", "<ButtonRelease-1>", self.unpress_dots)
+        self.c_main.bind('<Motion>', self.position)
         self.e_todo.bind('<Return>', self.add_goal)
+
 
         reg = self.register(self.limit_input)
         self.e_todo.configure(validate="key", validatecommand=(reg, '%P'))
@@ -112,8 +122,6 @@ class App(customtkinter.CTk):
         # self.c_clock.tag_bind("meta", "<Button-1>", self.press)
         # self.c_clock.tag_bind("meta", "<ButtonRelease-1>", self.unpress)
 
-
-
     def add_goal(self, *_):
 
         value = self.e_todo.get()
@@ -123,8 +131,8 @@ class App(customtkinter.CTk):
             goal = self.c_main.create_text(150, 140 + i * 60, text=f"{value}",
                                            font=("Arial", 20),
                                            fill=COL_FONT, anchor="w", tags=f"todo{i}")
-
             self.goals.append(goal)
+            self.positions.append(140 + i * 60)
 
             self.c_main.tag_bind(f"todo{i}", '<Enter>', self.strike_on)
             self.c_main.tag_bind(f"todo{i}", '<Leave>', self.strike_off)
@@ -171,7 +179,9 @@ class App(customtkinter.CTk):
             self.c_main.itemconfigure(self.goals[i], text=next_text)
 
         self.c_main.delete(self.goals[-1])
-        self.goals.remove(self.goals[-1])
+        self.goals.pop()
+        self.positions.pop()
+        self.c_main.moveto(self.dots, 100, self.positions[-1] - 25)
 
     def move(self, e):
 
@@ -200,6 +210,25 @@ class App(customtkinter.CTk):
         self.img = ImageTk.PhotoImage(self.img.rotate(-self.clock.angle))
         self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
 
+    def position(self, e):
+        for posy in self.positions:
+            if posy - 15 < e.y < posy + 15 and 100 < e.x < 150:
+                self.c_main.moveto(self.dots, 100, posy - 25)
+                self.c_main.itemconfigure(self.dots, state='normal')
+
+            self.update()
+
+    def move_dots(self,e):
+        print(e.x, e.y)
+        if 200 < e.y < self.positions[-1]:
+            self.c_main.moveto(self.dots, 100, e.y - 25)
+
+    def press_dots(self,e):
+        self.c_main.unbind("<Motion>")
+        print("press")
+
+    def unpress_dots(self,e):
+        self.c_main.bind('<Motion>', self.position)
 if __name__ == "__main__":
     app = App()
     app.mainloop()
