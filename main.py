@@ -21,6 +21,8 @@ class App(customtkinter.CTk):
         self.height = 0
         self.last = 0
         self.positions = []
+        self.label_pos = 0
+        self.goal = 0
 
 
         self.sc_width = self.winfo_screenwidth()
@@ -86,15 +88,18 @@ class App(customtkinter.CTk):
                                              command=self.third_screen)
         self.c_main.create_window(2035, 1365, window=self.b_yes, width=150, height=50)
 
-        self.dots = self.c_main.create_image(125, 210, image=create_imagetk("images/dots.png"), tags=("dots",))
-        self.c_main.itemconfigure(self.dots, state='hidden')
+        self.dots = self.c_main.create_image(125, 210, image=create_imagetk("images/dots.png"), tags=("dots",),
+                                             state='hidden')
+        self.shadow = self.c_main.create_text(-100, -100, text="", font=("Arial", 20), fill="grey")
+        self.c_main.itemconfigure(self.shadow, state='hidden')
+        self.line = self.c_main.create_image(-100, -100 + self.label_pos * 60, image=create_imagetk("images/line2.png"),
+                                             state='hidden')
 
         self.c_main.tag_bind("dots", "<B1-Motion>", self.move_dots)
         self.c_main.tag_bind("dots", "<Button-1>", self.press_dots)
         self.c_main.tag_bind("dots", "<ButtonRelease-1>", self.unpress_dots)
         self.c_main.bind('<Motion>', self.position)
         self.e_todo.bind('<Return>', self.add_goal)
-
 
         reg = self.register(self.limit_input)
         self.e_todo.configure(validate="key", validatecommand=(reg, '%P'))
@@ -147,7 +152,7 @@ class App(customtkinter.CTk):
         font = ImageFont.truetype("arial.ttf", 20)
         box = font.getbbox(input1)
 
-        if box[2] < 1740:
+        if box[2] < 1640:
             return True
         else:
             return False
@@ -181,7 +186,8 @@ class App(customtkinter.CTk):
         self.c_main.delete(self.goals[-1])
         self.goals.pop()
         self.positions.pop()
-        self.c_main.moveto(self.dots, 100, self.positions[-1] - 25)
+        if len(self.goals) != 0:
+            self.c_main.moveto(self.dots, 100, self.positions[-1] - 25)
 
     def move(self, e):
 
@@ -210,25 +216,79 @@ class App(customtkinter.CTk):
         self.img = ImageTk.PhotoImage(self.img.rotate(-self.clock.angle))
         self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
 
+    # dragging
+
     def position(self, e):
+        flag = 0
+        y = 0
         for posy in self.positions:
-            if posy - 15 < e.y < posy + 15 and 100 < e.x < 150:
-                self.c_main.moveto(self.dots, 100, posy - 25)
-                self.c_main.itemconfigure(self.dots, state='normal')
+            if posy - 25 < e.y < posy + 25 and 110 < e.x < 140:
+                y = posy
+                flag = 1
 
-            self.update()
+        if flag == 1 and y - 14 < e.y < y + 14:
+            self.c_main.itemconfigure(self.dots, state='normal')
+            self.c_main.moveto(self.dots, 100, y - 25)
+        else:
+            self.c_main.itemconfigure(self.dots, state='hidden')
 
-    def move_dots(self,e):
-        print(e.x, e.y)
+        self.update()
+
+    def move_dots(self, e):
+
+        self.c_main.itemconfigure(self.shadow, state="normal")
+
+        if e.y < 200:
+            self.label_pos = 0
+        elif e.y > self.positions[-1]:
+            self.label_pos = len(self.positions) - 1
+        else:
+            self.label_pos = int((e.y - 110) / 60) - 1
+        print(self.label_pos)
+        self.c_main.moveto(self.line, 150, 150 + self.label_pos * 60)
+
         if 200 < e.y < self.positions[-1]:
             self.c_main.moveto(self.dots, 100, e.y - 25)
+            self.c_main.moveto(self.shadow, 150, e.y - 20)
 
-    def press_dots(self,e):
+    def press_dots(self, e):
+        text = ""
+        self.goal = 0
+        self.c_main.itemconfigure(self.line, state='normal')
+        for posy in self.positions:
+            if posy - 25 < e.y < posy + 25:
+                text = self.c_main.itemcget(self.goals[self.goal], 'text')
+            else:
+                self.goal += 1
+        self.c_main.itemconfigure(self.shadow, text=text)
         self.c_main.unbind("<Motion>")
         print("press")
 
-    def unpress_dots(self,e):
+    def unpress_dots(self, e):
+        self.c_main.itemconfigure(self.line, state='hidden')
         self.c_main.bind('<Motion>', self.position)
+        self.c_main.itemconfigure(self.shadow, state="hidden")
+        self.c_main.moveto(self.line, -100, -100)
+        self.c_main.moveto(self.shadow, -100, -100)
+
+        print("!", self.goals)
+        # change = self.label_pos, self.c_main.itemcget(self.goals[self.label_pos], 'text')
+        new_goals = []
+
+        for i in range(len(self.goals)):
+            text = ""
+            if i < self.label_pos:
+                text = self.c_main.itemcget(self.goals[i], 'text')
+            elif i == self.label_pos:
+                text = self.c_main.itemcget(self.goals[self.goal], 'text')
+            elif i > self.label_pos:
+                text = self.c_main.itemcget(self.goals[i-1], 'text')
+            new_goals.append(text)
+
+        for i in range(len(self.goals)):
+            self.c_main.itemconfigure(self.goals[i], text=new_goals[i])
+
+
 if __name__ == "__main__":
     app = App()
     app.mainloop()

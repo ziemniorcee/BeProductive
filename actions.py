@@ -19,3 +19,4 @@ def create_imagetk(file, x=0, y=0, angle=0, index=0):
     else:
 
         return images[index]
+
