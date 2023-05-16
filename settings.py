@@ -5,3 +5,7 @@ COL_FONT = "#fcf7ff"
 
 FONT = ("Arial", 30)
 FONT_TIMER = ("Arial", 50)
+FONT_ADD = ("Arial", 60)
+
+FONT_TEXT = ("Arial", 20)
+FONT_TEXT_STRIKE = ("Arial", 20, "overstrike", "bold")
