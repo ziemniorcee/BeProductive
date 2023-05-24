@@ -1,3 +1,5 @@
-jAN
-DRUGI
-PAWEL
+2023-05-24
+jan
+pawel
+drugi
+To write to an existing file, you must add a parameter to the open() function:

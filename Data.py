@@ -59,16 +59,16 @@ class Weather:
         set_time = int(datetime.datetime.fromtimestamp(self.info["sunset"]).strftime("%I")) + 13
 
         if not rise_time < self.hour < set_time:
-            self.image = "images/wi-night-clear.png"
+            self.image = "images/weather/wi-night-clear.png"
         elif self.type < 300:
-            self.image = "images/wi-thunderstorm.png"
+            self.image = "images/weather/wi-thunderstorm.png"
         elif self.type < 600:
-            self.image = "images/wi-rain.png"
+            self.image = "images/weather/wi-rain.png"
         elif self.type < 700:
-            self.image = "images/wi-snow.png"
+            self.image = "images/weather/wi-snow.png"
         elif self.type < 800:
-            self.image = "images/wi-dust.png"
+            self.image = "images/weather/wi-dust.png"
         elif self.type == 800:
-            self.image = "images/wi-day-sunny.png"
+            self.image = "images/weather/wi-day-sunny.png"
         else:
-            self.image = "images/wi-cloud.png"
+            self.image = "images/weather/wi-cloud.png"
