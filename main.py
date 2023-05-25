@@ -6,6 +6,7 @@ from clock import Clock
 from settings import *
 import os.path
 
+
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
@@ -26,17 +27,17 @@ class App(customtkinter.CTk):
 
         self.todo_widgets = []
         self.which_goals = [0, None]
-        self.read_goals()
+        self.goals_from_file()
 
-    def main_window(self):
+    def w_main(self):
         """Creates sidebar, main and other widgets"""
-        self.create_cmain()
+        self.create_c_main()
         self.c_sidebar = customtkinter.CTkCanvas(self, width=400, height=1440,
                                                  bg="black", highlightthickness=0)
         self.c_sidebar.grid(row=0, column=0)
         self.b_dayinfo = customtkinter.CTkButton(self, text="Day info", font=("Arial", 40), fg_color=COL_2,
                                                  bg_color=COL_2, hover_color="black", border_color=COL_2,
-                                                 border_width=10, command=self.main_window)
+                                                 border_width=10, command=self.w_main)
         self.c_sidebar.create_window(200, 100, window=self.b_dayinfo, width=300, height=100)
         self.c_sidebar.create_image(200, 1300, image=create_imagetk("images/line.png", 350, 100))
         self.c_sidebar.create_text(260, 1370, text=f" {self.today.day} ", font=FONT, fill=COL_FONT)
@@ -65,14 +66,20 @@ class App(customtkinter.CTk):
                                 fill=COL_FONT)
         self.b_start = customtkinter.CTkButton(self, text="Plan your day", fg_color="transparent", font=("Arial", 50),
                                                border_width=12, border_color=COL_2,
-                                               text_color=("gray10", "#DCE4EE"), command=self.setup1_window,
+                                               text_color=("gray10", "#DCE4EE"), command=self.w_setup1,
                                                corner_radius=100, hover_color=COL_2)
         self.c_main.create_window(1080, 800, window=self.b_start, width=400, height=150)
 
-    def setup1_window(self):
+    def w_setup1(self):
         """setup - creating goals"""
+
         self.goals = []
-        self.create_cmain()
+        self.create_c_main()
+
+        if len(self.goals_list) > 0:
+            self.positions = []
+            for goal in self.goals_list:
+                self.show_entry(goal)
 
         self.c_main.create_text(1080, 60, text="Create goals for today", font=FONT, fill=COL_FONT)
         self.c_main.create_image(1080, 100, image=create_imagetk("images/line.png", 450, 150))
@@ -91,7 +98,7 @@ class App(customtkinter.CTk):
 
         self.b_yes = customtkinter.CTkButton(self, text="It's all", font=FONT, fg_color=COL_2,
                                              hover_color=COL_1, border_color=COL_2, border_width=5,
-                                             command=self.setup2_screen)
+                                             command=self.w_setup2)
         self.c_main.create_window(2035, 1365, window=self.b_yes, width=150, height=50)
 
         self.dots = self.c_main.create_image(125, 210, image=create_imagetk("images/goals/dots.png"), tags=("dots",),
@@ -110,10 +117,10 @@ class App(customtkinter.CTk):
         reg = self.register(self.limit_input)
         self.e_todo.configure(validate="key", validatecommand=(reg, '%P'))
 
-    def setup2_screen(self):
+    def w_setup2(self):
         """setup - creating focus blocks"""
         self.savegoals()
-        self.create_cmain()
+        self.create_c_main()
 
         self.c_main.create_text(1080, 60, text="Create focus blocks", font=FONT, fill=COL_FONT)
         self.c_main.create_image(1080, 100, image=create_imagetk("images/line.png", 450, 150))
@@ -133,7 +140,7 @@ class App(customtkinter.CTk):
         # self.c_clock.tag_bind("meta", "<ButtonRelease-1>", self.unpress)
 
     # create elements
-    def create_cmain(self):
+    def create_c_main(self):
         if self.c_main is not None:
             self.c_main.destroy()
         self.c_main = customtkinter.CTkCanvas(self, width=2160, height=1440, bg=COL_1, highlightthickness=0)
@@ -143,11 +150,10 @@ class App(customtkinter.CTk):
         self.c_main.create_window(2135, 125, window=self.b_exit, width=50, height=50)
 
     # actions
-    def read_goals(self):
+    def goals_from_file(self):
         if os.path.isfile("goals.txt"):
             with open("goals.txt", "r") as f:
                 lines = f.readlines()
-                print(lines)
                 if len(lines) != 0:
                     for i in range(len(lines)):
                         lines[i] = lines[i].strip()
@@ -161,19 +167,25 @@ class App(customtkinter.CTk):
     def add_goal(self, *_):
         value = self.e_todo.get()
         if value != "":
-            i = len(self.goals) + 1
-
-            goal = self.c_main.create_text(150, 140 + i * 60, text=f"{value}",
-                                           font=FONT_TEXT,
-                                           fill=COL_FONT, anchor="w", tags=f"todo{i}")
-            self.goals.append(goal)
-            self.positions.append(140 + i * 60)
-
-            self.c_main.tag_bind(f"todo{i}", '<Enter>', self.strike_on)
-            self.c_main.tag_bind(f"todo{i}", '<Leave>', self.strike_off)
-            self.c_main.tag_bind(f"todo{i}", '<Button-1>', self.del_goal)
-
+            self.show_entry(value)
             self.e_todo.delete(0, len(value))
+        self.goals_list = []
+        for i in range(len(self.goals)):
+            self.goals_list.append(self.c_main.itemcget(self.goals[i], 'text'))
+
+    def show_entry(self, text):
+        i = len(self.goals) + 1
+
+        goal = self.c_main.create_text(150, 140 + i * 60, text=f"{text}",
+                                       font=FONT_TEXT,
+                                       fill=COL_FONT, anchor="w", tags=f"todo{i}")
+        self.goals.append(goal)
+        self.positions.append(140 + i * 60)
+        # self.goals_list.append(text)
+
+        self.c_main.tag_bind(f"todo{i}", '<Enter>', self.strike_on)
+        self.c_main.tag_bind(f"todo{i}", '<Leave>', self.strike_off)
+        self.c_main.tag_bind(f"todo{i}", '<Button-1>', self.del_goal)
 
     def del_goal(self, event):
         widget_name = event.widget.find_withtag("current")[0]
@@ -187,8 +199,13 @@ class App(customtkinter.CTk):
         self.c_main.delete(self.goals[-1])
         self.goals.pop()
         self.positions.pop()
+
         if len(self.goals) != 0:
             self.c_main.moveto(self.dots, 100, self.positions[-1] - 25)
+
+        self.goals_list = []
+        for i in range(len(self.goals)):
+            self.goals_list.append(self.c_main.itemcget(self.goals[i], 'text'))
 
     def savegoals(self):
         if len(self.goals_list) == 0:
@@ -226,7 +243,8 @@ class App(customtkinter.CTk):
                         actual += " " + word
                 full += actual
                 if start < 11:
-                    text = self.c_main.create_text(400, 190 + start * 30 + (end-start)/2 * 30, text=f"{i}. {full}", font=FONT_TEXT,
+                    text = self.c_main.create_text(400, 190 + start * 30 + (end - start) / 2 * 30, text=f"{i}. {full}",
+                                                   font=FONT_TEXT,
                                                    fill=COL_FONT, justify="left")
                     self.todo_widgets.append(text)
                 else:
@@ -234,13 +252,11 @@ class App(customtkinter.CTk):
                     break
                 start = end
 
-
-    # motion & binds
+    # setup1 functions
 
     def limit_input(self, input1):
         font = ImageFont.truetype("arial.ttf", 20)
         box = font.getbbox(input1)
-        print(input1)
         if box[2] < 1500:
             return True
         else:
@@ -323,6 +339,7 @@ class App(customtkinter.CTk):
         for i in range(len(self.goals)):
             self.c_main.itemconfigure(self.goals[i], text=self.goals_list[i])
 
+    # setup2 features
     def move(self, e):
         if self.click:
             self.clock.calculate_angle(e.x, e.y)
@@ -352,5 +369,5 @@ class App(customtkinter.CTk):
 
 if __name__ == "__main__":
     app = App()
-    app.main_window()
+    app.w_main()
     app.mainloop()

@@ -1,5 +1,4 @@
-2023-05-24
-jan
-pawel
-drugi
-To write to an existing file, you must add a parameter to the open() function:
+2023-05-25
+chuj
+cztery
+nie wiem
