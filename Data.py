@@ -5,8 +5,8 @@ import requests
 class Date:
     """Class for returning Date elements"""
     def __init__(self):
-        self.today = datetime.datetime.now()
-        self.hour1 = self.today.hour
+        self.date_today = datetime.datetime.now()
+        self.now_hour = self.date_today.hour
 
         self.get_date()
 
@@ -15,7 +15,7 @@ class Date:
         # months = ["January", "February", "March", "April", "May", "June", "July",
         #           "August", "September", "October", "November", "December"]
         # self.day = f"{self.today.year} {months[self.today.month - 1]} {self.today.day}"
-        self.day = self.today.date()
+        self.formatted_date = self.date_today.date()
 
 
 class Weather:
@@ -36,7 +36,7 @@ class Weather:
         self.hour = self.today.hour
 
         self.get_weather()
-        self.image1()
+        self.get_image()
 
     def get_weather(self):
         """getting weather. In comment Api version"""
@@ -51,7 +51,7 @@ class Weather:
         temp, temp_f = self.info["temp"], self.info["feels_like"]
         self.temperature = [f"{round(temp)}{self.degree_sign}", f"{round(temp_f)}{self.degree_sign}"]
 
-    def image1(self):
+    def get_image(self):
         """choosing proper image  dependently on the weather"""
         self.type = int(self.info["weather"][0]["id"])
 

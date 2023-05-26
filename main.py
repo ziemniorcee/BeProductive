@@ -1,5 +1,5 @@
 import customtkinter
-from PIL import ImageFont
+
 from Data import Date, Weather
 from actions import *
 from clock import Clock
@@ -14,24 +14,32 @@ class App(customtkinter.CTk):
         self.title("Better Tomorrow")
         self.attributes("-fullscreen", True)
 
-        self.today = Date()
+        # data
+        self.today_data = Date()
         self.weather_data = Weather()
 
-        self.positions = []
-        self.label_pos = 0
-        self.goals = []
-        self.goals_list = []
+        # main
+        self.main_goals_widgets = []
+        self.which_goals = [0]
+        self.goals_site = 0
+        self.is_more_sites = 0
 
+        # setup1
+        self.goals_widgets = []
+        self.goals_texts = []
+        self.shadow_line_position = 0
+        self.goal_widgets_yposes = []
+        self.is_end = 0
+        # setup2
         self.clock = Clock()
         self.click = 0
-
-        self.todo_widgets = []
-        self.which_goals = [0, None]
         self.goals_from_file()
 
     def w_main(self):
         """Creates sidebar, main and other widgets"""
         self.create_c_main()
+        self.show_goals()
+
         self.c_sidebar = customtkinter.CTkCanvas(self, width=400, height=1440,
                                                  bg="black", highlightthickness=0)
         self.c_sidebar.grid(row=0, column=0)
@@ -40,7 +48,7 @@ class App(customtkinter.CTk):
                                                  border_width=10, command=self.w_main)
         self.c_sidebar.create_window(200, 100, window=self.b_dayinfo, width=300, height=100)
         self.c_sidebar.create_image(200, 1300, image=create_imagetk("images/line.png", 350, 100))
-        self.c_sidebar.create_text(260, 1370, text=f" {self.today.day} ", font=FONT, fill=COL_FONT)
+        self.c_sidebar.create_text(260, 1370, text=f" {self.today_data.formatted_date} ", font=FONT, fill=COL_FONT)
         self.c_sidebar.create_image(90, 1370, image=create_imagetk(self.weather_data.image, 150, 150))
 
         # Goals section
@@ -49,14 +57,15 @@ class App(customtkinter.CTk):
 
         img = customtkinter.CTkImage(light_image=Image.open("images/goals/up2.png"), size=(50, 50))
         self.arr_up = customtkinter.CTkButton(self, image=img, text="",
-                                              fg_color=COL_1, hover_color=COL_2, command=lambda: self.show_goals(0))
+                                              fg_color=COL_1, hover_color=COL_2,
+                                              command=lambda: self.show_goals(0) if self.is_more_sites else None)
 
         self.c_main.create_window(575, 190, window=self.arr_up, width=70, height=70)
         img = customtkinter.CTkImage(light_image=Image.open("images/goals/down2.png"), size=(50, 50))
         self.arr_down = customtkinter.CTkButton(self, image=img, text="",
-                                                fg_color=COL_1, hover_color=COL_2, command=lambda: self.show_goals(1))
+                                                fg_color=COL_1, hover_color=COL_2,
+                                                command=lambda: self.show_goals(1) if self.is_more_sites else None)
         self.c_main.create_window(225, 190, window=self.arr_down, width=70, height=70)
-        self.show_goals(0)
 
         self.c_main.create_image(1080, 250, image=create_imagetk(self.weather_data.image, 500, 500))
         self.c_main.create_text(1080, 220, text=f" {self.weather_data.temperature[0]}", font=FONT,
@@ -73,12 +82,12 @@ class App(customtkinter.CTk):
     def w_setup1(self):
         """setup - creating goals"""
 
-        self.goals = []
+        self.goals_widgets = []
         self.create_c_main()
 
-        if len(self.goals_list) > 0:
-            self.positions = []
-            for goal in self.goals_list:
+        if len(self.goals_texts) > 0:
+            self.goal_widgets_yposes = []
+            for goal in self.goals_texts:
                 self.show_entry(goal)
 
         self.c_main.create_text(1080, 60, text="Create goals for today", font=FONT, fill=COL_FONT)
@@ -96,7 +105,7 @@ class App(customtkinter.CTk):
                                              border_color=COL_2)
         self.c_main.create_window(75, 1365, window=self.b_add, height=50, width=50)
 
-        self.b_yes = customtkinter.CTkButton(self, text="It's all", font=FONT, fg_color=COL_2,
+        self.b_yes = customtkinter.CTkButton(self, text="Submit", font=FONT, fg_color=COL_2,
                                              hover_color=COL_1, border_color=COL_2, border_width=5,
                                              command=self.w_setup2)
         self.c_main.create_window(2035, 1365, window=self.b_yes, width=150, height=50)
@@ -105,7 +114,8 @@ class App(customtkinter.CTk):
                                              state='hidden')
         self.shadow = self.c_main.create_text(-100, -100, text="", font=FONT_TEXT, fill="grey")
         self.c_main.itemconfigure(self.shadow, state='hidden')
-        self.line = self.c_main.create_image(-100, -100 + self.label_pos * 60, image=create_imagetk("images/line2.png"),
+        self.line = self.c_main.create_image(-100, -100 + self.shadow_line_position * 60,
+                                             image=create_imagetk("images/line2.png"),
                                              state='hidden')
 
         self.c_main.tag_bind("dots", "<B1-Motion>", self.move_dots)
@@ -114,7 +124,7 @@ class App(customtkinter.CTk):
         self.c_main.bind('<Motion>', self.position)
         self.e_todo.bind('<Return>', self.add_goal)
 
-        reg = self.register(self.limit_input)
+        reg = self.register(lambda input1: (FONT_BOX.getbbox(input1)[2] < 1500))
         self.e_todo.configure(validate="key", validatecommand=(reg, '%P'))
 
     def w_setup2(self):
@@ -158,8 +168,9 @@ class App(customtkinter.CTk):
                     for i in range(len(lines)):
                         lines[i] = lines[i].strip()
 
-                    if str(self.today.day) == lines[0]:
-                        self.goals_list = lines[1:]
+                    if str(self.today_data.formatted_date) == lines[0]:
+                        self.goals_texts = lines[1:]
+            print(self.goals_texts)
         else:
             with open("goals.txt", 'x'):
                 pass
@@ -169,18 +180,18 @@ class App(customtkinter.CTk):
         if value != "":
             self.show_entry(value)
             self.e_todo.delete(0, len(value))
-        self.goals_list = []
-        for i in range(len(self.goals)):
-            self.goals_list.append(self.c_main.itemcget(self.goals[i], 'text'))
+        self.goals_texts = []
+        for i in range(len(self.goals_widgets)):
+            self.goals_texts.append(self.c_main.itemcget(self.goals_widgets[i], 'text'))
 
     def show_entry(self, text):
-        i = len(self.goals) + 1
+        i = len(self.goals_widgets) + 1
 
         goal = self.c_main.create_text(150, 140 + i * 60, text=f"{text}",
                                        font=FONT_TEXT,
                                        fill=COL_FONT, anchor="w", tags=f"todo{i}")
-        self.goals.append(goal)
-        self.positions.append(140 + i * 60)
+        self.goals_widgets.append(goal)
+        self.goal_widgets_yposes.append(140 + i * 60)
         # self.goals_list.append(text)
 
         self.c_main.tag_bind(f"todo{i}", '<Enter>', self.strike_on)
@@ -190,51 +201,57 @@ class App(customtkinter.CTk):
     def del_goal(self, event):
         widget_name = event.widget.find_withtag("current")[0]
 
-        index = self.goals.index(widget_name)
+        index = self.goals_widgets.index(widget_name)
 
-        for i in range(index, len(self.goals) - 1):
-            next_text = self.c_main.itemcget(self.goals[i + 1], 'text')
-            self.c_main.itemconfigure(self.goals[i], text=next_text)
+        for i in range(index, len(self.goals_widgets) - 1):
+            next_text = self.c_main.itemcget(self.goals_widgets[i + 1], 'text')
+            self.c_main.itemconfigure(self.goals_widgets[i], text=next_text)
 
-        self.c_main.delete(self.goals[-1])
-        self.goals.pop()
-        self.positions.pop()
+        self.c_main.delete(self.goals_widgets[-1])
+        self.goals_widgets.pop()
+        self.goal_widgets_yposes.pop()
 
-        if len(self.goals) != 0:
-            self.c_main.moveto(self.dots, 100, self.positions[-1] - 25)
+        if len(self.goals_widgets) != 0:
+            self.c_main.moveto(self.dots, 100, self.goal_widgets_yposes[-1] - 25)
 
-        self.goals_list = []
-        for i in range(len(self.goals)):
-            self.goals_list.append(self.c_main.itemcget(self.goals[i], 'text'))
+        self.goals_texts = []
+        for i in range(len(self.goals_widgets)):
+            self.goals_texts.append(self.c_main.itemcget(self.goals_widgets[i], 'text'))
 
     def savegoals(self):
-        if len(self.goals_list) == 0:
-            for i in range(len(self.goals)):
-                self.goals_list.append(self.c_main.itemcget(self.goals[i], 'text'))
+        if len(self.goals_texts) == 0:
+            for i in range(len(self.goals_widgets)):
+                self.goals_texts.append(self.c_main.itemcget(self.goals_widgets[i], 'text'))
 
         with open('goals.txt', 'w+') as file:
-            file.write(f"{self.today.day}\n")
-            for goals in self.goals_list:
+            file.write(f"{self.today_data.formatted_date}\n")
+            for goals in self.goals_texts:
                 file.write('%s\n' % goals)
 
-    def show_goals(self, direction):
-        for widget in self.todo_widgets:
+    def show_goals(self, direction=2):
+        if direction == 0 and self.goals_site > 0:
+            self.goals_site -= 1
+        if direction == 1 and self.is_end == 0:
+            self.goals_site += 1
+
+        print(self.goals_site)
+        for widget in self.main_goals_widgets:
             self.c_main.delete(widget)
-        if len(self.goals_list) != 0:
-            i = self.which_goals[direction]
+
+        if len(self.goals_texts) != 0:
+            i = self.which_goals[self.goals_site]
             start = 1
             end = 1
 
-            for goal in self.goals_list[i:]:
+            for goal in self.goals_texts[i:]:
                 i += 1
                 end += 1
-                font = ImageFont.truetype("arial.ttf", 20)
-                goal_list = goal.split(" ")
 
+                goal_list = goal.split(" ")
                 full = ""
                 actual = ""
                 for word in goal_list:
-                    box = font.getbbox(actual + word)
+                    box = FONT_BOX.getbbox(actual + word)
                     if box[2] > 300:
                         full += actual + "\n" + word
                         actual = ""
@@ -242,41 +259,32 @@ class App(customtkinter.CTk):
                     else:
                         actual += " " + word
                 full += actual
-                if start < 11:
-                    text = self.c_main.create_text(400, 190 + start * 30 + (end - start) / 2 * 30, text=f"{i}. {full}",
-                                                   font=FONT_TEXT,
-                                                   fill=COL_FONT, justify="left")
-                    self.todo_widgets.append(text)
+                if start < 8:
+                    print(200 + start * 35 + (end - start) / 2 * 30, end, start)
+                    text = self.c_main.create_text(180, 190 + start * 40 + (end - start) * 20, text=f"{i}. {full}",
+                                                   font=FONT_TEXT, width=500,
+                                                   fill=COL_FONT, justify="left", anchor="w")
+                    self.main_goals_widgets.append(text)
+                    self.is_end = 1
                 else:
-                    self.which_goals[1] = i - 1
+                    self.which_goals.append(i - 1)
+                    self.is_end = 0
+                    self.is_more_sites = 1
                     break
                 start = end
 
     # setup1 functions
 
-    def limit_input(self, input1):
-        font = ImageFont.truetype("arial.ttf", 20)
-        box = font.getbbox(input1)
-        if box[2] < 1500:
-            return True
-        else:
-            return False
-
     def strike_on(self, event):
-        widget_name = event.widget.find_withtag("current")[0]
-        self.text = self.c_main.itemcget(widget_name, 'text')
-
-        self.c_main.itemconfigure(widget_name, font=FONT_TEXT_STRIKE)
+        self.c_main.itemconfigure(event.widget.find_withtag("current")[0], font=FONT_TEXT_STRIKE)
 
     def strike_off(self, event):
-        widget_name = event.widget.find_withtag("current")[0]
-
-        self.c_main.itemconfigure(widget_name, font=FONT_TEXT)
+        self.c_main.itemconfigure(event.widget.find_withtag("current")[0], font=FONT_TEXT)
 
     def position(self, e):
         flag = 0
         y = 0
-        for posy in self.positions:
+        for posy in self.goal_widgets_yposes:
             if posy - 25 < e.y < posy + 25 and 110 < e.x < 140:
                 y = posy
                 flag = 1
@@ -287,21 +295,19 @@ class App(customtkinter.CTk):
         else:
             self.c_main.itemconfigure(self.dots, state='hidden')
 
-        self.update()
-
     def move_dots(self, e):
         self.c_main.itemconfigure(self.shadow, state="normal")
 
         if e.y < 200:
-            self.label_pos = 0
-        elif e.y > self.positions[-1]:
-            self.label_pos = len(self.positions)
+            self.shadow_line_position = 0
+        elif e.y > self.goal_widgets_yposes[-1]:
+            self.shadow_line_position = len(self.goal_widgets_yposes)
         else:
-            self.label_pos = int((e.y - 110) / 60) - 1
+            self.shadow_line_position = int((e.y - 110) / 60) - 1
 
-        self.c_main.moveto(self.line, 150, 150 + self.label_pos * 60)
+        self.c_main.moveto(self.line, 150, 150 + self.shadow_line_position * 60)
 
-        if 200 < e.y < self.positions[-1]:
+        if 200 < e.y < self.goal_widgets_yposes[-1]:
             self.c_main.moveto(self.dots, 100, e.y - 25)
             self.c_main.moveto(self.shadow, 150, e.y - 20)
 
@@ -310,34 +316,34 @@ class App(customtkinter.CTk):
         text = ""
         self.goal = 0
         self.c_main.itemconfigure(self.line, state='normal')
-        for posy in self.positions:
+        for posy in self.goal_widgets_yposes:
             if posy - 25 < e.y < posy + 25:
-                text = self.c_main.itemcget(self.goals[self.goal], 'text')
+                text = self.c_main.itemcget(self.goals_widgets[self.goal], 'text')
                 flag = 1
             elif flag == 0:
                 self.goal += 1
         self.c_main.itemconfigure(self.shadow, text=text)
         self.c_main.unbind("<Motion>")
 
-    def unpress_dots(self, e):
+    def unpress_dots(self, *_):
         self.c_main.itemconfigure(self.line, state='hidden')
         self.c_main.bind('<Motion>', self.position)
         self.c_main.itemconfigure(self.shadow, state="hidden")
         self.c_main.moveto(self.line, -100, -100)
         self.c_main.moveto(self.shadow, -100, -100)
 
-        self.goals_list = []
+        self.goals_texts = []
 
-        for i in range(len(self.goals)):
-            self.goals_list.append(self.c_main.itemcget(self.goals[i], 'text'))
+        for i in range(len(self.goals_widgets)):
+            self.goals_texts.append(self.c_main.itemcget(self.goals_widgets[i], 'text'))
 
-        text = self.c_main.itemcget(self.goals[self.goal], 'text')
+        text = self.c_main.itemcget(self.goals_widgets[self.goal], 'text')
 
-        self.goals_list.remove(text)
-        self.goals_list.insert(self.label_pos, text)
+        self.goals_texts.remove(text)
+        self.goals_texts.insert(self.shadow_line_position, text)
 
-        for i in range(len(self.goals)):
-            self.c_main.itemconfigure(self.goals[i], text=self.goals_list[i])
+        for i in range(len(self.goals_widgets)):
+            self.c_main.itemconfigure(self.goals_widgets[i], text=self.goals_texts[i])
 
     # setup2 features
     def move(self, e):
@@ -360,7 +366,7 @@ class App(customtkinter.CTk):
             self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
             self.click = 1
 
-    def unpress(self, e):
+    def unpress(self, *_):
         self.click = 0
         self.img = Image.open("images/hand2.png")
         self.img = ImageTk.PhotoImage(self.img.rotate(-self.clock.angle))
