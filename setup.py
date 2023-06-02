@@ -1,9 +1,8 @@
-import os
 from Data import Date
-from PIL import ImageFont
 from settings import *
 from customtkinter import *
 from actions import *
+from clock import Clock
 
 
 class Setup1:
@@ -51,7 +50,7 @@ class Setup1:
 
         self.b_yes = CTkButton(self.app, text="Submit", font=FONT, fg_color=COL_2,
                                hover_color=COL_1, border_color=COL_2, border_width=5,
-                               command=self.app.w_setup2)
+                               command=self.app.setup2.create_setup2_window)
         self.app.c_main.create_window(2035, 1365, window=self.b_yes, width=150, height=50)
 
         self.dots = self.app.c_main.create_image(125, 210, image=create_imagetk("images/goals/dots.png"),
@@ -230,8 +229,8 @@ class Setup1:
 
     # method for getting/saving goals
     def goals_from_file(self):
-        if os.path.isfile("goals.txt"):
-            with open("goals.txt", "r") as f:
+        if os.path.isfile("data/goals.txt"):
+            with open("data/goals.txt", "r") as f:
                 lines = f.readlines()
                 if len(lines) != 0:
                     for i in range(len(lines)):
@@ -240,7 +239,7 @@ class Setup1:
                     if str(self.today_data.formatted_date) == lines[0]:
                         self.goals_texts = lines[1:]
         else:
-            with open("goals.txt", 'x'):
+            with open("data/goals.txt", 'x'):
                 pass
 
     def save_goals_to_file(self):
@@ -248,7 +247,94 @@ class Setup1:
             for i in range(len(self.goals_widgets)):
                 self.goals_texts.append(self.app.c_main.itemcget(self.goals_widgets[i], 'text'))
 
-        with open('goals.txt', 'w+') as file:
+        with open('data/goals.txt', 'w+') as file:
             file.write(f"{self.today_data.formatted_date}\n")
             for goals in self.goals_texts:
                 file.write('%s\n' % goals)
+
+
+class Setup2:
+    def __init__(self, root):
+        self.clock_window = None
+        self.app = root
+        self.is_clock_window_on = False
+        self.recent_blocks = []
+
+        self.blocks_from_file()
+        self.new_block = []
+
+    def create_setup2_window(self):
+        self.app.setup1.save_goals_to_file()
+        self.app.create_c_main()
+        self.app.c_main.create_text(1080, 60, text="Create focus blocks", font=("Arial", 40), fill=COL_FONT)
+        self.app.c_main.create_image(1080, 100, image=create_imagetk("images/line.png", 450, 150))
+        self.app.c_main.create_rectangle(50, 150, 2110, 1000, outline=COL_2, width=5)
+        self.app.c_main.create_line(800, 150, 800, 1000, fill=COL_2, width=5)
+        # Left block
+        self.app.c_main.create_text(425, 175, font=("Arial", 30), fill=COL_FONT, text="Recently created")
+        self.b_create_block = CTkButton(self.app, text="+", font=("Arial", 70), fg_color=COL_1,
+                                        command=self.create_block)
+        self.app.c_main.create_window(80, 970, window=self.b_create_block, height=50, width=50)
+        # Right block
+        self.app.c_main.create_text(1455, 175, font=("Arial", 30), fill=COL_FONT, text="Saved")
+
+        startx = 75
+        starty = 225
+        i = 0
+        j = 0
+        for block in self.recent_blocks:
+            tag_block = f"r_block{10 + i + j * 10}"
+            tag_time = f"r_timer{10 + i + j * 10}"
+            self.app.c_main.create_rectangle(startx + i * 250, starty + 150 * j, startx + 200 + i * 250,
+                                             starty + 100 + 150 * j, fill=block[1], tags=tag_block, outline=COL_2, width=5)
+            hour = int(block[0]) // 60
+            minutes = int(block[0]) % 60
+            timer = f"{hour if hour > 9 else '0'+str(hour)}:{minutes if minutes > 9 else '0'+str(minutes)}"
+            self.app.c_main.create_text(175 + i * 250, 275 + j * 150,
+                                        text=timer, font=FONT, fill=COL_FONT, tags=tag_block)
+            self.app.c_main.create_text(175+i * 250, 305+j*150, text=block[2], fill=COL_FONT, font=("Arial", 15),
+                                        tag=tag_block)
+            i += 1
+            if i % 3 == 0:
+                j += 1
+                i = 0
+            self.app.c_main.tag_bind(tag_block, "<B1-Motion>", self.move_block)
+
+
+
+            print(tag_block)
+
+    def create_block(self):
+        print(self.is_clock_window_on)
+        if not self.is_clock_window_on or not self.clock_window.is_clock_on:
+            self.clock_window = Clock(self)
+            self.clock_window.wm_attributes("-topmost", True)
+            self.is_clock_window_on = True
+            self.clock_window.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+    def on_closing(self):
+
+        self.is_clock_window_on = False
+        self.save_blocks_to_file()
+        self.clock_window.destroy()
+
+    def blocks_from_file(self):
+        with open("data/blocks.txt", "r+") as file:
+            xd = file.readlines()
+            for i in range(0, len(xd), 3):
+                self.recent_blocks.append([xd[i].strip(), xd[i + 1].strip(), xd[i + 2].strip()])
+
+    def save_blocks_to_file(self):
+        with open('data/blocks.txt', 'a+') as file:
+            for element in self.new_block:
+                file.write('%s\n' % element)
+
+    def move_block(self, e):
+        block = (e.widget.find_withtag("current")[0])
+        element = block % 3
+        print(block)
+        self.app.c_main.moveto(block-element, e.x-100, e.y-50)
+        self.app.c_main.moveto(block+1-element, e.x-50, e.y-20)
+        self.app.c_main.moveto(block+2-element, e.x-25, e.y+20)
+
+#   def press_block(self, e):

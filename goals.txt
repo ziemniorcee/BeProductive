@@ -1,4 +1,0 @@
-2023-05-26
-Refraktoryzacja, setupy do osobnej klasy, tyle ile siê da
-nauczyæ siê do inf02
-Iœæ na si³ownie
