@@ -48,6 +48,7 @@ class App(CTk):
         self.c_sidebar.create_image(90, 1370, image=create_imagetk(self.weather_data.image, 150, 150))
 
 
+
 if __name__ == "__main__":
     app = App()
     app.mainloop()

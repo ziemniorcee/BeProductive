@@ -12,7 +12,6 @@ class Clock(CTkToplevel):
         self.is_clock_on = True
         self.setup2 = root
 
-
         self.last = 0
         self.round1 = 0
         self.hour = 0
@@ -27,6 +26,7 @@ class Clock(CTkToplevel):
         self.buttons = []
         self.window = 0
         self.color = None
+
 
         self.b_prev = None
         self.b_next = None

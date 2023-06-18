@@ -260,11 +260,22 @@ class Setup2:
         self.is_clock_window_on = False
         self.recent_blocks = []
 
-        self.blocks_from_file()
         self.new_block = []
+        self.start_pos = []
+        self.first_block_id = None
+
+        self.timeline_positions = [100]
+        self.current_pos = 0
+        self.timeline_blocks = []
+
+        self.pointer = None
+
+        self.blocks_tl = []
+        self.tag_nr = 0
+        self.change = 0
 
     def create_setup2_window(self):
-        self.app.setup1.save_goals_to_file()
+        self.recent_blocks = []
         self.app.create_c_main()
         self.app.c_main.create_text(1080, 60, text="Create focus blocks", font=("Arial", 40), fill=COL_FONT)
         self.app.c_main.create_image(1080, 100, image=create_imagetk("images/line.png", 450, 150))
@@ -275,34 +286,51 @@ class Setup2:
         self.b_create_block = CTkButton(self.app, text="+", font=("Arial", 70), fg_color=COL_1,
                                         command=self.create_block)
         self.app.c_main.create_window(80, 970, window=self.b_create_block, height=50, width=50)
+
         # Right block
         self.app.c_main.create_text(1455, 175, font=("Arial", 30), fill=COL_FONT, text="Saved")
 
+        self.blocks_from_file()
         startx = 75
         starty = 225
         i = 0
         j = 0
         for block in self.recent_blocks:
             tag_block = f"r_block{10 + i + j * 10}"
-            tag_time = f"r_timer{10 + i + j * 10}"
-            self.app.c_main.create_rectangle(startx + i * 250, starty + 150 * j, startx + 200 + i * 250,
-                                             starty + 100 + 150 * j, fill=block[1], tags=tag_block, outline=COL_2, width=5)
+            block_id = self.app.c_main.create_rectangle(startx + i * 250, starty + 150 * j, startx + 200 + i * 250,
+                                                        starty + 100 + 150 * j, fill=block[1], tags=tag_block,
+                                                        outline=COL_2,
+                                                        width=5)
+            if self.first_block_id is None:
+                self.first_block_id = block_id
+
             hour = int(block[0]) // 60
             minutes = int(block[0]) % 60
-            timer = f"{hour if hour > 9 else '0'+str(hour)}:{minutes if minutes > 9 else '0'+str(minutes)}"
+            timer = f"{hour if hour > 9 else '0' + str(hour)}:{minutes if minutes > 9 else '0' + str(minutes)}"
             self.app.c_main.create_text(175 + i * 250, 275 + j * 150,
                                         text=timer, font=FONT, fill=COL_FONT, tags=tag_block)
-            self.app.c_main.create_text(175+i * 250, 305+j*150, text=block[2], fill=COL_FONT, font=("Arial", 15),
-                                        tag=tag_block)
+            self.app.c_main.create_text(175 + i * 250, 305 + j * 150, text=block[2], fill=COL_FONT, font=("Arial", 15),
+                                        tag=tag_block, anchor="center")
             i += 1
             if i % 3 == 0:
                 j += 1
                 i = 0
+
             self.app.c_main.tag_bind(tag_block, "<B1-Motion>", self.move_block)
+            self.app.c_main.tag_bind(tag_block, "<Button-1>", self.press_block)
+            self.app.c_main.tag_bind(tag_block, "<ButtonRelease-1>", self.unpress_block)
 
+        # Timeline
+        self.app.c_main.create_line(50, 1190, 2060, 1190, fill=COL_2, width=5)
+        self.app.c_main.create_line(2010, 1160, 2060, 1190, fill=COL_2, width=5)
+        self.app.c_main.create_line(2010, 1220, 2060, 1190, fill=COL_2, width=5)
 
+        self.app.c_main.create_line(50, 1290, 2060, 1290, fill=COL_2, width=5)
+        self.app.c_main.create_line(2010, 1260, 2060, 1290, fill=COL_2, width=5)
+        self.app.c_main.create_line(2010, 1320, 2060, 1290, fill=COL_2, width=5)
 
-            print(tag_block)
+        self.trash = self.app.c_main.create_image(2100, 1240, image=create_imagetk("images/blocks/trash.png"),
+                                                  state="hidden")
 
     def create_block(self):
         print(self.is_clock_window_on)
@@ -317,24 +345,264 @@ class Setup2:
         self.is_clock_window_on = False
         self.save_blocks_to_file()
         self.clock_window.destroy()
+        self.create_setup2_window()
 
     def blocks_from_file(self):
-        with open("data/blocks.txt", "r+") as file:
-            xd = file.readlines()
-            for i in range(0, len(xd), 3):
-                self.recent_blocks.append([xd[i].strip(), xd[i + 1].strip(), xd[i + 2].strip()])
+        self.recent_blocks = []
+        if os.path.isfile("data/blocks.txt"):
+            with open("data/blocks.txt", "r") as file:
+                xd = file.readlines()
+                for i in range(0, len(xd), 3):
+                    self.recent_blocks.append([xd[i].strip(), xd[i + 1].strip(), xd[i + 2].strip()])
+        else:
+            with open("data/blocks.txt", 'x'):
+                pass
 
     def save_blocks_to_file(self):
-        with open('data/blocks.txt', 'a+') as file:
-            for element in self.new_block:
-                file.write('%s\n' % element)
+
+        with open("data/blocks.txt", "r+") as file:
+            lines = file.readlines()
+            print(len(lines))
+
+        new_arr = self.new_block
+
+        if len(new_arr) == 3:
+            if len(lines) < 45:
+                for item in lines[:len(lines)]:
+                    new_arr.append(item.strip())
+            else:
+                for item in lines[:42]:
+                    new_arr.append(item.strip())
+
+            with open('data/blocks.txt', 'w+') as file:
+                for element in new_arr:
+                    file.write('%s\n' % element)
 
     def move_block(self, e):
+        self.change = self.current_pos
         block = (e.widget.find_withtag("current")[0])
-        element = block % 3
-        print(block)
-        self.app.c_main.moveto(block-element, e.x-100, e.y-50)
-        self.app.c_main.moveto(block+1-element, e.x-50, e.y-20)
-        self.app.c_main.moveto(block+2-element, e.x-25, e.y+20)
 
-#   def press_block(self, e):
+        element = (block - self.first_block_id) % 3
+        if 1090 < e.y < 1390:
+            self.app.c_main.itemconfigure(self.pointer, state='normal')
+            self.app.c_main.moveto(block - element, e.x - 100, 1187)
+            self.app.c_main.moveto(block - element + 1, e.x - 50, 1220)
+            self.app.c_main.coords(block - element + 2, e.x, 1270)
+            i = 0
+            for pos in self.timeline_positions:
+                if e.x - 100 <= pos < e.x + 100:
+                    self.app.c_main.coords(self.pointer, self.timeline_positions[i], 1140,
+                                           self.timeline_positions[i],
+                                           1340)
+                    self.change = i
+
+                i += 1
+        else:
+            self.app.c_main.moveto(block - element, e.x - 100, e.y - 50)
+            self.app.c_main.moveto(block - element + 1, e.x - 50, e.y - 20)
+            self.app.c_main.coords(block - element + 2, e.x, e.y + 35)
+            if self.pointer is not None:
+                self.app.c_main.itemconfigure(self.pointer, state='hidden')
+        self.app.c_main.tag_raise(block - element)
+        self.app.c_main.tag_raise(block - element + 1)
+        self.app.c_main.tag_raise(block - element + 2)
+
+    def press_block(self, e):
+
+        self.pointer = self.app.c_main.create_line(self.timeline_positions[self.current_pos], 1140,
+                                                   self.timeline_positions[self.current_pos],
+                                                   1340, fill="#155255", width=5, state="hidden")
+
+        block = ((e.widget.find_withtag("current")[0]) - self.first_block_id) / 3
+        i = int(block % 3)
+        j = int(block // 3)
+        self.start_pos = [75 + i * 250, 225 + 150 * j]
+
+    def unpress_block(self, e):
+
+        if self.pointer is not None:
+            self.app.c_main.itemconfigure(self.pointer, state='hidden')
+
+        block = (e.widget.find_withtag("current")[0])
+
+        element = (block - self.first_block_id) % 3
+
+        self.app.c_main.moveto(block - element, self.start_pos[0], self.start_pos[1])
+        self.app.c_main.moveto(block + 1 - element, self.start_pos[0] + 50, self.start_pos[1] + 30)
+        self.app.c_main.coords(block + 2 - element, self.start_pos[0] + 100, self.start_pos[1] + 85)
+        # text = self.app.c_main.itemcget(block + 2 - element, 'text')
+
+        if 1090 < e.y < 1390:
+            tag = f"tl{self.tag_nr}"
+            self.tag_nr += 1
+
+            col = self.app.c_main.itemcget(block - element, 'fill')
+            timer = self.app.c_main.itemcget(block + 1 - element, 'text')
+            text = self.app.c_main.itemcget(block + 2 - element, 'text')
+
+            block = self.app.c_main.create_rectangle(self.timeline_positions[self.current_pos], 1190,
+                                                     self.timeline_positions[self.current_pos] + 200,
+                                                     1290, fill=col, outline=COL_2, width=5, tags=tag)
+
+            block_time = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1240,
+                                                     text=timer, font=FONT, fill=COL_FONT, tags=tag)
+            block_text = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1270,
+                                                     text=text, font=("Arial", 15), fill=COL_FONT, tags=tag)
+
+            self.app.c_main.tag_bind(tag, "<B1-Motion>", self.tl_move_block)
+
+            self.app.c_main.tag_bind(tag, "<Button-1>", self.tl_press_block)
+            self.app.c_main.tag_bind(tag, "<ButtonRelease-1>", self.tl_unpress_block)
+
+            self.blocks_tl.append([block, block_time, block_text])
+
+            self.timeline_positions.append(self.timeline_positions[self.current_pos] + 200)
+            self.current_pos += 1
+
+            self.element = len(self.blocks_tl)
+
+            if self.element > 0:
+                print("!", self.change, self.element)
+                new_tl = self.blocks_tl[:self.change]
+                new_tl.append(self.blocks_tl[self.element - 1])
+
+                for item in self.blocks_tl[self.change:self.element]:
+                    new_tl.append(item)
+                for item in self.blocks_tl[self.element + 1:]:
+                    new_tl.append(item)
+
+                colors = []
+                texts = []
+                times = []
+
+                for i in range(len(new_tl)):
+                    block_col = self.app.c_main.itemcget(new_tl[i][0], 'fill')
+                    colors.append(block_col)
+                    block_text = self.app.c_main.itemcget(new_tl[i][1], 'text')
+                    texts.append(block_text)
+                    block_time = self.app.c_main.itemcget(new_tl[i][2], 'text')
+                    times.append(block_time)
+
+                for i in range(len(self.blocks_tl)):
+                    self.app.c_main.itemconfigure(self.blocks_tl[i][0], fill=colors[i])
+                    self.app.c_main.itemconfigure(self.blocks_tl[i][1], text=texts[i])
+                    self.app.c_main.itemconfigure(self.blocks_tl[i][2], text=times[i])
+
+    def tl_move_block(self, e):
+        self.element = 0
+        block = (e.widget.find_withtag("current")[0])
+        for i in range(len(self.blocks_tl)):
+            for j in range(3):
+                if self.blocks_tl[i][j] == block:
+                    self.element = i
+                    break
+
+        if 1090 < e.y < 1390:
+            self.app.c_main.itemconfigure(self.pointer, state='normal')
+            self.app.c_main.moveto(self.blocks_tl[self.element][0], e.x - 100, 1187)
+            self.app.c_main.moveto(self.blocks_tl[self.element][1], e.x - 50, 1220)
+            self.app.c_main.coords(self.blocks_tl[self.element][2], e.x, 1270)
+
+            i = 0
+            for pos in self.timeline_positions:
+                if e.x - 100 <= pos < e.x + 100:
+                    self.app.c_main.coords(self.pointer, self.timeline_positions[i], 1140,
+                                           self.timeline_positions[i],
+                                           1340)
+
+                    self.change = i
+                i += 1
+        if e.x > 2000:
+            self.app.c_main.itemconfigure(self.blocks_tl[self.element][0], outline="red")
+        else:
+            self.app.c_main.itemconfigure(self.blocks_tl[self.element][0], outline=COL_2)
+
+    def tl_press_block(self, e):
+        self.app.c_main.itemconfigure(self.pointer, state='normal')
+        self.element = 0
+        block = (e.widget.find_withtag("current")[0])
+        for i in range(len(self.blocks_tl)):
+            for j in range(3):
+                if self.blocks_tl[i][j] == block:
+                    self.element = i
+                    break
+
+        self.app.c_main.itemconfigure(self.trash, state="normal")
+
+    def tl_unpress_block(self, e):
+        self.app.c_main.itemconfigure(self.trash, state="hidden")
+        self.app.c_main.itemconfigure(self.pointer, state='hidden')
+        self.app.c_main.itemconfigure(self.blocks_tl[self.element][0], outline=COL_2)
+
+        colors = []
+        texts = []
+        times = []
+        new_tl = []
+
+        self.app.c_main.coords(self.blocks_tl[self.element][0], self.timeline_positions[self.element], 1190,
+                               self.timeline_positions[self.element] + 200, 1290)
+        self.app.c_main.coords(self.blocks_tl[self.element][1], self.timeline_positions[self.element] + 100, 1240)
+        self.app.c_main.coords(self.blocks_tl[self.element][2], self.timeline_positions[self.element] + 100, 1270)
+
+        if e.x > 2000:
+
+            self.change = len(self.blocks_tl)
+            new_tl = self.blocks_tl[:self.element]
+            for item in self.blocks_tl[self.element + 1:self.change]:
+                new_tl.append(item)
+            new_tl.append(self.blocks_tl[self.element])
+            for item in self.blocks_tl[self.change:]:
+                new_tl.append(item)
+
+            for i in range(len(new_tl)):
+                block_col = self.app.c_main.itemcget(new_tl[i][0], 'fill')
+                colors.append(block_col)
+                block_text = self.app.c_main.itemcget(new_tl[i][1], 'text')
+                texts.append(block_text)
+                block_time = self.app.c_main.itemcget(new_tl[i][2], 'text')
+                times.append(block_time)
+            self.current_pos -= 1
+            self.timeline_positions.pop(-1)
+
+            for i in range(len(new_tl)):
+                self.app.c_main.itemconfigure(self.blocks_tl[i][0], fill=colors[i])
+                self.app.c_main.itemconfigure(self.blocks_tl[i][1], text=texts[i])
+                self.app.c_main.itemconfigure(self.blocks_tl[i][2], text=times[i])
+
+            self.app.c_main.delete(self.blocks_tl[-1][0])
+            self.app.c_main.delete(self.blocks_tl[-1][1])
+            self.app.c_main.delete(self.blocks_tl[-1][2])
+            self.blocks_tl.pop(-1)
+
+        elif self.element != self.change:
+            if self.element > self.change:
+                new_tl = self.blocks_tl[:self.change]
+                new_tl.append(self.blocks_tl[self.element])
+                for item in self.blocks_tl[self.change:self.element]:
+                    new_tl.append(item)
+                for item in self.blocks_tl[self.element + 1:]:
+                    new_tl.append(item)
+            else:
+                new_tl = self.blocks_tl[:self.element]
+                for item in self.blocks_tl[self.element + 1:self.change]:
+                    new_tl.append(item)
+                new_tl.append(self.blocks_tl[self.element])
+                for item in self.blocks_tl[self.change:]:
+                    new_tl.append(item)
+
+            colors = []
+            texts = []
+            times = []
+
+            for i in range(len(new_tl)):
+                block_col = self.app.c_main.itemcget(new_tl[i][0], 'fill')
+                colors.append(block_col)
+                block_text = self.app.c_main.itemcget(new_tl[i][1], 'text')
+                texts.append(block_text)
+                block_time = self.app.c_main.itemcget(new_tl[i][2], 'text')
+                times.append(block_time)
+
+            for i in range(len(new_tl)):
+                self.app.c_main.itemconfigure(self.blocks_tl[i][0], fill=colors[i])
+                self.app.c_main.itemconfigure(self.blocks_tl[i][1], text=texts[i])
+                self.app.c_main.itemconfigure(self.blocks_tl[i][2], text=times[i])
