@@ -430,7 +430,6 @@ class Setup2:
         self.app.c_main.moveto(block - element, self.start_pos[0], self.start_pos[1])
         self.app.c_main.moveto(block + 1 - element, self.start_pos[0] + 50, self.start_pos[1] + 30)
         self.app.c_main.coords(block + 2 - element, self.start_pos[0] + 100, self.start_pos[1] + 85)
-        # text = self.app.c_main.itemcget(block + 2 - element, 'text')
 
         if 1090 < e.y < 1390:
             tag = f"tl{self.tag_nr}"
@@ -462,31 +461,14 @@ class Setup2:
             self.element = len(self.blocks_tl)
 
             if self.element > 0:
-                print("!", self.change, self.element)
                 new_tl = self.blocks_tl[:self.change]
                 new_tl.append(self.blocks_tl[self.element - 1])
-
-                for item in self.blocks_tl[self.change:self.element]:
+                for item in self.blocks_tl[self.change:self.element-1]:
                     new_tl.append(item)
                 for item in self.blocks_tl[self.element + 1:]:
                     new_tl.append(item)
 
-                colors = []
-                texts = []
-                times = []
-
-                for i in range(len(new_tl)):
-                    block_col = self.app.c_main.itemcget(new_tl[i][0], 'fill')
-                    colors.append(block_col)
-                    block_text = self.app.c_main.itemcget(new_tl[i][1], 'text')
-                    texts.append(block_text)
-                    block_time = self.app.c_main.itemcget(new_tl[i][2], 'text')
-                    times.append(block_time)
-
-                for i in range(len(self.blocks_tl)):
-                    self.app.c_main.itemconfigure(self.blocks_tl[i][0], fill=colors[i])
-                    self.app.c_main.itemconfigure(self.blocks_tl[i][1], text=texts[i])
-                    self.app.c_main.itemconfigure(self.blocks_tl[i][2], text=times[i])
+                self.tl_shift(new_tl)
 
     def tl_move_block(self, e):
         self.element = 0
@@ -590,19 +572,24 @@ class Setup2:
                 for item in self.blocks_tl[self.change:]:
                     new_tl.append(item)
 
-            colors = []
-            texts = []
-            times = []
+            self.tl_shift(new_tl)
 
-            for i in range(len(new_tl)):
-                block_col = self.app.c_main.itemcget(new_tl[i][0], 'fill')
-                colors.append(block_col)
-                block_text = self.app.c_main.itemcget(new_tl[i][1], 'text')
-                texts.append(block_text)
-                block_time = self.app.c_main.itemcget(new_tl[i][2], 'text')
-                times.append(block_time)
+    def tl_shift(self, arr):
+        print(arr)
+        colors = []
+        texts = []
+        times = []
 
-            for i in range(len(new_tl)):
-                self.app.c_main.itemconfigure(self.blocks_tl[i][0], fill=colors[i])
-                self.app.c_main.itemconfigure(self.blocks_tl[i][1], text=texts[i])
-                self.app.c_main.itemconfigure(self.blocks_tl[i][2], text=times[i])
+        for i in range(len(arr)):
+            print("xd")
+            block_col = self.app.c_main.itemcget(arr[i][0], 'fill')
+            colors.append(block_col)
+            block_text = self.app.c_main.itemcget(arr[i][1], 'text')
+            texts.append(block_text)
+            block_time = self.app.c_main.itemcget(arr[i][2], 'text')
+            times.append(block_time)
+
+        for i in range(len(arr)):
+            self.app.c_main.itemconfigure(self.blocks_tl[i][0], fill=colors[i])
+            self.app.c_main.itemconfigure(self.blocks_tl[i][1], text=texts[i])
+            self.app.c_main.itemconfigure(self.blocks_tl[i][2], text=times[i])

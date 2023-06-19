@@ -41,12 +41,11 @@ class App(CTk):
         self.c_sidebar.grid(row=0, column=0)
         self.b_dayinfo = CTkButton(self, text="Day info", font=("Arial", 40), fg_color=COL_2,
                                    bg_color=COL_2, hover_color="black", border_color=COL_2,
-                                    border_width=10, command=self.main.create_main_window)
+                                   border_width=10, command=self.main.create_main_window)
         self.c_sidebar.create_window(200, 100, window=self.b_dayinfo, width=300, height=100)
         self.c_sidebar.create_image(200, 1300, image=create_imagetk("images/line.png", 350, 100))
         self.c_sidebar.create_text(260, 1370, text=f" {self.today_data.formatted_date} ", font=FONT, fill=COL_FONT)
         self.c_sidebar.create_image(90, 1370, image=create_imagetk(self.weather_data.image, 150, 150))
-
 
 
 if __name__ == "__main__":
