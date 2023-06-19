@@ -263,6 +263,7 @@ class Setup2:
         self.new_block = []
         self.start_pos = []
         self.first_block_id = None
+        self.blocks = []
 
         self.timeline_positions = [100]
         self.current_pos = 0
@@ -307,10 +308,11 @@ class Setup2:
             hour = int(block[0]) // 60
             minutes = int(block[0]) % 60
             timer = f"{hour if hour > 9 else '0' + str(hour)}:{minutes if minutes > 9 else '0' + str(minutes)}"
-            self.app.c_main.create_text(175 + i * 250, 275 + j * 150,
-                                        text=timer, font=FONT, fill=COL_FONT, tags=tag_block)
-            self.app.c_main.create_text(175 + i * 250, 305 + j * 150, text=block[2], fill=COL_FONT, font=("Arial", 15),
-                                        tag=tag_block, anchor="center")
+            category = self.app.c_main.create_text(175 + i * 250, 275 + j * 150,
+                                                   text=timer, font=FONT, fill=COL_FONT, tags=tag_block)
+            time = self.app.c_main.create_text(175 + i * 250, 305 + j * 150, text=block[2], fill=COL_FONT,
+                                               font=("Arial", 15),
+                                               tag=tag_block, anchor="center")
             i += 1
             if i % 3 == 0:
                 j += 1
@@ -319,6 +321,7 @@ class Setup2:
             self.app.c_main.tag_bind(tag_block, "<B1-Motion>", self.move_block)
             self.app.c_main.tag_bind(tag_block, "<Button-1>", self.press_block)
             self.app.c_main.tag_bind(tag_block, "<ButtonRelease-1>", self.unpress_block)
+            self.blocks.append([block_id, category, time])
 
         # Timeline
         self.app.c_main.create_line(50, 1190, 2060, 1190, fill=COL_2, width=5)
@@ -460,15 +463,13 @@ class Setup2:
 
             self.element = len(self.blocks_tl)
 
-            if self.element > 0:
-                new_tl = self.blocks_tl[:self.change]
-                new_tl.append(self.blocks_tl[self.element - 1])
-                for item in self.blocks_tl[self.change:self.element-1]:
-                    new_tl.append(item)
-                for item in self.blocks_tl[self.element + 1:]:
-                    new_tl.append(item)
-
-                self.tl_shift(new_tl)
+            new_tl = self.blocks_tl[:self.change]
+            new_tl.append(self.blocks_tl[self.element - 1])
+            for item in self.blocks_tl[self.change:self.element - 1]:
+                new_tl.append(item)
+            for item in self.blocks_tl[self.element + 1:]:
+                new_tl.append(item)
+            self.tl_shift(new_tl)
 
     def tl_move_block(self, e):
         self.element = 0
@@ -516,47 +517,12 @@ class Setup2:
         self.app.c_main.itemconfigure(self.pointer, state='hidden')
         self.app.c_main.itemconfigure(self.blocks_tl[self.element][0], outline=COL_2)
 
-        colors = []
-        texts = []
-        times = []
-        new_tl = []
-
         self.app.c_main.coords(self.blocks_tl[self.element][0], self.timeline_positions[self.element], 1190,
                                self.timeline_positions[self.element] + 200, 1290)
         self.app.c_main.coords(self.blocks_tl[self.element][1], self.timeline_positions[self.element] + 100, 1240)
         self.app.c_main.coords(self.blocks_tl[self.element][2], self.timeline_positions[self.element] + 100, 1270)
 
-        if e.x > 2000:
-
-            self.change = len(self.blocks_tl)
-            new_tl = self.blocks_tl[:self.element]
-            for item in self.blocks_tl[self.element + 1:self.change]:
-                new_tl.append(item)
-            new_tl.append(self.blocks_tl[self.element])
-            for item in self.blocks_tl[self.change:]:
-                new_tl.append(item)
-
-            for i in range(len(new_tl)):
-                block_col = self.app.c_main.itemcget(new_tl[i][0], 'fill')
-                colors.append(block_col)
-                block_text = self.app.c_main.itemcget(new_tl[i][1], 'text')
-                texts.append(block_text)
-                block_time = self.app.c_main.itemcget(new_tl[i][2], 'text')
-                times.append(block_time)
-            self.current_pos -= 1
-            self.timeline_positions.pop(-1)
-
-            for i in range(len(new_tl)):
-                self.app.c_main.itemconfigure(self.blocks_tl[i][0], fill=colors[i])
-                self.app.c_main.itemconfigure(self.blocks_tl[i][1], text=texts[i])
-                self.app.c_main.itemconfigure(self.blocks_tl[i][2], text=times[i])
-
-            self.app.c_main.delete(self.blocks_tl[-1][0])
-            self.app.c_main.delete(self.blocks_tl[-1][1])
-            self.app.c_main.delete(self.blocks_tl[-1][2])
-            self.blocks_tl.pop(-1)
-
-        elif self.element != self.change:
+        if self.element != self.change:
             if self.element > self.change:
                 new_tl = self.blocks_tl[:self.change]
                 new_tl.append(self.blocks_tl[self.element])
@@ -571,17 +537,21 @@ class Setup2:
                 new_tl.append(self.blocks_tl[self.element])
                 for item in self.blocks_tl[self.change:]:
                     new_tl.append(item)
-
+                if e.x > 2000:
+                    self.current_pos -= 1
+                    self.timeline_positions.pop(-1)
+                    self.app.c_main.delete(self.blocks_tl[-1][0])
+                    self.app.c_main.delete(self.blocks_tl[-1][1])
+                    self.app.c_main.delete(self.blocks_tl[-1][2])
+                    self.blocks_tl.pop(-1)
             self.tl_shift(new_tl)
 
     def tl_shift(self, arr):
-        print(arr)
         colors = []
         texts = []
         times = []
 
         for i in range(len(arr)):
-            print("xd")
             block_col = self.app.c_main.itemcget(arr[i][0], 'fill')
             colors.append(block_col)
             block_text = self.app.c_main.itemcget(arr[i][1], 'text')
