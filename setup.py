@@ -18,6 +18,7 @@ class Setup1:
         self.shadow_line_position = 0
         self.goal_widgets_yposes = []
         self.is_end = 0
+        self.blocks = []
 
         self.goals_widgets = []
         self.which_goals = [0]
@@ -275,10 +276,12 @@ class Setup2:
         self.tag_nr = 0
         self.change = 0
 
+        self.timeline_view = []
+
     def create_setup2_window(self):
         self.recent_blocks = []
         self.app.create_c_main()
-        self.app.c_main.create_text(1080, 60, text="Create focus blocks", font=("Arial", 40), fill=COL_FONT)
+        self.app.c_main.create_text(1080, 60, text="Create focus timeline", font=("Arial", 40), fill=COL_FONT)
         self.app.c_main.create_image(1080, 100, image=create_imagetk("images/line.png", 450, 150))
         self.app.c_main.create_rectangle(50, 150, 2110, 1000, outline=COL_2, width=5)
         self.app.c_main.create_line(800, 150, 800, 1000, fill=COL_2, width=5)
@@ -292,6 +295,26 @@ class Setup2:
         self.app.c_main.create_text(1455, 175, font=("Arial", 30), fill=COL_FONT, text="Saved")
 
         self.blocks_from_file()
+        self.create_recent_blocks()
+
+        self.create_timeline()
+
+        # Timeline
+        self.app.c_main.create_line(50, 1190, 2060, 1190, fill=COL_2, width=5)
+        self.app.c_main.create_line(2010, 1160, 2060, 1190, fill=COL_2, width=5)
+        self.app.c_main.create_line(2010, 1220, 2060, 1190, fill=COL_2, width=5)
+
+        self.app.c_main.create_line(50, 1290, 2060, 1290, fill=COL_2, width=5)
+        self.app.c_main.create_line(2010, 1260, 2060, 1290, fill=COL_2, width=5)
+        self.app.c_main.create_line(2010, 1320, 2060, 1290, fill=COL_2, width=5)
+
+        self.trash = self.app.c_main.create_image(2100, 1240, image=create_imagetk("images/blocks/trash.png"),
+                                                  state="hidden")
+        self.pointer = self.app.c_main.create_line(self.timeline_positions[self.current_pos], 1140,
+                                                   self.timeline_positions[self.current_pos],
+                                                   1340, fill="#155255", width=5, state="hidden")
+
+    def create_recent_blocks(self):
         startx = 75
         starty = 225
         i = 0
@@ -323,20 +346,40 @@ class Setup2:
             self.app.c_main.tag_bind(tag_block, "<ButtonRelease-1>", self.unpress_block)
             self.blocks.append([block_id, category, time])
 
-        # Timeline
-        self.app.c_main.create_line(50, 1190, 2060, 1190, fill=COL_2, width=5)
-        self.app.c_main.create_line(2010, 1160, 2060, 1190, fill=COL_2, width=5)
-        self.app.c_main.create_line(2010, 1220, 2060, 1190, fill=COL_2, width=5)
+    def create_timeline(self):
+        self.blocks_tl = []
+        self.current_pos = []
+        self.timeline_view = []
+        self.current_pos = 0
+        self.timeline_positions = [100]
 
-        self.app.c_main.create_line(50, 1290, 2060, 1290, fill=COL_2, width=5)
-        self.app.c_main.create_line(2010, 1260, 2060, 1290, fill=COL_2, width=5)
-        self.app.c_main.create_line(2010, 1320, 2060, 1290, fill=COL_2, width=5)
+        self.timeline_from_file()
+        for item in self.timeline_view:
+            self.add_block(item[0], item[1], item[2])
 
-        self.trash = self.app.c_main.create_image(2100, 1240, image=create_imagetk("images/blocks/trash.png"),
-                                                  state="hidden")
+    def add_block(self, col, timer, text):
+        tag = f"tl{self.tag_nr}"
+        self.tag_nr += 1
+        block = self.app.c_main.create_rectangle(self.timeline_positions[self.current_pos], 1190,
+                                                 self.timeline_positions[self.current_pos] + 200,
+                                                 1290, fill=col, outline=COL_2, width=5, tags=tag)
+
+        block_time = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1240,
+                                                 text=timer, font=FONT, fill=COL_FONT, tags=tag)
+        block_text = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1270,
+                                                 text=text, font=("Arial", 15), fill=COL_FONT, tags=tag)
+
+        self.app.c_main.tag_bind(tag, "<B1-Motion>", self.tl_move_block)
+
+        self.app.c_main.tag_bind(tag, "<Button-1>", self.tl_press_block)
+        self.app.c_main.tag_bind(tag, "<ButtonRelease-1>", self.tl_unpress_block)
+
+        self.blocks_tl.append([block, block_time, block_text])
+
+        self.timeline_positions.append(self.timeline_positions[self.current_pos] + 200)
+        self.current_pos += 1
 
     def create_block(self):
-        print(self.is_clock_window_on)
         if not self.is_clock_window_on or not self.clock_window.is_clock_on:
             self.clock_window = Clock(self)
             self.clock_window.wm_attributes("-topmost", True)
@@ -365,7 +408,6 @@ class Setup2:
 
         with open("data/blocks.txt", "r+") as file:
             lines = file.readlines()
-            print(len(lines))
 
         new_arr = self.new_block
 
@@ -391,15 +433,9 @@ class Setup2:
             self.app.c_main.moveto(block - element, e.x - 100, 1187)
             self.app.c_main.moveto(block - element + 1, e.x - 50, 1220)
             self.app.c_main.coords(block - element + 2, e.x, 1270)
-            i = 0
-            for pos in self.timeline_positions:
-                if e.x - 100 <= pos < e.x + 100:
-                    self.app.c_main.coords(self.pointer, self.timeline_positions[i], 1140,
-                                           self.timeline_positions[i],
-                                           1340)
-                    self.change = i
 
-                i += 1
+            self.change = self.get_change(e.x)
+
         else:
             self.app.c_main.moveto(block - element, e.x - 100, e.y - 50)
             self.app.c_main.moveto(block - element + 1, e.x - 50, e.y - 20)
@@ -411,10 +447,6 @@ class Setup2:
         self.app.c_main.tag_raise(block - element + 2)
 
     def press_block(self, e):
-
-        self.pointer = self.app.c_main.create_line(self.timeline_positions[self.current_pos], 1140,
-                                                   self.timeline_positions[self.current_pos],
-                                                   1340, fill="#155255", width=5, state="hidden")
 
         block = ((e.widget.find_withtag("current")[0]) - self.first_block_id) / 3
         i = int(block % 3)
@@ -435,31 +467,12 @@ class Setup2:
         self.app.c_main.coords(block + 2 - element, self.start_pos[0] + 100, self.start_pos[1] + 85)
 
         if 1090 < e.y < 1390:
-            tag = f"tl{self.tag_nr}"
-            self.tag_nr += 1
 
             col = self.app.c_main.itemcget(block - element, 'fill')
             timer = self.app.c_main.itemcget(block + 1 - element, 'text')
             text = self.app.c_main.itemcget(block + 2 - element, 'text')
 
-            block = self.app.c_main.create_rectangle(self.timeline_positions[self.current_pos], 1190,
-                                                     self.timeline_positions[self.current_pos] + 200,
-                                                     1290, fill=col, outline=COL_2, width=5, tags=tag)
-
-            block_time = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1240,
-                                                     text=timer, font=FONT, fill=COL_FONT, tags=tag)
-            block_text = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1270,
-                                                     text=text, font=("Arial", 15), fill=COL_FONT, tags=tag)
-
-            self.app.c_main.tag_bind(tag, "<B1-Motion>", self.tl_move_block)
-
-            self.app.c_main.tag_bind(tag, "<Button-1>", self.tl_press_block)
-            self.app.c_main.tag_bind(tag, "<ButtonRelease-1>", self.tl_unpress_block)
-
-            self.blocks_tl.append([block, block_time, block_text])
-
-            self.timeline_positions.append(self.timeline_positions[self.current_pos] + 200)
-            self.current_pos += 1
+            self.add_block(col, timer, text)
 
             self.element = len(self.blocks_tl)
 
@@ -474,11 +487,7 @@ class Setup2:
     def tl_move_block(self, e):
         self.element = 0
         block = (e.widget.find_withtag("current")[0])
-        for i in range(len(self.blocks_tl)):
-            for j in range(3):
-                if self.blocks_tl[i][j] == block:
-                    self.element = i
-                    break
+        self.element = self.calculate_element(block)
 
         if 1090 < e.y < 1390:
             self.app.c_main.itemconfigure(self.pointer, state='normal')
@@ -486,30 +495,18 @@ class Setup2:
             self.app.c_main.moveto(self.blocks_tl[self.element][1], e.x - 50, 1220)
             self.app.c_main.coords(self.blocks_tl[self.element][2], e.x, 1270)
 
-            i = 0
-            for pos in self.timeline_positions:
-                if e.x - 100 <= pos < e.x + 100:
-                    self.app.c_main.coords(self.pointer, self.timeline_positions[i], 1140,
-                                           self.timeline_positions[i],
-                                           1340)
-
-                    self.change = i
-                i += 1
+            self.change = self.get_change(e.x)
         if e.x > 2000:
             self.app.c_main.itemconfigure(self.blocks_tl[self.element][0], outline="red")
         else:
             self.app.c_main.itemconfigure(self.blocks_tl[self.element][0], outline=COL_2)
 
     def tl_press_block(self, e):
-        self.app.c_main.itemconfigure(self.pointer, state='normal')
         self.element = 0
-        block = (e.widget.find_withtag("current")[0])
-        for i in range(len(self.blocks_tl)):
-            for j in range(3):
-                if self.blocks_tl[i][j] == block:
-                    self.element = i
-                    break
 
+        self.app.c_main.itemconfigure(self.pointer, state='normal')
+        block = (e.widget.find_withtag("current")[0])
+        self.element = self.calculate_element(block)
         self.app.c_main.itemconfigure(self.trash, state="normal")
 
     def tl_unpress_block(self, e):
@@ -530,6 +527,7 @@ class Setup2:
                     new_tl.append(item)
                 for item in self.blocks_tl[self.element + 1:]:
                     new_tl.append(item)
+                self.tl_shift(new_tl)
             else:
                 new_tl = self.blocks_tl[:self.element]
                 for item in self.blocks_tl[self.element + 1:self.change]:
@@ -537,29 +535,87 @@ class Setup2:
                 new_tl.append(self.blocks_tl[self.element])
                 for item in self.blocks_tl[self.change:]:
                     new_tl.append(item)
+                self.tl_shift(new_tl)
                 if e.x > 2000:
                     self.current_pos -= 1
                     self.timeline_positions.pop(-1)
                     self.app.c_main.delete(self.blocks_tl[-1][0])
                     self.app.c_main.delete(self.blocks_tl[-1][1])
                     self.app.c_main.delete(self.blocks_tl[-1][2])
+                    print("xd1", self.timeline_view)
+
                     self.blocks_tl.pop(-1)
-            self.tl_shift(new_tl)
+                    new_tl.pop(-1)
+                    print("xd2", self.timeline_view)
+                    self.save_timeline_to_file2()
+
+
+            print("ntl", new_tl)
 
     def tl_shift(self, arr):
-        colors = []
-        texts = []
-        times = []
-
+        print("tl1", arr)
+        print('chuj', self.app.c_main.itemcget(arr[0][0], 'fill'))
+        blocks = []
         for i in range(len(arr)):
-            block_col = self.app.c_main.itemcget(arr[i][0], 'fill')
-            colors.append(block_col)
-            block_text = self.app.c_main.itemcget(arr[i][1], 'text')
-            texts.append(block_text)
-            block_time = self.app.c_main.itemcget(arr[i][2], 'text')
-            times.append(block_time)
+            col = self.app.c_main.itemcget(arr[i][0], 'fill')
+            text = self.app.c_main.itemcget(arr[i][1], 'text')
+            time = self.app.c_main.itemcget(arr[i][2], 'text')
+            blocks.append([col, text, time])
 
-        for i in range(len(arr)):
-            self.app.c_main.itemconfigure(self.blocks_tl[i][0], fill=colors[i])
-            self.app.c_main.itemconfigure(self.blocks_tl[i][1], text=texts[i])
-            self.app.c_main.itemconfigure(self.blocks_tl[i][2], text=times[i])
+        for i in range(self.current_pos):
+            self.app.c_main.itemconfigure(self.blocks_tl[i][0], fill=blocks[i][0])
+            self.app.c_main.itemconfigure(self.blocks_tl[i][1], text=blocks[i][1])
+            self.app.c_main.itemconfigure(self.blocks_tl[i][2], text=blocks[i][2])
+        print("blocks", blocks)
+        self.save_timeline_to_file(blocks)
+
+    def calculate_element(self, block):
+        for i in range(len(self.blocks_tl)):
+            for j in range(3):
+                if self.blocks_tl[i][j] == block:
+                    return i
+
+    def get_change(self, x):
+        i = 0
+        for pos in self.timeline_positions:
+            if x - 100 <= pos < x + 100:
+                self.app.c_main.coords(self.pointer, self.timeline_positions[i], 1140,
+                                       self.timeline_positions[i],
+                                       1340)
+                self.change = i
+
+            i += 1
+
+        return self.change
+
+    def timeline_from_file(self):
+        if os.path.isfile("data/tl_blocks.txt"):
+
+            with open("data/tl_blocks.txt", 'r') as file:
+                arr = file.readlines()
+
+            for i in range(0, len(arr), 3):
+                self.timeline_view.append([arr[i].strip(), arr[i + 1].strip(), arr[i + 2].strip()])
+
+    def save_timeline_to_file(self, blocks):
+
+        new_arr = []
+        flag = 1
+        for block in blocks:
+            for item in block:
+                if item == "":
+                    flag = 0
+            if flag:
+                new_arr.append(block)
+
+        with open("data/tl_blocks.txt", "w") as file:
+            for block in new_arr:
+                for item in block:
+                    file.write('%s\n' % item)
+
+    def save_timeline_to_file2(self):
+        with open("data/tl_blocks.txt", "w") as file:
+            for i in range(self.current_pos):
+                file.write('%s\n' % self.app.c_main.itemcget(self.blocks_tl[i][0], 'fill'))
+                file.write('%s\n' % self.app.c_main.itemcget(self.blocks_tl[i][1], 'text'))
+                file.write('%s\n' % self.app.c_main.itemcget(self.blocks_tl[i][2], 'text'))
