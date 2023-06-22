@@ -20,3 +20,9 @@ def create_imagetk(file, x=0, y=0, angle=0, index=0):
 
         return images[index]
 
+
+def calculate_element(block, arr):
+    for i in range(len(arr)):
+        for j in range(3):
+            if arr[i][j] == block:
+                return i

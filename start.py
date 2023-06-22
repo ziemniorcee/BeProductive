@@ -11,7 +11,6 @@ class start_window:
         self.today_data = Date()
         self.weather_data = Weather()
 
-
     def create_main_window(self):
         self.app.setup1.goals_site = 0
         self.app.create_c_main()

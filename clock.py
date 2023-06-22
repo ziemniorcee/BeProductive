@@ -123,7 +123,7 @@ class Clock(CTkToplevel):
         else:
             print("xd2")
             self.setup2.new_block = [self.hour * 60 + self.minutes, self.color, value]
-            self.setup2.on_closing()
+            self.setup2.clock_on_closing()
 
     def calculate_angle(self, x, y):
         """Return angle based on cursor """
