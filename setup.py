@@ -259,9 +259,26 @@ class Setup2:
         self.clock_window = None
         self.is_clock_window_on = False
 
+        self.change = 0
+
+        self.rc_params = []
+        self.new_block = None
+
+        self.saved_params = []
+
+        self.create_mode = 0
+        self.startx = [75, 825]
+        self.width = [3, 5]
+
+        self.blocks = [[], []]
+        self.binds = [[self.rc_move, self.press, self.rc_unpress], [self.saved_move, self.press, self.saved_unpress]]
+
+        self.blocks_files = ["blocks.txt", "saved_blocks.txt"]
+        self.file_length = [45, 225]
+
     def create_setup2_window(self):
         self.tag_id = 0
-
+        self.create_mode = 0
         self.app.create_c_main()
         self.app.c_main.create_text(1080, 60, text="Create focus timeline", font=("Arial", 40), fill=COL_FONT)
         self.app.c_main.create_image(1080, 100, image=create_imagetk("images/line.png", 450, 150))
@@ -275,7 +292,11 @@ class Setup2:
         self.rc_create()
 
         # saved panel
+        self.add_bg = self.app.c_main.create_rectangle(800, 150, 2110, 1000, fill=COL_1, outline=COL_2, width=5)
         self.app.c_main.create_text(1455, 175, font=("Arial", 30), fill=COL_FONT, text="Saved")
+        self.add_text = self.app.c_main.create_text(1455, 975, font=("Arial", 30), fill=COL_FONT, state="hidden"
+                                                    , text="Drop here to save")
+        self.saved_create()
 
         # Timeline panel
         self.app.c_main.create_line(50, 1190, 2060, 1190, fill=COL_2, width=5)
@@ -293,39 +314,50 @@ class Setup2:
 
     def rc_create(self):
         self.rc_params = []
-        self.rc_blocks = []
-        startx = 75
+
+        self.rc_from_file()
+        self._blocks_create(self.rc_params)
+
+    def saved_create(self):
+        self.saved_params = []
+
+        self.saved_from_file()
+        self._blocks_create(self.saved_params)
+
+    def _blocks_create(self, arr):
+        self.blocks[self.create_mode] = []
+        startx = self.startx[self.create_mode]
         starty = 225
         i = 0
         j = 0
 
-        self.rc_from_file()
+        for block in arr:
+            tag_block = f"block{self.tag_id}"
+            self.tag_id += 1
 
-        for block in self.rc_blocks:
-
-            tag_block = f"r_block{10 + i + j * 10}"
             block_id = self.app.c_main.create_rectangle(startx + i * 250, starty + 150 * j, startx + 200 + i * 250,
                                                         starty + 100 + 150 * j, fill=block[1], tags=tag_block,
                                                         outline=COL_2,
                                                         width=5)
-            hour = int(block[0]) // 60
-            minutes = int(block[0]) % 60
-            timer = f"{hour if hour > 9 else '0' + str(hour)}:{minutes if minutes > 9 else '0' + str(minutes)}"
-            category = self.app.c_main.create_text(175 + i * 250, 275 + j * 150,
+
+            timer = format_time(block[0])
+            category = self.app.c_main.create_text(startx + 100 + i * 250, 275 + j * 150,
                                                    text=timer, font=FONT, fill=COL_FONT, tags=tag_block)
-            time = self.app.c_main.create_text(175 + i * 250, 305 + j * 150, text=block[2], fill=COL_FONT,
+            time = self.app.c_main.create_text(startx + 100 + i * 250, 305 + j * 150, text=block[2], fill=COL_FONT,
                                                font=("Arial", 15),
                                                tag=tag_block, anchor="center")
             i += 1
-            if i % 3 == 0:
+            if i % self.width[self.create_mode] == 0:
                 j += 1
                 i = 0
 
-            self.app.c_main.tag_bind(tag_block, "<B1-Motion>", self.rc_move)
-            self.app.c_main.tag_bind(tag_block, "<Button-1>", self.rc_press)
-            self.app.c_main.tag_bind(tag_block, "<ButtonRelease-1>", self.rc_unpress)
-            self.rc_params.append([block_id, category, time])
+            self.app.c_main.tag_bind(tag_block, "<B1-Motion>", self.binds[self.create_mode][0])
+            self.app.c_main.tag_bind(tag_block, "<Button-1>", self.binds[self.create_mode][1])
+            self.app.c_main.tag_bind(tag_block, "<ButtonRelease-1>", self.binds[self.create_mode][2])
 
+            self.blocks[self.create_mode].append([block_id, category, time])
+
+        self.create_mode = not self.create_mode
 
     def rc_add(self):
         if not self.is_clock_window_on or not self.clock_window.is_clock_on:
@@ -334,15 +366,11 @@ class Setup2:
             self.is_clock_window_on = True
             self.clock_window.protocol("WM_DELETE_WINDOW", self.clock_on_closing)
 
-    def saved_create(self):
-        self.saved_blocks = []
-        self.saved_from_file()
-
     def tl_create(self):
         self.tl_blocks = []
-        self.current_pos = []
         self.tl_params = []
         self.current_pos = 0
+
         self.timeline_positions = [100]
         self.pointer = self.app.c_main.create_line(self.timeline_positions[self.current_pos], 1140,
                                                    self.timeline_positions[self.current_pos],
@@ -387,64 +415,99 @@ class Setup2:
 
     # from other classes
     def clock_on_closing(self):
-
-        self.is_clock_window_on = False
-        self.rc_to_file()
+        if self.new_block is not None:
+            self.to_file()
+            self.create_setup2_window()
         self.clock_window.destroy()
-        self.create_setup2_window()
+        self.is_clock_window_on = False
 
     # binds
 
     # recent blocks binds
-    def rc_press(self, e):
+    def press(self, e):
         block = (e.widget.find_withtag("current")[0])
-        self.element = calculate_element(block, self.rc_params)
-        i = int(self.element % 3)
-        j = int(self.element // 3)
-        self.start_pos = [75 + i * 250, 225 + 150 * j]
+        self.category, self.element = calculate_category(block, self.blocks)
+        i = int(self.element % self.width[self.category])
+        j = int(self.element // self.width[self.category])
+        self.start_pos = [self.startx[self.category] + i * 250, 225 + 150 * j]
 
     def rc_move(self, e):
+        self._move(e)
+        if 800 < e.x < 2110 and 150 < e.y < 1000:
+            self.app.c_main.itemconfigure(self.add_bg, fill=COL_2)
+            self.app.c_main.itemconfigure(self.add_text, state='normal')
+        else:
+            self.app.c_main.itemconfigure(self.add_bg, fill=COL_1)
+            self.app.c_main.itemconfigure(self.add_text, state='hidden')
+
+    def saved_move(self, e):
+        self._move(e)
+
+    def _move(self, e):
 
         if 1090 < e.y < 1390:
-            self._move(self.rc_params, e)
+            self._track(self.blocks[self.category], e)
 
         else:
-            self.app.c_main.moveto(self.rc_params[self.element][0], e.x - 100, e.y - 50)
-            self.app.c_main.moveto(self.rc_params[self.element][1], e.x - 50, e.y - 20)
-            self.app.c_main.coords(self.rc_params[self.element][2], e.x, e.y + 35)
+            self.app.c_main.moveto(self.blocks[self.category][self.element][0], e.x - 100, e.y - 50)
+            self.app.c_main.moveto(self.blocks[self.category][self.element][1], e.x - 50, e.y - 20)
+            self.app.c_main.coords(self.blocks[self.category][self.element][2], e.x, e.y + 35)
             if self.pointer is not None:
                 self.app.c_main.itemconfigure(self.pointer, state='hidden')
 
-        self.app.c_main.tag_raise(self.rc_params[self.element][0])
-        self.app.c_main.tag_raise(self.rc_params[self.element][1])
-        self.app.c_main.tag_raise(self.rc_params[self.element][2])
+        self.app.c_main.tag_raise(self.blocks[self.category][self.element][0])
+        self.app.c_main.tag_raise(self.blocks[self.category][self.element][1])
+        self.app.c_main.tag_raise(self.blocks[self.category][self.element][2])
 
     def rc_unpress(self, e):
+        self._unpress(e)
+        if 800 < e.x < 2110 and 150 < e.y < 1000:
+            self.app.c_main.itemconfigure(self.add_bg, fill=COL_1)
+            self.app.c_main.itemconfigure(self.add_text, state='hidden')
+
+            timer = self.app.c_main.itemcget(self.blocks[self.category][self.element][1], 'text')
+            col = self.app.c_main.itemcget(self.blocks[self.category][self.element][0], 'fill')
+            text = self.app.c_main.itemcget(self.blocks[self.category][self.element][2], 'text')
+
+            timer = deformat_time(timer)
+            self.new_block = [timer, col, text]
+
+            self.category = 1
+            self.to_file()
+            self.create_setup2_window()
+            self.new_block = None
+
+    def saved_unpress(self, e):
+        self._unpress(e)
+
+    def _unpress(self, e):
         if self.pointer is not None:
             self.app.c_main.itemconfigure(self.pointer, state='hidden')
 
-        self.app.c_main.moveto(self.rc_params[self.element][0], self.start_pos[0], self.start_pos[1])
-        self.app.c_main.moveto(self.rc_params[self.element][1], self.start_pos[0] + 50, self.start_pos[1] + 30)
-        self.app.c_main.coords(self.rc_params[self.element][2], self.start_pos[0] + 100, self.start_pos[1] + 85)
+        self.app.c_main.moveto(self.blocks[self.category][self.element][0], self.start_pos[0], self.start_pos[1])
+        self.app.c_main.moveto(self.blocks[self.category][self.element][1], self.start_pos[0] + 50,
+                               self.start_pos[1] + 30)
+        self.app.c_main.coords(self.blocks[self.category][self.element][2], self.start_pos[0] + 100,
+                               self.start_pos[1] + 85)
 
+        # TODO zmienic format tl
         if 1090 < e.y < 1390:
-
-            col = self.app.c_main.itemcget(self.rc_params[self.element][0], 'fill')
-            timer = self.app.c_main.itemcget(self.rc_params[self.element][1], 'text')
-            text = self.app.c_main.itemcget(self.rc_params[self.element][2], 'text')
+            col = self.app.c_main.itemcget(self.blocks[self.category][self.element][0], 'fill')
+            timer = self.app.c_main.itemcget(self.blocks[self.category][self.element][1], 'text')
+            text = self.app.c_main.itemcget(self.blocks[self.category][self.element][2], 'text')
 
             self.tl_add_block(col, timer, text)
 
             self.element = len(self.tl_blocks)
 
-            new_tl = self.tl_blocks[:self.change]
-            new_tl.append(self.tl_blocks[self.element - 1])
-            for item in self.tl_blocks[self.change:self.element - 1]:
-                new_tl.append(item)
-            for item in self.tl_blocks[self.element + 1:]:
-                new_tl.append(item)
+            new_tl = self.tl_blocks[:]
+            poped = new_tl.pop(self.element - 1)
+            new_tl.insert(self.change, poped)
             self._tl_shift(new_tl)
+
             self.tl_to_file()
+
+    # Saved binds
 
     # Timeline binds
     def tl_press(self, e):
@@ -456,7 +519,7 @@ class Setup2:
 
     def tl_move(self, e):
         if 1090 < e.y < 1390:
-            self._move(self.tl_blocks, e)
+            self._track(self.tl_blocks, e)
         if e.x > 2000:
             self.app.c_main.itemconfigure(self.tl_blocks[self.element][0], outline="red")
         else:
@@ -472,35 +535,20 @@ class Setup2:
         self.app.c_main.coords(self.tl_blocks[self.element][1], self.timeline_positions[self.element] + 100, 1240)
         self.app.c_main.coords(self.tl_blocks[self.element][2], self.timeline_positions[self.element] + 100, 1270)
 
-        if self.element != self.change:
-            if self.element > self.change:
-                print(self.tl_blocks)
-                new_tl = self.tl_blocks[:self.change]
-                new_tl.append(self.tl_blocks[self.element])
-                for item in self.tl_blocks[self.change:self.element]:
-                    new_tl.append(item)
-                for item in self.tl_blocks[self.element + 1:]:
-                    new_tl.append(item)
-                self._tl_shift(new_tl)
-                print(new_tl)
-                print(self.tl_blocks)
-            else:
-                new_tl = self.tl_blocks[:self.element]
-                for item in self.tl_blocks[self.element + 1:self.change]:
-                    new_tl.append(item)
-                new_tl.append(self.tl_blocks[self.element])
-                for item in self.tl_blocks[self.change:]:
-                    new_tl.append(item)
-                self._tl_shift(new_tl)
-                if e.x > 2000:
-                    self.current_pos -= 1
-                    self.timeline_positions.pop(-1)
-                    self.app.c_main.delete(self.tl_blocks[-1][0])
-                    self.app.c_main.delete(self.tl_blocks[-1][1])
-                    self.app.c_main.delete(self.tl_blocks[-1][2])
-
-                    self.tl_blocks.pop(-1)
-                    new_tl.pop(-1)
+        if self.element < self.change:
+            self.change -= 1
+        new_tl = self.tl_blocks[:]
+        poped = new_tl.pop(self.element)
+        new_tl.insert(self.change, poped)
+        self._tl_shift(new_tl)
+        if e.x > 2000:
+            self.current_pos -= 1
+            self.timeline_positions.pop(-1)
+            self.app.c_main.delete(self.tl_blocks[-1][0])
+            self.app.c_main.delete(self.tl_blocks[-1][1])
+            self.app.c_main.delete(self.tl_blocks[-1][2])
+            self.tl_blocks.pop(-1)
+            new_tl.pop(-1)
 
         self.tl_to_file()
 
@@ -518,7 +566,7 @@ class Setup2:
             self.app.c_main.itemconfigure(self.tl_blocks[i][1], text=blocks[i][1])
             self.app.c_main.itemconfigure(self.tl_blocks[i][2], text=blocks[i][2])
 
-    def _move(self, arr, e):
+    def _track(self, arr, e):
         self.app.c_main.itemconfigure(self.pointer, state='normal')
         self.app.c_main.moveto(arr[self.element][0], e.x - 100, 1187)
         self.app.c_main.moveto(arr[self.element][1], e.x - 50, 1220)
@@ -530,52 +578,54 @@ class Setup2:
 
     # recent blocks
     def rc_from_file(self):
-        self.rc_blocks = []
         if os.path.isfile("data/blocks.txt"):
             with open("data/blocks.txt", "r") as file:
-                xd = file.readlines()
-                for i in range(0, len(xd), 3):
-                    self.rc_blocks.append([xd[i].strip(), xd[i + 1].strip(), xd[i + 2].strip()])
+                lines = file.readlines()
+
+                for i in range(0, len(lines), 3):
+                    self.rc_params.append([lines[i].strip(), lines[i + 1].strip(), lines[i + 2].strip()])
         else:
             with open("data/blocks.txt", 'x'):
                 pass
 
-    def rc_to_file(self):
-
-        with open("data/blocks.txt", "r+") as file:
+    def to_file(self):
+        with open(f"data/{self.blocks_files[self.category]}", "r+") as file:
             lines = file.readlines()
-
+        print(self.new_block)
         if len(self.new_block) == 3:
-            if len(lines) < 45:
+            if len(lines) < self.file_length[self.category]:
                 for item in lines[:len(lines)]:
                     self.new_block.append(item.strip())
             else:
-                for item in lines[:42]:
+                for item in lines[:self.file_length[self.category] - 3]:
                     self.new_block.append(item.strip())
 
-            with open('data/blocks.txt', 'w+') as file:
+            with open(f"data/{self.blocks_files[self.category]}", 'w+') as file:
                 for element in self.new_block:
                     file.write('%s\n' % element)
 
     # saved
     def saved_from_file(self):
-        self.rc_blocks = []
-        if os.path.isfile("data/blocks.txt"):
-            with open("data/blocks.txt", "r") as file:
-                xd = file.readlines()
-                for i in range(0, len(xd), 3):
-                    self.rc_blocks.append([xd[i].strip(), xd[i + 1].strip(), xd[i + 2].strip()])
+        if os.path.isfile("data/saved_blocks.txt"):
+            with open("data/saved_blocks.txt", "r") as file:
+                lines = file.readlines()
+                for i in range(0, len(lines), 3):
+                    self.saved_params.append([lines[i].strip(), lines[i + 1].strip(), lines[i + 2].strip()])
+
         else:
-            with open("data/blocks.txt", 'x'):
+            with open("data/saved_blocks.txt", 'x'):
                 pass
 
     # timeline
     def tl_from_file(self):
         if os.path.isfile("data/tl_blocks.txt"):
             with open("data/tl_blocks.txt", 'r') as file:
-                arr = file.readlines()
-            for i in range(0, len(arr), 3):
-                self.tl_params.append([arr[i].strip(), arr[i + 1].strip(), arr[i + 2].strip()])
+                lines = file.readlines()
+            for i in range(0, len(lines), 3):
+                self.tl_params.append([lines[i].strip(), lines[i + 1].strip(), lines[i + 2].strip()])
+        else:
+            with open("data/tl_blocks.txt", 'x'):
+                pass
 
     def tl_to_file(self):
         with open("data/tl_blocks.txt", "w") as file:
@@ -583,3 +633,16 @@ class Setup2:
                 file.write('%s\n' % self.app.c_main.itemcget(self.tl_blocks[i][0], 'fill'))
                 file.write('%s\n' % self.app.c_main.itemcget(self.tl_blocks[i][1], 'text'))
                 file.write('%s\n' % self.app.c_main.itemcget(self.tl_blocks[i][2], 'text'))
+
+    # def from_file(self, file_name, target_arr):
+    #     print(file_name)
+    #
+    #     if os.path.isfile(file_name):
+    #         with open(file_name, 'r') as file:
+    #             arr = file.readlines()
+    #         for i in range(0, len(arr), 3):
+    #             target_arr.append([arr[i].strip(), arr[i + 1].strip(), arr[i + 2].strip()])
+    #     else:
+    #         with open(file_name, 'x'):
+    #             pass
+    #     print(target_arr)
