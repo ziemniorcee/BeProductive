@@ -23,7 +23,7 @@ class App(CTk):
         self.setup2 = Setup2(self)
 
         self.create_c_sidebar()
-        self.setup2.create_setup2_window()
+        self.main.create_main_window()
 
     # create elements
     def create_c_main(self):

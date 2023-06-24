@@ -271,7 +271,7 @@ class Setup2:
         self.width = [3, 5]
 
         self.blocks = [[], []]
-        self.binds = [[self.rc_move, self.press, self.rc_unpress], [self.saved_move, self.press, self.saved_unpress]]
+        self.binds = [[self.rc_move, self.rc_press, self.rc_unpress], [self.saved_move, self.saved_press, self.saved_unpress]]
 
         self.blocks_files = ["blocks.txt", "saved_blocks.txt"]
         self.file_length = [45, 225]
@@ -299,6 +299,10 @@ class Setup2:
         self.saved_create()
 
         # Timeline panel
+        self.tl_bg = self.app.c_main.create_rectangle(50, 1190, 2060, 1290, fill=COL_1, width=0)
+        self.tl_add_text = self.app.c_main.create_text(1055, 1350, font=("Arial", 30), fill=COL_FONT, state="hidden",
+                                                  text="Add to the timeline")
+
         self.app.c_main.create_line(50, 1190, 2060, 1190, fill=COL_2, width=5)
         self.app.c_main.create_line(2010, 1160, 2060, 1190, fill=COL_2, width=5)
         self.app.c_main.create_line(2010, 1220, 2060, 1190, fill=COL_2, width=5)
@@ -379,7 +383,9 @@ class Setup2:
         for item in self.tl_params:
             self.tl_add_block(item[0], item[1], item[2])
 
-    def tl_add_block(self, col, timer, text):
+    def tl_add_block(self, timer, col, text):
+        print(timer)
+        timer = format_time(timer)
         tag = f"tl{self.tag_id}"
         self.tag_id += 1
         block = self.app.c_main.create_rectangle(self.timeline_positions[self.current_pos], 1190,
@@ -424,22 +430,32 @@ class Setup2:
     # binds
 
     # recent blocks binds
-    def press(self, e):
+    def rc_press(self, e):
+        self._press(e)
+        self.app.c_main.itemconfigure(self.add_bg, fill=COL_2)
+        self.app.c_main.itemconfigure(self.add_text, state='normal')
+
+    def saved_press(self, e):
+        self._press(e)
+
+    def _press(self, e):
         block = (e.widget.find_withtag("current")[0])
         self.category, self.element = calculate_category(block, self.blocks)
         i = int(self.element % self.width[self.category])
         j = int(self.element // self.width[self.category])
         self.start_pos = [self.startx[self.category] + i * 250, 225 + 150 * j]
 
+        self.app.c_main.itemconfigure(self.tl_bg, fill="#313131")
+        self.app.c_main.itemconfigure(self.tl_add_text, state="normal")
+
     def rc_move(self, e):
         self._move(e)
         if 800 < e.x < 2110 and 150 < e.y < 1000:
-            self.app.c_main.itemconfigure(self.add_bg, fill=COL_2)
-            self.app.c_main.itemconfigure(self.add_text, state='normal')
+            self.app.c_main.itemconfigure(self.blocks[self.category][self.element][0], outline="green")
         else:
-            self.app.c_main.itemconfigure(self.add_bg, fill=COL_1)
-            self.app.c_main.itemconfigure(self.add_text, state='hidden')
+            self.app.c_main.itemconfigure(self.blocks[self.category][self.element][0], outline=COL_2)
 
+#1055
     def saved_move(self, e):
         self._move(e)
 
@@ -461,6 +477,8 @@ class Setup2:
 
     def rc_unpress(self, e):
         self._unpress(e)
+        self.app.c_main.itemconfigure(self.add_bg, fill=COL_1)
+        self.app.c_main.itemconfigure(self.add_text, state='hidden')
         if 800 < e.x < 2110 and 150 < e.y < 1000:
             self.app.c_main.itemconfigure(self.add_bg, fill=COL_1)
             self.app.c_main.itemconfigure(self.add_text, state='hidden')
@@ -469,7 +487,9 @@ class Setup2:
             col = self.app.c_main.itemcget(self.blocks[self.category][self.element][0], 'fill')
             text = self.app.c_main.itemcget(self.blocks[self.category][self.element][2], 'text')
 
+            print("!", timer)
             timer = deformat_time(timer)
+
             self.new_block = [timer, col, text]
 
             self.category = 1
@@ -496,7 +516,8 @@ class Setup2:
             timer = self.app.c_main.itemcget(self.blocks[self.category][self.element][1], 'text')
             text = self.app.c_main.itemcget(self.blocks[self.category][self.element][2], 'text')
 
-            self.tl_add_block(col, timer, text)
+            timer = deformat_time(timer)
+            self.tl_add_block(timer, col, text)
 
             self.element = len(self.tl_blocks)
 
@@ -506,6 +527,8 @@ class Setup2:
             self._tl_shift(new_tl)
 
             self.tl_to_file()
+        self.app.c_main.itemconfigure(self.tl_bg, fill=COL_1)
+        self.app.c_main.itemconfigure(self.tl_add_text, state="hidden")
 
     # Saved binds
 
@@ -630,19 +653,7 @@ class Setup2:
     def tl_to_file(self):
         with open("data/tl_blocks.txt", "w") as file:
             for i in range(self.current_pos):
+                file.write('%s\n' % deformat_time(self.app.c_main.itemcget(self.tl_blocks[i][1], 'text')))
                 file.write('%s\n' % self.app.c_main.itemcget(self.tl_blocks[i][0], 'fill'))
-                file.write('%s\n' % self.app.c_main.itemcget(self.tl_blocks[i][1], 'text'))
                 file.write('%s\n' % self.app.c_main.itemcget(self.tl_blocks[i][2], 'text'))
 
-    # def from_file(self, file_name, target_arr):
-    #     print(file_name)
-    #
-    #     if os.path.isfile(file_name):
-    #         with open(file_name, 'r') as file:
-    #             arr = file.readlines()
-    #         for i in range(0, len(arr), 3):
-    #             target_arr.append([arr[i].strip(), arr[i + 1].strip(), arr[i + 2].strip()])
-    #     else:
-    #         with open(file_name, 'x'):
-    #             pass
-    #     print(target_arr)
