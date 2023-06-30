@@ -41,3 +41,7 @@ class start_window:
                                  text_color=("gray10", "#DCE4EE"), command=self.app.setup1.create_setup1_window,
                                  corner_radius=100, hover_color=COL_2)
         self.app.c_main.create_window(1080, 800, window=self.b_start, width=400, height=150)
+
+        self.app.setup2.show_timeline()
+
+        self.app.c_main.create_line(555, 1400, 1610, 1400, fill=COL_2, width=6)

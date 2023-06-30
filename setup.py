@@ -1,8 +1,9 @@
-from Data import Date
-from settings import *
 from customtkinter import *
+
+from Data import Date
 from actions import *
 from clock import Clock
+from settings import *
 
 
 class Setup1:
@@ -93,6 +94,7 @@ class Setup1:
         self.goals_texts = []
         for i in range(len(self.goals_widgets)):
             self.goals_texts.append(self.app.c_main.itemcget(self.goals_widgets[i], 'text'))
+        self.save_goals_to_file()
 
     def del_goal(self, event):
         widget_name = event.widget.find_withtag("current")[0]
@@ -113,6 +115,7 @@ class Setup1:
         self.app.setup1.goals_texts = []
         for i in range(len(self.goals_widgets)):
             self.app.setup1.goals_texts.append(self.app.c_main.itemcget(self.goals_widgets[i], 'text'))
+        self.save_goals_to_file()
 
     # binds for adding goals
     def strike_on(self, event):
@@ -238,6 +241,7 @@ class Setup1:
 
                     if str(self.today_data.formatted_date) == lines[0]:
                         self.goals_texts = lines[1:]
+
         else:
             with open("data/goals.txt", 'x'):
                 pass
@@ -258,6 +262,7 @@ class Setup2:
         self.app = root
         self.clock_window = None
         self.is_clock_window_on = False
+        self.today_data = Date()
 
         self.change = 0
 
@@ -271,10 +276,21 @@ class Setup2:
         self.width = [3, 5]
 
         self.blocks = [[], []]
-        self.binds = [[self.rc_move, self.rc_press, self.rc_unpress], [self.saved_move, self.saved_press, self.saved_unpress]]
+        self.binds = [[self.rc_move, self.rc_press, self.rc_unpress],
+                      [self.saved_move, self.saved_press, self.saved_unpress]]
 
         self.blocks_files = ["blocks.txt", "saved_blocks.txt"]
         self.file_length = [45, 225]
+
+        self.category = 0
+        self.pause_value = 0
+        self.current_position = 100
+
+        self.timer = "0:00"
+        self.current_speed = 0
+        self.is_on_main = 1
+
+        self.current_line_len = 555
 
     def create_setup2_window(self):
         self.tag_id = 0
@@ -301,8 +317,17 @@ class Setup2:
         # Timeline panel
         self.tl_bg = self.app.c_main.create_rectangle(50, 1190, 2060, 1290, fill=COL_1, width=0)
         self.tl_add_text = self.app.c_main.create_text(1055, 1350, font=("Arial", 30), fill=COL_FONT, state="hidden",
-                                                  text="Add to the timeline")
+                                                       text="Add to the timeline")
 
+        self._tl_image()
+
+        self.tl_trash = self.app.c_main.create_image(2100, 1240, image=create_imagetk("images/blocks/trash.png"),
+                                                     state="hidden")
+        self.saved_trash = self.app.c_main.create_image(835, 960, image=create_imagetk("images/blocks/trash.png"),
+                                                        state="hidden")
+        self.tl_create()
+
+    def _tl_image(self):
         self.app.c_main.create_line(50, 1190, 2060, 1190, fill=COL_2, width=5)
         self.app.c_main.create_line(2010, 1160, 2060, 1190, fill=COL_2, width=5)
         self.app.c_main.create_line(2010, 1220, 2060, 1190, fill=COL_2, width=5)
@@ -310,11 +335,6 @@ class Setup2:
         self.app.c_main.create_line(50, 1290, 2060, 1290, fill=COL_2, width=5)
         self.app.c_main.create_line(2010, 1260, 2060, 1290, fill=COL_2, width=5)
         self.app.c_main.create_line(2010, 1320, 2060, 1290, fill=COL_2, width=5)
-
-        self.trash = self.app.c_main.create_image(2100, 1240, image=create_imagetk("images/blocks/trash.png"),
-                                                  state="hidden")
-
-        self.tl_create()
 
     def rc_create(self):
         self.rc_params = []
@@ -383,8 +403,7 @@ class Setup2:
         for item in self.tl_params:
             self.tl_add_block(item[0], item[1], item[2])
 
-    def tl_add_block(self, timer, col, text):
-        print(timer)
+    def tl_add_block(self, timer, col, text, move=1):
         timer = format_time(timer)
         tag = f"tl{self.tag_id}"
         self.tag_id += 1
@@ -397,10 +416,11 @@ class Setup2:
         block_text = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1270,
                                                  text=text, font=("Arial", 15), fill=COL_FONT, tags=tag)
 
-        self.app.c_main.tag_bind(tag, "<B1-Motion>", self.tl_move)
+        if move:
+            self.app.c_main.tag_bind(tag, "<B1-Motion>", self.tl_move)
 
-        self.app.c_main.tag_bind(tag, "<Button-1>", self.tl_press)
-        self.app.c_main.tag_bind(tag, "<ButtonRelease-1>", self.tl_unpress)
+            self.app.c_main.tag_bind(tag, "<Button-1>", self.tl_press)
+            self.app.c_main.tag_bind(tag, "<ButtonRelease-1>", self.tl_unpress)
 
         self.tl_blocks.append([block, block_time, block_text])
 
@@ -437,6 +457,7 @@ class Setup2:
 
     def saved_press(self, e):
         self._press(e)
+        self.app.c_main.itemconfigure(self.saved_trash, state='normal')
 
     def _press(self, e):
         block = (e.widget.find_withtag("current")[0])
@@ -455,9 +476,12 @@ class Setup2:
         else:
             self.app.c_main.itemconfigure(self.blocks[self.category][self.element][0], outline=COL_2)
 
-#1055
     def saved_move(self, e):
         self._move(e)
+        if 735 < e.x < 935 and 900 < e.y < 1020:
+            self.app.c_main.itemconfigure(self.blocks[1][self.element][0], outline="red")
+        else:
+            self.app.c_main.itemconfigure(self.blocks[1][self.element][0], outline=COL_2)
 
     def _move(self, e):
 
@@ -487,7 +511,6 @@ class Setup2:
             col = self.app.c_main.itemcget(self.blocks[self.category][self.element][0], 'fill')
             text = self.app.c_main.itemcget(self.blocks[self.category][self.element][2], 'text')
 
-            print("!", timer)
             timer = deformat_time(timer)
 
             self.new_block = [timer, col, text]
@@ -499,6 +522,18 @@ class Setup2:
 
     def saved_unpress(self, e):
         self._unpress(e)
+        self.app.c_main.itemconfigure(self.saved_trash, state='hidden')
+        if 735 < e.x < 935 and 900 < e.y < 1020:
+            self._delete_saved()
+
+    def _delete_saved(self):
+        self.saved_params.remove(self.saved_params[self.element])
+
+        with open("data/saved_blocks.txt", "w") as file:
+            for block in self.saved_params:
+                for item in block:
+                    file.write('%s\n' % item)
+        self.create_setup2_window()
 
     def _unpress(self, e):
         if self.pointer is not None:
@@ -510,7 +545,6 @@ class Setup2:
         self.app.c_main.coords(self.blocks[self.category][self.element][2], self.start_pos[0] + 100,
                                self.start_pos[1] + 85)
 
-        # TODO zmienic format tl
         if 1090 < e.y < 1390:
             col = self.app.c_main.itemcget(self.blocks[self.category][self.element][0], 'fill')
             timer = self.app.c_main.itemcget(self.blocks[self.category][self.element][1], 'text')
@@ -538,7 +572,7 @@ class Setup2:
         self.element = calculate_element(block, self.tl_blocks)
 
         self.app.c_main.itemconfigure(self.pointer, state='normal')
-        self.app.c_main.itemconfigure(self.trash, state="normal")
+        self.app.c_main.itemconfigure(self.tl_trash, state="normal")
 
     def tl_move(self, e):
         if 1090 < e.y < 1390:
@@ -549,7 +583,7 @@ class Setup2:
             self.app.c_main.itemconfigure(self.tl_blocks[self.element][0], outline=COL_2)
 
     def tl_unpress(self, e):
-        self.app.c_main.itemconfigure(self.trash, state="hidden")
+        self.app.c_main.itemconfigure(self.tl_trash, state="hidden")
         self.app.c_main.itemconfigure(self.pointer, state='hidden')
         self.app.c_main.itemconfigure(self.tl_blocks[self.element][0], outline=COL_2)
 
@@ -614,7 +648,6 @@ class Setup2:
     def to_file(self):
         with open(f"data/{self.blocks_files[self.category]}", "r+") as file:
             lines = file.readlines()
-        print(self.new_block)
         if len(self.new_block) == 3:
             if len(lines) < self.file_length[self.category]:
                 for item in lines[:len(lines)]:
@@ -644,16 +677,157 @@ class Setup2:
         if os.path.isfile("data/tl_blocks.txt"):
             with open("data/tl_blocks.txt", 'r') as file:
                 lines = file.readlines()
-            for i in range(0, len(lines), 3):
-                self.tl_params.append([lines[i].strip(), lines[i + 1].strip(), lines[i + 2].strip()])
+
+                if len(lines) != 0:
+
+                    if str(self.today_data.formatted_date) == lines[0][:-1]:
+
+                        for i in range(1, len(lines), 3):
+                            self.tl_params.append([lines[i].strip(), lines[i + 1].strip(), lines[i + 2].strip()])
         else:
             with open("data/tl_blocks.txt", 'x'):
                 pass
 
     def tl_to_file(self):
         with open("data/tl_blocks.txt", "w") as file:
+            file.write(f"{self.today_data.formatted_date}\n")
             for i in range(self.current_pos):
                 file.write('%s\n' % deformat_time(self.app.c_main.itemcget(self.tl_blocks[i][1], 'text')))
                 file.write('%s\n' % self.app.c_main.itemcget(self.tl_blocks[i][0], 'fill'))
                 file.write('%s\n' % self.app.c_main.itemcget(self.tl_blocks[i][2], 'text'))
 
+    # methods for main window
+
+    def show_timeline(self):
+        self.tag_id = 0
+        self.current_pos = 0
+        self.timeline_positions = [100]
+        self.tl_blocks = []
+        self.tl_params = []
+
+        self.current_block = 0
+
+        self._tl_image()
+        self.tl_from_file()
+
+        for item in self.tl_params:
+            self.tl_add_block(item[0], item[1], item[2], 0)
+
+        img = CTkImage(light_image=Image.open("images/timeline/play.png"), size=(50, 50))
+        self.play_pause = CTkButton(self.app, image=img, text="", fg_color=COL_1, hover_color=COL_1,
+                                    command=self.start_timer)
+        self.app.c_main.create_window(1055, 1350, window=self.play_pause, width=70, height=70)
+
+        img = CTkImage(light_image=Image.open("images/timeline/next.png"), size=(25, 25))
+        self.next = CTkButton(self.app, image=img, text="", fg_color=COL_1, hover_color=COL_2, command=self.next_block)
+        self.app.c_main.create_window(1155, 1350, window=self.next, width=40, height=40)
+
+        img = CTkImage(light_image=Image.open("images/timeline/previous.png"), size=(25, 25))
+        self.previous = CTkButton(self.app, image=img, text="", fg_color=COL_1, hover_color=COL_2,
+                                  command=self.prev_block)
+        self.app.c_main.create_window(955, 1350, window=self.previous, width=40, height=40)
+
+        self.time_current = self.app.c_main.create_text(500, 1400, text=f"{self.timer}", font=("Arial", 20),
+                                                        fill=COL_FONT)
+        self.block_len = self.app.c_main.create_text(1665, 1400, text="0:00", font=("Arial", 20), fill=COL_FONT)
+        self.current = self.app.c_main.create_line(self.current_position, 1160, self.current_position, 1320,
+                                                   fill=COL_FONT, width=5)
+        self.line_length = self.app.c_main.create_line(555, 1400, 555, 1400, fill=COL_FONT, width=8)
+        self.app.c_main.tag_raise(self.line_length)
+
+        self.play_pause.bind("<Button-1>", self.play_pause_enter)
+        if len(self.tl_params) > 0:
+            self.time = int(self.tl_params[self.current_block][0])
+            self.app.c_main.itemconfigure(self.block_len, text=f"{self.time}:00")
+            self.on = False
+
+        if self.is_on_main == 0:
+            self.count_down(self.current_time)
+            self.on = not self.on
+            self._change_img("pause")
+
+        if self.current_pos == 0:
+            self.play_pause.configure(state="disabled")
+
+    def start_timer(self):
+        self.block_change = 0
+        self.play_pause.configure(command=None)
+        self.app.after(500, lambda: self.play_pause.configure(command=self.start_timer))
+
+        self.on = not self.on
+
+        if self.on:
+            self._change_img("pause")
+            self.time = int(self.tl_params[self.current_block][0])
+            self.current_speed = 200 / (self.time * 60)
+            self.line_speed = 1000 / (self.time * 60)
+
+            if self.pause_value == 0:
+                self.count_down(0)
+            else:
+                self.count_down(self.current_time)
+
+    def count_down(self, count):
+        if self.block_change != 1:
+            count_min = int(count / 60)
+            count_sec = count % 60
+            if count_sec < 10:
+                count_sec = f"0{count_sec}"
+
+            if count < self.time * 60 and self.on:
+                self.timer = f"{count_min}:{count_sec}"
+
+                if self.current in self.app.c_main.find_all():
+                    self.app.c_main.itemconfigure(self.time_current, text=self.timer)
+                    self.app.c_main.coords(self.current, self.current_position, 1160, self.current_position, 1320)
+                    self.app.c_main.coords(self.line_length, 555, 1400, self.current_line_len, 1400)
+                    self.is_on_main = 1
+                    self.pause_value = count
+                else:
+                    self.is_on_main = 0
+                self.current_time = count + 1
+
+                self.app.after(1000, self.count_down, count + 1)
+
+                self.current_position += self.current_speed
+                self.current_line_len += self.line_speed
+            elif not count < self.time * 60:
+                self.next_block()
+            else:
+                self.pause_value = count
+                self._change_img("play")
+            self.block_change = 0
+
+    def _change_img(self, file):
+        img = CTkImage(light_image=Image.open(f"images/timeline/{file}.png"), size=(50, 50))
+        self.play_pause.configure(image=img)
+
+    def next_block(self):
+        if len(self.tl_params) - 1 > self.current_block:
+            self.current_block += 1
+            self._reset()
+
+    def prev_block(self):
+        if self.current_block > 0 and self.current_time == 0:
+            self.current_block -= 1
+            self._reset()
+        elif self.current_time != 0:
+            self._reset()
+
+    def _reset(self):
+        self.current_position = 100 + self.current_block * 200
+        self.app.c_main.itemconfigure(self.block_len, text=f"{self.tl_params[self.current_block][0]}:00")
+        self.app.c_main.itemconfigure(self.time_current, text=f"00:00")
+        self.pause_value = 0
+        self._change_img("play")
+        self.app.c_main.coords(self.line_length, 555, 1400, 555, 1400)
+        self.app.c_main.coords(self.current, self.current_position, 1160, self.current_position, 1320)
+        self.current_time = 0
+        self.block_change = 1
+        self.current_line_len = 555
+        self.on = not self.on
+
+    # binds
+    def play_pause_enter(self, e):
+        self.play_pause.configure(hover_color=COL_2)
+        self.app.after(300, lambda: self.play_pause.configure(hover_color=COL_1))
