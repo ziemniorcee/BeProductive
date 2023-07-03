@@ -12,6 +12,7 @@ class start_window:
         self.weather_data = Weather()
 
     def create_main_window(self):
+        self.app.page = 0
         self.app.setup1.goals_site = 0
         self.app.create_c_main()
         self.app.setup1.show_goals()
@@ -36,12 +37,25 @@ class start_window:
         self.app.c_main.create_text(1080, 260, text=f"Feels like: {self.weather_data.temperature[1]}",
                                     font=("Arial", 15),
                                     fill=COL_FONT)
-        self.b_start = CTkButton(self.app, text="Plan your day", fg_color="transparent", font=("Arial", 50),
+        self.app.setup2.show_timeline()
+
+        self._make_b_start()
+        self.app.c_main.create_window(1080, 800, window=self.b_start, width=400, height=150)
+
+        self.app.c_main.create_line(555, 1330, 1610, 1330, fill=COL_2, width=6)
+
+    def _make_b_start(self):
+        option = 3
+        texts = ["Plan your day", "Create goals", "Create blocks", "Configure setup"]
+
+        if len(self.app.setup1.goals_texts) == 0 and self.app.setup2.tl_blocks == 0:
+            option = 0
+        elif len(self.app.setup1.goals_texts) == 0:
+            option = 1
+        elif len(self.app.setup2.tl_blocks) == 0:
+            option = 2
+
+        self.b_start = CTkButton(self.app, text=texts[option], fg_color="transparent", font=("Arial", 50),
                                  border_width=12, border_color=COL_2,
                                  text_color=("gray10", "#DCE4EE"), command=self.app.setup1.create_setup1_window,
                                  corner_radius=100, hover_color=COL_2)
-        self.app.c_main.create_window(1080, 800, window=self.b_start, width=400, height=150)
-
-        self.app.setup2.show_timeline()
-
-        self.app.c_main.create_line(555, 1400, 1610, 1400, fill=COL_2, width=6)

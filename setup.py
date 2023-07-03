@@ -27,6 +27,7 @@ class Setup1:
         self.goals_from_file()
 
     def create_setup1_window(self):
+        self.app.page = 1
         self.app.create_c_main()
 
         self.goals_widgets = []
@@ -43,16 +44,16 @@ class Setup1:
 
         self.e_todo = CTkEntry(self.app, font=FONT_TEXT)
         self.e_todo.focus()
-        self.app.c_main.create_window(1030, 1365, window=self.e_todo, width=1760, height=50)
+        self.app.c_main.create_window(1030, 1295, window=self.e_todo, width=1760, height=50)
         self.b_add = CTkButton(self.app, text="+", font=FONT_ADD, fg_color=COL_2,
                                command=self.add_goal, border_width=5, hover_color=COL_1,
                                border_color=COL_2)
-        self.app.c_main.create_window(75, 1365, window=self.b_add, height=50, width=50)
+        self.app.c_main.create_window(75, 1295, window=self.b_add, height=50, width=50)
 
         self.b_yes = CTkButton(self.app, text="Submit", font=FONT, fg_color=COL_2,
                                hover_color=COL_1, border_color=COL_2, border_width=5,
                                command=self.app.setup2.create_setup2_window)
-        self.app.c_main.create_window(2035, 1365, window=self.b_yes, width=150, height=50)
+        self.app.c_main.create_window(2035, 1295, window=self.b_yes, width=150, height=50)
 
         self.dots = self.app.c_main.create_image(125, 210, image=create_imagetk("images/goals/dots.png"),
                                                  tags=("dots",),
@@ -265,11 +266,9 @@ class Setup2:
         self.today_data = Date()
 
         self.change = 0
-
-        self.rc_params = []
+        self.tag_id = 0
         self.new_block = None
-
-        self.saved_params = []
+        self.rc_params = []
 
         self.create_mode = 0
         self.startx = [75, 825]
@@ -291,9 +290,11 @@ class Setup2:
         self.is_on_main = 1
 
         self.current_line_len = 555
+        self.timeline_positions = [100]
 
     def create_setup2_window(self):
-        self.tag_id = 0
+        self.app.page = 2
+
         self.create_mode = 0
         self.app.create_c_main()
         self.app.c_main.create_text(1080, 60, text="Create focus timeline", font=("Arial", 40), fill=COL_FONT)
@@ -315,26 +316,31 @@ class Setup2:
         self.saved_create()
 
         # Timeline panel
-        self.tl_bg = self.app.c_main.create_rectangle(50, 1190, 2060, 1290, fill=COL_1, width=0)
-        self.tl_add_text = self.app.c_main.create_text(1055, 1350, font=("Arial", 30), fill=COL_FONT, state="hidden",
+        self.tl_bg = self.app.c_main.create_rectangle(50, 1120, 2060, 1220, fill=COL_1, width=0)
+        self.tl_add_text = self.app.c_main.create_text(1055, 1280, font=("Arial", 30), fill=COL_FONT, state="hidden",
                                                        text="Add to the timeline")
 
         self._tl_image()
 
-        self.tl_trash = self.app.c_main.create_image(2100, 1240, image=create_imagetk("images/blocks/trash.png"),
+        self.tl_trash = self.app.c_main.create_image(2100, 1170, image=create_imagetk("images/blocks/trash.png"),
                                                      state="hidden")
         self.saved_trash = self.app.c_main.create_image(835, 960, image=create_imagetk("images/blocks/trash.png"),
                                                         state="hidden")
         self.tl_create()
 
-    def _tl_image(self):
-        self.app.c_main.create_line(50, 1190, 2060, 1190, fill=COL_2, width=5)
-        self.app.c_main.create_line(2010, 1160, 2060, 1190, fill=COL_2, width=5)
-        self.app.c_main.create_line(2010, 1220, 2060, 1190, fill=COL_2, width=5)
+        self.b_yes = CTkButton(self.app, text="Submit", font=FONT, fg_color=COL_2,
+                               hover_color=COL_1, border_color=COL_2, border_width=5,
+                               command=self.app.main.create_main_window)
+        self.app.c_main.create_window(2035, 1295, window=self.b_yes, width=150, height=50)
 
-        self.app.c_main.create_line(50, 1290, 2060, 1290, fill=COL_2, width=5)
-        self.app.c_main.create_line(2010, 1260, 2060, 1290, fill=COL_2, width=5)
-        self.app.c_main.create_line(2010, 1320, 2060, 1290, fill=COL_2, width=5)
+    def _tl_image(self):
+        self.app.c_main.create_line(50, 1120, 2060, 1120, fill=COL_2, width=5)
+        self.app.c_main.create_line(2010, 1090, 2060, 1120, fill=COL_2, width=5)
+        self.app.c_main.create_line(2010, 1150, 2060, 1120, fill=COL_2, width=5)
+
+        self.app.c_main.create_line(50, 1220, 2060, 1220, fill=COL_2, width=5)
+        self.app.c_main.create_line(2010, 1190, 2060, 1220, fill=COL_2, width=5)
+        self.app.c_main.create_line(2010, 1250, 2060, 1220, fill=COL_2, width=5)
 
     def rc_create(self):
         self.rc_params = []
@@ -395,10 +401,9 @@ class Setup2:
         self.tl_params = []
         self.current_pos = 0
 
-        self.timeline_positions = [100]
-        self.pointer = self.app.c_main.create_line(self.timeline_positions[self.current_pos], 1140,
+        self.pointer = self.app.c_main.create_line(self.timeline_positions[self.current_pos], 1070,
                                                    self.timeline_positions[self.current_pos],
-                                                   1340, fill="#155255", width=5, state="hidden")
+                                                   1270, fill="#155255", width=5, state="hidden")
         self.tl_from_file()
         for item in self.tl_params:
             self.tl_add_block(item[0], item[1], item[2])
@@ -407,13 +412,13 @@ class Setup2:
         timer = format_time(timer)
         tag = f"tl{self.tag_id}"
         self.tag_id += 1
-        block = self.app.c_main.create_rectangle(self.timeline_positions[self.current_pos], 1190,
+        block = self.app.c_main.create_rectangle(self.timeline_positions[self.current_pos], 1120,
                                                  self.timeline_positions[self.current_pos] + 200,
-                                                 1290, fill=col, outline=COL_2, width=5, tags=tag)
+                                                 1220, fill=col, outline=COL_2, width=5, tags=tag)
 
-        block_time = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1240,
+        block_time = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1170,
                                                  text=timer, font=FONT, fill=COL_FONT, tags=tag)
-        block_text = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1270,
+        block_text = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1200,
                                                  text=text, font=("Arial", 15), fill=COL_FONT, tags=tag)
 
         if move:
@@ -431,9 +436,9 @@ class Setup2:
         i = 0
         for pos in self.timeline_positions:
             if x - 100 <= pos < x + 100:
-                self.app.c_main.coords(self.pointer, self.timeline_positions[i], 1140,
+                self.app.c_main.coords(self.pointer, self.timeline_positions[i], 1070,
                                        self.timeline_positions[i],
-                                       1340)
+                                       1270)
                 self.change = i
                 break
 
@@ -441,6 +446,7 @@ class Setup2:
 
     # from other classes
     def clock_on_closing(self):
+        self.category = 0
         if self.new_block is not None:
             self.to_file()
             self.create_setup2_window()
@@ -536,6 +542,7 @@ class Setup2:
         self.create_setup2_window()
 
     def _unpress(self, e):
+
         if self.pointer is not None:
             self.app.c_main.itemconfigure(self.pointer, state='hidden')
 
@@ -545,6 +552,7 @@ class Setup2:
         self.app.c_main.coords(self.blocks[self.category][self.element][2], self.start_pos[0] + 100,
                                self.start_pos[1] + 85)
 
+        new_tl = []
         if 1090 < e.y < 1390:
             col = self.app.c_main.itemcget(self.blocks[self.category][self.element][0], 'fill')
             timer = self.app.c_main.itemcget(self.blocks[self.category][self.element][1], 'text')
@@ -560,7 +568,11 @@ class Setup2:
             new_tl.insert(self.change, poped)
             self._tl_shift(new_tl)
 
+        if self.element != self.change:
+            self.begin()
             self.tl_to_file()
+
+
         self.app.c_main.itemconfigure(self.tl_bg, fill=COL_1)
         self.app.c_main.itemconfigure(self.tl_add_text, state="hidden")
 
@@ -587,17 +599,21 @@ class Setup2:
         self.app.c_main.itemconfigure(self.pointer, state='hidden')
         self.app.c_main.itemconfigure(self.tl_blocks[self.element][0], outline=COL_2)
 
-        self.app.c_main.coords(self.tl_blocks[self.element][0], self.timeline_positions[self.element], 1190,
-                               self.timeline_positions[self.element] + 200, 1290)
-        self.app.c_main.coords(self.tl_blocks[self.element][1], self.timeline_positions[self.element] + 100, 1240)
-        self.app.c_main.coords(self.tl_blocks[self.element][2], self.timeline_positions[self.element] + 100, 1270)
+        self.app.c_main.coords(self.tl_blocks[self.element][0], self.timeline_positions[self.element], 1120,
+                               self.timeline_positions[self.element] + 200, 1220)
+        self.app.c_main.coords(self.tl_blocks[self.element][1], self.timeline_positions[self.element] + 100, 1170)
+        self.app.c_main.coords(self.tl_blocks[self.element][2], self.timeline_positions[self.element] + 100, 1200)
 
         if self.element < self.change:
             self.change -= 1
         new_tl = self.tl_blocks[:]
         poped = new_tl.pop(self.element)
         new_tl.insert(self.change, poped)
+
+        if self.element != self.change:
+            self.begin()
         self._tl_shift(new_tl)
+
         if e.x > 2000:
             self.current_pos -= 1
             self.timeline_positions.pop(-1)
@@ -616,18 +632,20 @@ class Setup2:
             col = self.app.c_main.itemcget(arr[i][0], 'fill')
             text = self.app.c_main.itemcget(arr[i][1], 'text')
             time = self.app.c_main.itemcget(arr[i][2], 'text')
+
             blocks.append([col, text, time])
 
         for i in range(self.current_pos):
+            print(self.current_pos)
             self.app.c_main.itemconfigure(self.tl_blocks[i][0], fill=blocks[i][0])
             self.app.c_main.itemconfigure(self.tl_blocks[i][1], text=blocks[i][1])
             self.app.c_main.itemconfigure(self.tl_blocks[i][2], text=blocks[i][2])
 
     def _track(self, arr, e):
         self.app.c_main.itemconfigure(self.pointer, state='normal')
-        self.app.c_main.moveto(arr[self.element][0], e.x - 100, 1187)
-        self.app.c_main.moveto(arr[self.element][1], e.x - 50, 1220)
-        self.app.c_main.coords(arr[self.element][2], e.x, 1270)
+        self.app.c_main.moveto(arr[self.element][0], e.x - 100, 1117)
+        self.app.c_main.moveto(arr[self.element][1], e.x - 50, 1150)
+        self.app.c_main.coords(arr[self.element][2], e.x, 1200)
 
         self.get_change(e.x)
 
@@ -699,12 +717,10 @@ class Setup2:
     # methods for main window
 
     def show_timeline(self):
-        self.tag_id = 0
         self.current_pos = 0
         self.timeline_positions = [100]
         self.tl_blocks = []
         self.tl_params = []
-
         self.current_block = 0
 
         self._tl_image()
@@ -716,23 +732,23 @@ class Setup2:
         img = CTkImage(light_image=Image.open("images/timeline/play.png"), size=(50, 50))
         self.play_pause = CTkButton(self.app, image=img, text="", fg_color=COL_1, hover_color=COL_1,
                                     command=self.start_timer)
-        self.app.c_main.create_window(1055, 1350, window=self.play_pause, width=70, height=70)
+        self.app.c_main.create_window(1055, 1280, window=self.play_pause, width=70, height=70)
 
         img = CTkImage(light_image=Image.open("images/timeline/next.png"), size=(25, 25))
         self.next = CTkButton(self.app, image=img, text="", fg_color=COL_1, hover_color=COL_2, command=self.next_block)
-        self.app.c_main.create_window(1155, 1350, window=self.next, width=40, height=40)
+        self.app.c_main.create_window(1155, 1280, window=self.next, width=40, height=40)
 
         img = CTkImage(light_image=Image.open("images/timeline/previous.png"), size=(25, 25))
         self.previous = CTkButton(self.app, image=img, text="", fg_color=COL_1, hover_color=COL_2,
                                   command=self.prev_block)
-        self.app.c_main.create_window(955, 1350, window=self.previous, width=40, height=40)
+        self.app.c_main.create_window(955, 1280, window=self.previous, width=40, height=40)
 
-        self.time_current = self.app.c_main.create_text(500, 1400, text=f"{self.timer}", font=("Arial", 20),
+        self.time_current = self.app.c_main.create_text(500, 1330, text=f"{self.timer}", font=("Arial", 20),
                                                         fill=COL_FONT)
-        self.block_len = self.app.c_main.create_text(1665, 1400, text="0:00", font=("Arial", 20), fill=COL_FONT)
-        self.current = self.app.c_main.create_line(self.current_position, 1160, self.current_position, 1320,
+        self.block_len = self.app.c_main.create_text(1665, 1330, text="0:00", font=("Arial", 20), fill=COL_FONT)
+        self.current = self.app.c_main.create_line(self.current_position, 1090, self.current_position, 1250,
                                                    fill=COL_FONT, width=5)
-        self.line_length = self.app.c_main.create_line(555, 1400, 555, 1400, fill=COL_FONT, width=8)
+        self.line_length = self.app.c_main.create_line(555, 1330, 555, 1330, fill=COL_FONT, width=8)
         self.app.c_main.tag_raise(self.line_length)
 
         self.play_pause.bind("<Button-1>", self.play_pause_enter)
@@ -751,10 +767,10 @@ class Setup2:
 
     def start_timer(self):
         self.block_change = 0
+        self.on = not self.on
+
         self.play_pause.configure(command=None)
         self.app.after(500, lambda: self.play_pause.configure(command=self.start_timer))
-
-        self.on = not self.on
 
         if self.on:
             self._change_img("pause")
@@ -773,18 +789,13 @@ class Setup2:
             count_sec = count % 60
             if count_sec < 10:
                 count_sec = f"0{count_sec}"
-
             if count < self.time * 60 and self.on:
                 self.timer = f"{count_min}:{count_sec}"
-
-                if self.current in self.app.c_main.find_all():
+                if self.app.page == 0:
                     self.app.c_main.itemconfigure(self.time_current, text=self.timer)
-                    self.app.c_main.coords(self.current, self.current_position, 1160, self.current_position, 1320)
-                    self.app.c_main.coords(self.line_length, 555, 1400, self.current_line_len, 1400)
-                    self.is_on_main = 1
+                    self.app.c_main.coords(self.current, self.current_position, 1090, self.current_position, 1250)
+                    self.app.c_main.coords(self.line_length, 555, 1330, self.current_line_len, 1330)
                     self.pause_value = count
-                else:
-                    self.is_on_main = 0
                 self.current_time = count + 1
 
                 self.app.after(1000, self.count_down, count + 1)
@@ -803,16 +814,31 @@ class Setup2:
         self.play_pause.configure(image=img)
 
     def next_block(self):
+        self.play_pause.configure(command=None)
+        self.app.after(500, lambda: self.play_pause.configure(command=self.start_timer))
         if len(self.tl_params) - 1 > self.current_block:
             self.current_block += 1
             self._reset()
 
     def prev_block(self):
+        self.play_pause.configure(command=None)
+        self.app.after(500, lambda: self.play_pause.configure(command=self.start_timer))
         if self.current_block > 0 and self.current_time == 0:
             self.current_block -= 1
             self._reset()
         elif self.current_time != 0:
             self._reset()
+
+    def begin(self):
+        self.current_block = 0
+        self.current_position = 100 + self.current_block * 200
+        self.pause_value = 0
+        self._change_img("play")
+        self.current_time = 0
+        self.block_change = 1
+        self.current_line_len = 555
+        self.timer = "0:00"
+        self.on = False
 
     def _reset(self):
         self.current_position = 100 + self.current_block * 200
@@ -821,11 +847,11 @@ class Setup2:
         self.pause_value = 0
         self._change_img("play")
         self.app.c_main.coords(self.line_length, 555, 1400, 555, 1400)
-        self.app.c_main.coords(self.current, self.current_position, 1160, self.current_position, 1320)
+        self.app.c_main.coords(self.current, self.current_position, 1090, self.current_position, 1250)
         self.current_time = 0
         self.block_change = 1
         self.current_line_len = 555
-        self.on = not self.on
+        self.on = False
 
     # binds
     def play_pause_enter(self, e):
