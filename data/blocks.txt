@@ -1,12 +1,18 @@
-15
-#ffa8e0
-tst
+60
+#870a98
+xdxd
+60
+#215365
+Reading
+60
+#6e5204
+Gym
+60
+#ff671d
+granie wlola
 50
 #0b84ff
 test
-27
-#98ffe0
-xd
 1
 #ff9a4f
 test

@@ -4,8 +4,8 @@ from Data import Date, Weather
 from actions import *
 from settings import *
 from setup import Setup1, Setup2
-from start import start_window
-
+from start import Start_window
+from habit import Habit_tracker
 
 class App(CTk):
     def __init__(self):
@@ -21,9 +21,10 @@ class App(CTk):
         self.weather_data = Weather()
         self.c_main = None
 
-        self.main = start_window(self)
+        self.main = Start_window(self)
         self.setup1 = Setup1(self)
         self.setup2 = Setup2(self)
+        self.habit = Habit_tracker(self)
         self.page = 0
 
         self.create_c_sidebar()
@@ -44,6 +45,11 @@ class App(CTk):
                                    bg_color=COL_2, hover_color="black", border_color=COL_2,
                                    border_width=10, command=self.main.create_main_window)
         self.c_sidebar.create_window(200, 100, window=self.b_dayinfo, width=300, height=100)
+        self.b_habit_tracker = CTkButton(self, text="Habit Tracker", font=("Arial", 40), fg_color=COL_2,
+                                         bg_color=COL_2, hover_color="black", border_color=COL_2,
+                                         border_width=10, command=self.habit.create_habit_window)
+        self.c_sidebar.create_window(200, 225, window=self.b_habit_tracker, width=300, height=100)
+
         self.c_sidebar.create_image(200, 1230, image=create_imagetk("images/line.png", 350, 100))
         self.c_sidebar.create_text(260, 1300, text=f" {self.today_data.formatted_date} ", font=FONT, fill=COL_FONT)
         self.c_sidebar.create_image(90, 1300, image=create_imagetk(self.weather_data.image, 150, 150))

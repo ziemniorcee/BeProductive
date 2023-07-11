@@ -27,7 +27,6 @@ class Clock(CTkToplevel):
         self.window = 0
         self.color = None
 
-
         self.b_prev = None
         self.b_next = None
         self.create_setup2_clock()
