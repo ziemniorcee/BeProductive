@@ -4,7 +4,7 @@ from customtkinter import *
 from Data import Date, Weather
 
 
-class start_window:
+class Start_window:
     def __init__(self, root):
         self.app = root
 
@@ -17,7 +17,7 @@ class start_window:
         self.app.create_c_main()
         self.app.setup1.widget_goals()
         self.app.c_main.create_text(400, 185, text="Goals for today", font=("Arial", 30), fill=COL_FONT)
-        self.app.c_main.create_image(400, 210, image=create_imagetk("images/line.png", 300, 100))
+        self.app.c_main.create_line(250, 210, 550, 210, fill=COL_2, width=5)
 
         img = CTkImage(light_image=Image.open("images/goals/up2.png"), size=(50, 50))
         self.arr_up = CTkButton(self.app, image=img, text="",
@@ -26,6 +26,7 @@ class start_window:
 
         self.app.c_main.create_window(575, 190, window=self.arr_up, width=70, height=70)
         img = CTkImage(light_image=Image.open("images/goals/down2.png"), size=(50, 50))
+        
         self.arr_down = CTkButton(self.app, image=img, text="",
                                   fg_color=COL_1, hover_color=COL_2,
                                   command=lambda: self.app.setup1.widget_goals(1))
@@ -38,13 +39,13 @@ class start_window:
                                     font=("Arial", 15),
                                     fill=COL_FONT)
         self.app.setup2.widget_timeline()
-
-        self._make_b_start()
+        self._b_start_make()
         self.app.c_main.create_window(1080, 800, window=self.b_start, width=400, height=150)
-
         self.app.c_main.create_line(555, 1330, 1555, 1330, fill=COL_2, width=6)
 
-    def _make_b_start(self):
+        self.app.habit.widget_habits()
+
+    def _b_start_make(self):
         option = 3
         texts = ["Plan your day", "Create goals", "Create blocks", "Configure setup"]
 

@@ -37,7 +37,7 @@ class Setup1:
                 self.show_goal(goal)
 
         self.app.c_main.create_text(1080, 60, text="Create goals for today", font=FONT, fill=COL_FONT)
-        self.app.c_main.create_image(1080, 100, image=create_imagetk("images/line.png", 450, 150))
+        self.app.c_main.create_line(870, 100, 1290, 100, fill=COL_2, width=8)
         self.app.c_main.create_image(75, 750, image=create_imagetk("images/goals/arrow.png", ))
         self.app.c_main.create_text(20, 750, text="Importance", font=FONT, fill=COL_FONT, anchor="nw",
                                     angle=90)
@@ -74,7 +74,6 @@ class Setup1:
         self.e_todo.configure(validate="key", validatecommand=(reg, '%P'))
 
     def show_goal(self, text):
-        print("xd")
         i = len(self.goals_widgets) + 1
         goal = self.app.c_main.create_text(150, 140 + i * 60, text=f"{text}",
                                            font=FONT_TEXT,
@@ -187,7 +186,6 @@ class Setup1:
             self.shadow_line_position -= 1
         self.goals_texts.remove(text)
         self.goals_texts.insert(self.shadow_line_position, text)
-        print(self.shadow_line_position)
 
         for i in range(len(self.goals_widgets)):
             self.app.c_main.itemconfigure(self.goals_widgets[i], text=self.goals_texts[i])
@@ -291,8 +289,8 @@ class Setup2:
         self.app.page = 2
 
         self.app.create_c_main()
-        self.app.c_main.create_text(1080, 60, text="Create focus timeline", font=("Arial", 40), fill=COL_FONT)
-        self.app.c_main.create_image(1080, 100, image=create_imagetk("images/line.png", 450, 150))
+        self.app.c_main.create_text(1080, 60, text="Create focus timeline", font=FONT, fill=COL_FONT)
+        self.app.c_main.create_line(870, 100, 1290, 100, fill=COL_2, width=8)
         self.app.c_main.create_rectangle(50, 150, 2110, 1000, outline=COL_2, width=5)
         self.app.c_main.create_line(800, 150, 800, 1000, fill=COL_2, width=5)
         self.b_submit = CTkButton(self.app, text="Submit", font=FONT, fg_color=COL_2,
@@ -569,6 +567,9 @@ class Setup2:
 
             self.element = len(self.tl_blocks)
 
+            print("change", self.change)
+            print("element", self.element)
+            print()
             new_tl = self.tl_blocks[:]
             poped = new_tl.pop(self.element - 1)
             new_tl.insert(self.change, poped)
@@ -593,6 +594,7 @@ class Setup2:
     def _tl_shift(self, arr):
         """changes order of blocks in timeline"""
         blocks = []
+
         for i in range(len(arr)):
             col = self.app.c_main.itemcget(arr[i][0], 'fill')
             text = self.app.c_main.itemcget(arr[i][1], 'text')
@@ -601,7 +603,6 @@ class Setup2:
             blocks.append([col, text, time])
 
         for i in range(self.current_pos):
-            print(self.current_pos)
             self.app.c_main.itemconfigure(self.tl_blocks[i][0], fill=blocks[i][0])
             self.app.c_main.itemconfigure(self.tl_blocks[i][1], text=blocks[i][1])
             self.app.c_main.itemconfigure(self.tl_blocks[i][2], text=blocks[i][2])
