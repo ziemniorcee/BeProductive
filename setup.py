@@ -180,10 +180,10 @@ class Setup1:
 
         text = self.app.c_main.itemcget(self.goals_widgets[self.goal], 'text')
         prev_pos = (self.goals_texts.index(text))
-        if prev_pos - 1 == self.shadow_line_position:
-            pass
-        elif self.shadow_line_position != 0:
+
+        if prev_pos + 1 == self.shadow_line_position:
             self.shadow_line_position -= 1
+
         self.goals_texts.remove(text)
         self.goals_texts.insert(self.shadow_line_position, text)
 
@@ -557,7 +557,8 @@ class Setup2:
         self.app.c_main.coords(self.blocks[self.category][self.element][2], self.start_pos[0] + 100,
                                self.start_pos[1] + 85)
 
-        if 1090 < e.y < 1390:
+        print()
+        if 1090 < e.y < 1390 and len(self.tl_blocks) < 9:
             col = self.app.c_main.itemcget(self.blocks[self.category][self.element][0], 'fill')
             timer = self.app.c_main.itemcget(self.blocks[self.category][self.element][1], 'text')
             text = self.app.c_main.itemcget(self.blocks[self.category][self.element][2], 'text')
