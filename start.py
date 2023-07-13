@@ -26,7 +26,7 @@ class Start_window:
 
         self.app.c_main.create_window(575, 190, window=self.arr_up, width=70, height=70)
         img = CTkImage(light_image=Image.open("images/goals/down2.png"), size=(50, 50))
-        
+
         self.arr_down = CTkButton(self.app, image=img, text="",
                                   fg_color=COL_1, hover_color=COL_2,
                                   command=lambda: self.app.setup1.widget_goals(1))
