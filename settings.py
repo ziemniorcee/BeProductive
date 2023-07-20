@@ -23,6 +23,7 @@ FONT = ("Arial", 30)
 FONT_TIMER = ("Arial", 50)
 FONT_ADD = ("Arial", 60)
 FONT_BOX = ImageFont.truetype("arial.ttf", 20)
+FONT_BOX2 = ImageFont.truetype("arial.ttf", 30)
 
 FONT_TEXT = ("Arial", 20)
 FONT_TEXT_STRIKE = ("Arial", 20, "overstrike", "bold")
@@ -31,7 +32,7 @@ FONT_TEXT_STRIKE = ("Arial", 20, "overstrike", "bold")
 class Settings(CTkToplevel):
     def __init__(self, root):
         super().__init__()
-        self.is_settings_on = True
+        self.settings_on = True
         self.main = root
 
         self.create_settings_window()

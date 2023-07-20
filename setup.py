@@ -300,8 +300,7 @@ class Setup2:
 
         # Recently created panel
         self.app.c_main.create_text(425, 175, font=("Arial", 30), fill=COL_FONT, text="Recently created")
-        self.b_rc_create = CTkButton(self.app, text="+", font=("Arial", 70), fg_color=COL_1,
-                                     command=self.rc_add)
+        self.b_rc_create = CTkButton(self.app, text="+", font=("Arial", 70), fg_color=COL_1, command=self.rc_add)
         self.app.c_main.create_window(80, 970, window=self.b_rc_create, height=50, width=50)
         self.rc_show()
         # saved panel
@@ -367,7 +366,6 @@ class Setup2:
 
         if is_move:
             self.app.c_main.tag_bind(tag, "<B1-Motion>", self.tl_move)
-
             self.app.c_main.tag_bind(tag, "<Button-1>", self.tl_press)
             self.app.c_main.tag_bind(tag, "<ButtonRelease-1>", self.tl_unpress)
 
@@ -557,7 +555,6 @@ class Setup2:
         self.app.c_main.coords(self.blocks[self.category][self.element][2], self.start_pos[0] + 100,
                                self.start_pos[1] + 85)
 
-        print()
         if 1090 < e.y < 1390 and len(self.tl_blocks) < 9:
             col = self.app.c_main.itemcget(self.blocks[self.category][self.element][0], 'fill')
             timer = self.app.c_main.itemcget(self.blocks[self.category][self.element][1], 'text')
@@ -568,9 +565,6 @@ class Setup2:
 
             self.element = len(self.tl_blocks)
 
-            print("change", self.change)
-            print("element", self.element)
-            print()
             new_tl = self.tl_blocks[:]
             poped = new_tl.pop(self.element - 1)
             new_tl.insert(self.change, poped)

@@ -1,8 +1,15 @@
-freedom
-red
-1030
-700
-freedom
-blue
-1300
-600
+132
+Freedom
+#94232c
+842
+100
+2
+Financial Freedom
+#0f7738
+352
+545
+3
+Spiritual Freedom
+#50969b
+993
+552

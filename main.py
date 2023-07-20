@@ -34,8 +34,8 @@ class App(CTk):
         self.create_c_sidebar()
         self.main.create_main_window()
 
-        self.settings_window = None
-        self.is_settings_window_on = False
+        self.settings_object = None
+        self.settings_window_on = False
 
     # create elements
     def create_c_main(self):
@@ -50,7 +50,6 @@ class App(CTk):
         self.c_main.create_window(2120, 30, window=self.settings, height=50, width=70)
 
     def create_c_sidebar(self):
-        print("popo ", COL_2)
         self.c_sidebar = CTkCanvas(self, width=400, height=1440,
                                    bg="black", highlightthickness=0)
         self.c_sidebar.grid(row=0, column=0)
@@ -64,7 +63,7 @@ class App(CTk):
                                          border_width=10, command=self.habit.create_habit_window)
         self.c_sidebar.create_window(200, 225, window=self.b_habit_tracker, width=300, height=100)
 
-        self.b_strategy = CTkButton(self, text="Life Stategy", font=("Arial", 40), fg_color=COL_2,
+        self.b_strategy = CTkButton(self, text="Life Strategy", font=("Arial", 40), fg_color=COL_2,
                                     bg_color=COL_2, hover_color="black", border_color=COL_2,
                                     border_width=10, command=self.strategy.create_strategy_window)
         self.c_sidebar.create_window(200, 350, window=self.b_strategy, width=300, height=100)
@@ -77,18 +76,18 @@ class App(CTk):
         pass
 
     def open_settings(self):
-        if not self.is_settings_window_on or not self.settings_window.is_settings_on:
-            self.settings_window = Settings(self)
-            self.settings_window.wm_attributes("-topmost", True)
-            self.is_settings_window_on = True
-            self.settings_window.protocol("WM_DELETE_WINDOW", self.settings_on_closing)
+        if not self.settings_window_on or not self.settings_object.settings_on:
+            self.settings_object = Settings(self)
+            self.settings_object.wm_attributes("-topmost", True)
+            self.settings_window_on = True
+            self.settings_object.protocol("WM_DELETE_WINDOW", self.settings_on_closing)
         else:
-            self.settings_window.destroy()
-            self.is_settings_window_on = False
+            self.settings_object.destroy()
+            self.settings_window_on = False
 
     def settings_on_closing(self):
-        self.is_settings_window_on = False
-        self.settings_window.destroy()
+        self.settings_window_on = False
+        self.settings_object.destroy()
 
 
 if __name__ == "__main__":
