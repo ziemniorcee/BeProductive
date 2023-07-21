@@ -1,18 +1,57 @@
-from actions import *
+from CTkMessagebox import CTkMessagebox
 from settings import *
-from customtkinter import *
-from CTkMessagebox import *
 
 
 class Block:
-    def __init__(self, ids, text, color, start):
+    """A class to represent a block.
+
+    ...
+    Attributes
+    ----------
+    primary_id : int
+        block's id
+    foreign_ids : list[int]
+        ids of blocks connected to the block
+    text : str
+        text displayed on a block
+    color : str
+        color of the block
+    start_pos : list[int]
+        block starting position [x, y]
+    end_pos : list[int]
+        block position after background move [x, y]
+    widget_id : list[int]
+        [0] constains block square widget id
+        [1] constains block text widget id
+    tag : str
+        tag of the block
+    width :
+        calculates width of block square widget based on pixel length of text
+    """
+
+    def __init__(self, ids, text, color, start_pos):
+        """
+        Costructs all the necessary attributes for the block object
+
+        Parameters
+        ----------
+            ids : str
+                chain of intigers, first is id of the block, the rest are other blocks ids for blocks that are connected
+            text : str
+                text displayed on a block
+            color : str
+                color of the block
+            start_pos : list[int]
+                block starting position [x, y]
+        """
+
         self.primary_id = int(ids[0])
         self.foreign_ids = [int(x) for x in ids[1:]]
 
         self.text = text
         self.color = color
-        self.start_pos = start
-        self.end_pos = start
+        self.start_pos = start_pos
+        self.end_pos = start_pos
         self.widget_id = []
         self.tag = None
         self.width = (FONT_BOX2.getbbox(self.text)[2] * 1.5)
@@ -21,27 +60,37 @@ class Block:
 class Strategy:
     def __init__(self, root):
         self.app = root
+        self.new_line_state = 0
 
-        self.new_block_window_on = False
-        self.new_block_object = None
-
-        self.first = 0
-        self.even = 0
-
-    def create_strategy_window(self):
-        self.move_diff = [0, 0]
-
+        # bg
+        self.move_diff = None
         self.delete_block_on = False
         self.new_line_on = False
         self.delete_line_on = False
 
+        #blocks
+        self.blocks = []
+        self.new_block_object = None
+        self.new_block_window_on = False
+
+        #lines
+        self.lines = []
+
+        # both
+        self.first = 0
+        self.even = 0
+
+    def create_strategy_window(self):
+        self.blocks_from_file()
+        self.app.create_c_main()
+
+        self.app.page = 4
         self.new_line_state = 0
 
-        self.blocks = []
-        self.lines = []
-        self.blocks_from_file()
-        self.app.page = 4
-        self.app.create_c_main()
+        self.new_block_window_on = False
+        self.delete_block_on = False
+        self.new_line_on = False
+        self.delete_line_on = False
 
         self.app.c_main.create_text(1080, 60, text="Life Strategy", font=FONT, fill=COL_FONT)
         self.app.c_main.create_line(870, 100, 1290, 100, fill=COL_2, width=8)
@@ -83,8 +132,10 @@ class Strategy:
                                                   width=3)
             text_id = self.c_bg.create_text(block.start_pos[0] + int(block.width / 2), block.start_pos[1] + 35,
                                             text=block.text, font=FONT, tags=f"block{tag_nr}")
+            print("block id type", type(block_id))
             block.widget_id = [block_id, text_id]
             block.tag = f"block{tag_nr}"
+
 
             if tag_nr == 0:
                 self.first = int(block_id / 2)
@@ -146,7 +197,7 @@ class Strategy:
             self.c_bg.delete(self.dynamic_line)
 
         self.new_line_on = not self.new_line_on
-        self.new_line_state = 0
+
         if self.new_line_on:
             self.b_new_line.configure(fg_color="red", text="cancel")
             for block in self.blocks:
@@ -243,7 +294,8 @@ class Strategy:
                 self.dynamic_line = self.c_bg.create_line(self.new_line_start[0], self.new_line_start[1], e.x, e.y,
                                                           fill=COL_2, width=3)
             elif self.new_line_state == 1:
-                if self.new_line_id != self.cur_block.primary_id and self.cur_block.primary_id not in self.blocks[self.new_line_id - 1].foreign_ids:
+                if self.new_line_id != self.cur_block.primary_id and self.cur_block.primary_id not in self.blocks[
+                    self.new_line_id - 1].foreign_ids:
                     self.c_bg.delete(self.dynamic_line)
                     self.blocks[self.new_line_id - 1].foreign_ids.append(self.cur_block.primary_id)
                     self.blocks_to_file()

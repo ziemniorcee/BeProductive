@@ -1,15 +1,20 @@
 132
 Freedom
 #94232c
-842
-100
+757
+123
 2
 Financial Freedom
 #0f7738
-352
-545
+194
+568
 3
 Spiritual Freedom
 #50969b
-993
-552
+1163
+585
+4
+sdaad
+#f74aff
+167
+841
