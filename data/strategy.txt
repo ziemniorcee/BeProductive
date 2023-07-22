@@ -1,20 +1,20 @@
-132
-Freedom
-#94232c
-757
 123
+Freedom
+#cf6bff
+819
+300
 2
-Financial Freedom
-#0f7738
-194
-568
+Financial freedom
+#93ffaf
+397
+610
 3
-Spiritual Freedom
-#50969b
-1163
-585
+adssad
+#a728ff
+1116
+598
 4
-sdaad
-#f74aff
-167
-841
+sasfa
+#66ffca
+904
+807
