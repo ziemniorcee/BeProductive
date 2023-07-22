@@ -14,10 +14,10 @@ class App(CTk):
     def __init__(self):
         super().__init__()
         self.title("Better Tomorrow")
-        w, h = self.winfo_screenwidth(), self.winfo_screenheight()
-        self.geometry("%dx%d+0+0" % (w, h))
+        width, height = self.winfo_screenwidth(), self.winfo_screenheight()
+        self.geometry("%dx%d+0+0" % (width, height))
         self.after(0, lambda: self.state('zoomed'))
-
+        print("typ", type(self))
         self.bind("<Configure>", self.resize)
 
         self.today_data = Date()

@@ -2,6 +2,7 @@ from PIL import ImageFont, Image, ImageColor
 from customtkinter import *
 from CTkColorPicker import *
 
+
 images_src = ["/weather/src-wi-cloud.png", "/weather/src-wi-day-sunny.png", "/weather/src-wi-dust.png",
               "/weather/src-wi-night-clear.png", "/weather/src-wi-rain.png", "/weather/src-wi-snow.png",
               "/weather/src-wi-thunderstorm.png", "/habits/src-checked.png", "/habits/src-unchecked.png",
