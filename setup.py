@@ -1,15 +1,16 @@
 from customtkinter import *
-
 from Data import Date
 from actions import *
 from clock import Clock
 from settings import *
+from settings import Settings
 
 
 class Setup1:
     """Creating goals setup"""
 
     def __init__(self, root):
+        self.settings = Settings()
         self.app = root
         self.c_main = None
 
@@ -36,29 +37,31 @@ class Setup1:
             for goal in self.goals_texts:
                 self.show_goal(goal)
 
-        self.app.c_main.create_text(1080, 60, text="Create goals for today", font=FONT, fill=COL_FONT)
-        self.app.c_main.create_line(870, 100, 1290, 100, fill=COL_2, width=8)
+        self.app.c_main.create_text(1080, 60, text="Create goals for today", font=self.settings.font, fill=self.settings.font_color)
+
+        self.app.c_main.create_line(870, 100, 1290, 100, fill=self.settings.second_color, width=8)
         self.app.c_main.create_image(75, 750, image=create_imagetk("images/goals/arrow.png", ))
-        self.app.c_main.create_text(20, 750, text="Importance", font=FONT, fill=COL_FONT, anchor="nw",
+        self.app.c_main.create_text(20, 750, text="Importance", font=self.settings.font, fill=self.settings.font_color, anchor="nw",
                                     angle=90)
 
-        self.e_todo = CTkEntry(self.app, font=FONT_TEXT)
+        self.e_todo = CTkEntry(self.app, font=("Arial", 20))
         self.e_todo.focus()
         self.app.c_main.create_window(1030, 1295, window=self.e_todo, width=1760, height=50)
-        self.b_add = CTkButton(self.app, text="+", font=FONT_ADD, fg_color=COL_2,
-                               command=self.add_goal, border_width=5, hover_color=COL_1,
-                               border_color=COL_2)
+        self.b_add = CTkButton(self.app, text="+", font=("Arial", 60), fg_color=self.settings.second_color,
+                               command=self.add_goal, border_width=5, hover_color=self.settings.main_color,
+                               border_color=self.settings.second_color)
         self.app.c_main.create_window(75, 1295, window=self.b_add, height=50, width=50)
 
-        self.b_submit = CTkButton(self.app, text="Submit", font=FONT, fg_color=COL_2,
-                                  hover_color=COL_1, border_color=COL_2, border_width=5,
+        self.b_submit = CTkButton(self.app, text="Submit", font=self.settings.font, fg_color=self.settings.second_color,
+                                  hover_color=self.settings.main_color, border_color=self.settings.second_color,
+                                  border_width=5,
                                   command=self.app.setup2.create_setup2_window)
         self.app.c_main.create_window(2035, 1295, window=self.b_submit, width=150, height=50)
 
         self.dots = self.app.c_main.create_image(125, 210, image=create_imagetk("images/goals/dots.png"),
                                                  tags=("dots",),
                                                  state='hidden')
-        self.shadow = self.app.c_main.create_text(-100, -100, text="", font=FONT_TEXT, fill="grey")
+        self.shadow = self.app.c_main.create_text(-100, -100, text="", font=("Arial", 20), fill="grey")
         self.app.c_main.itemconfigure(self.shadow, state='hidden')
         self.line = self.app.c_main.create_image(-100, -100 + self.shadow_line_position * 60,
                                                  image=create_imagetk("images/line2.png"),
@@ -70,14 +73,14 @@ class Setup1:
         self.app.c_main.bind('<Motion>', self.position)
         self.e_todo.bind('<Return>', self.add_goal)
 
-        reg = self.app.register(lambda input1: (FONT_BOX.getbbox(input1)[2] < 1500))
+        reg = self.app.register(lambda input1: (ImageFont.truetype("arial.ttf", 20).getbbox(input1)[2] < 1500))
         self.e_todo.configure(validate="key", validatecommand=(reg, '%P'))
 
     def show_goal(self, text):
         i = len(self.goals_widgets) + 1
         goal = self.app.c_main.create_text(150, 140 + i * 60, text=f"{text}",
-                                           font=FONT_TEXT,
-                                           fill=COL_FONT, anchor="w", tags=f"todo{i}")
+                                           font=("Arial", 20),
+                                           fill=self.settings.font_color, anchor="w", tags=f"todo{i}")
         self.goals_widgets.append(goal)
         self.goal_widgets_yposes.append(140 + i * 60)
 
@@ -118,10 +121,10 @@ class Setup1:
 
     # binds for adding goals
     def strike_on(self, event):
-        self.app.c_main.itemconfigure(event.widget.find_withtag("current")[0], font=FONT_TEXT_STRIKE)
+        self.app.c_main.itemconfigure(event.widget.find_withtag("current")[0], font=("Arial", 20, "overstrike", "bold"))
 
     def strike_off(self, event):
-        self.app.c_main.itemconfigure(event.widget.find_withtag("current")[0], font=FONT_TEXT)
+        self.app.c_main.itemconfigure(event.widget.find_withtag("current")[0], font=("Arial", 20))
 
     def position(self, e):
         flag = 0
@@ -236,7 +239,7 @@ class Setup1:
                 full = ""
                 actual = ""
                 for word in goal_list:
-                    box = FONT_BOX.getbbox(actual + word)
+                    box = ImageFont.truetype("arial.ttf", 20).getbbox(actual + word)
                     if box[2] > 300:
                         full += actual + "\n" + word
                         actual = ""
@@ -247,8 +250,8 @@ class Setup1:
                 if start < 8:
                     text = self.app.c_main.create_text(180, 190 + start * 40 + (end - start) * 20,
                                                        text=f"{i}. {full}",
-                                                       font=FONT_TEXT, width=500,
-                                                       fill=COL_FONT, justify="left", anchor="w")
+                                                       font=("Arial", 20), width=500,
+                                                       fill=self.settings.font_color, justify="left", anchor="w")
                     self.goals_widgets.append(text)
                     self.is_end = 1
                 else:
@@ -265,6 +268,7 @@ class Setup2:
     tl = timeline"""
 
     def __init__(self, root):
+        self.settings = Settings()
         self.app = root
         self.today_data = Date()
         self.tag_id = 0
@@ -289,31 +293,38 @@ class Setup2:
         self.app.page = 2
 
         self.app.create_c_main()
-        self.app.c_main.create_text(1080, 60, text="Create focus timeline", font=FONT, fill=COL_FONT)
-        self.app.c_main.create_line(870, 100, 1290, 100, fill=COL_2, width=8)
-        self.app.c_main.create_rectangle(50, 150, 2110, 1000, outline=COL_2, width=5)
-        self.app.c_main.create_line(800, 150, 800, 1000, fill=COL_2, width=5)
-        self.b_submit = CTkButton(self.app, text="Submit", font=FONT, fg_color=COL_2,
-                                  hover_color=COL_1, border_color=COL_2, border_width=5,
+        self.app.c_main.create_text(1080, 60, text="Create focus timeline", font=self.settings.font, fill=self.settings.font_color)
+
+        self.app.c_main.create_line(870, 100, 1290, 100, fill=self.settings.second_color, width=8)
+        self.app.c_main.create_rectangle(50, 150, 2110, 1000, outline=self.settings.second_color, width=5)
+        self.app.c_main.create_line(800, 150, 800, 1000, fill=self.settings.second_color, width=5)
+        self.b_submit = CTkButton(self.app, text="Submit", font=self.settings.font, fg_color=self.settings.second_color,
+                                  hover_color=self.settings.main_color, border_color=self.settings.second_color,
+                                  border_width=5,
                                   command=self.app.main.create_main_window)
         self.app.c_main.create_window(2035, 1295, window=self.b_submit, width=150, height=50)
 
         # Recently created panel
-        self.app.c_main.create_text(425, 175, font=("Arial", 30), fill=COL_FONT, text="Recently created")
-        self.b_rc_create = CTkButton(self.app, text="+", font=("Arial", 70), fg_color=COL_1, command=self.rc_add)
+        self.app.c_main.create_text(425, 175, font=("Arial", 30), fill=self.settings.font_color,
+                                    text="Recently created")
+        self.b_rc_create = CTkButton(self.app, text="+", font=("Arial", 70), fg_color=self.settings.main_color,
+                                     command=self.rc_add)
         self.app.c_main.create_window(80, 970, window=self.b_rc_create, height=50, width=50)
         self.rc_show()
         # saved panel
-        self.saved_add_bg = self.app.c_main.create_rectangle(800, 150, 2110, 1000, fill=COL_1, outline=COL_2, width=5)
-        self.app.c_main.create_text(1455, 175, font=("Arial", 30), fill=COL_FONT, text="Saved")
-        self.saved_add_text = self.app.c_main.create_text(1455, 975, font=("Arial", 30), fill=COL_FONT, state="hidden",
+        self.saved_add_bg = self.app.c_main.create_rectangle(800, 150, 2110, 1000, fill=self.settings.main_color,
+                                                             outline=self.settings.second_color, width=5)
+        self.app.c_main.create_text(1455, 175, font=("Arial", 30), fill=self.settings.font_color, text="Saved")
+        self.saved_add_text = self.app.c_main.create_text(1455, 975, font=("Arial", 30), fill=self.settings.font_color,
+                                                          state="hidden",
                                                           text="Drop here to save")
         self.saved_trash = self.app.c_main.create_image(835, 960, image=create_imagetk("images/blocks/trash.png"),
                                                         state="hidden")
         self.saved_show()
         # Timeline panel
-        self.tl_add_bg = self.app.c_main.create_rectangle(50, 1120, 2060, 1220, fill=COL_1, width=0)
-        self.tl_add_text = self.app.c_main.create_text(1055, 1280, font=("Arial", 30), fill=COL_FONT, state="hidden",
+        self.tl_add_bg = self.app.c_main.create_rectangle(50, 1120, 2060, 1220, fill=self.settings.main_color, width=0)
+        self.tl_add_text = self.app.c_main.create_text(1055, 1280, font=("Arial", 30), fill=self.settings.font_color,
+                                                       state="hidden",
                                                        text="Add to the timeline")
         self._tl_bg_create()
         self.tl_show()
@@ -357,12 +368,12 @@ class Setup2:
         self.tag_id += 1
         block = self.app.c_main.create_rectangle(self.timeline_positions[self.current_pos], 1120,
                                                  self.timeline_positions[self.current_pos] + 200,
-                                                 1220, fill=col, outline=COL_2, width=5, tags=tag)
+                                                 1220, fill=col, outline=self.settings.second_color, width=5, tags=tag)
 
         block_time = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1170,
-                                                 text=timer, font=FONT, fill=COL_FONT, tags=tag)
+                                                 text=timer, font=self.settings.font, fill=self.settings.font_color, tags=tag)
         block_text = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1200,
-                                                 text=text, font=("Arial", 15), fill=COL_FONT, tags=tag)
+                                                 text=text, font=("Arial", 15), fill=self.settings.font_color, tags=tag)
 
         if is_move:
             self.app.c_main.tag_bind(tag, "<B1-Motion>", self.tl_move)
@@ -375,13 +386,13 @@ class Setup2:
         self.current_pos += 1
 
     def _tl_bg_create(self):
-        self.app.c_main.create_line(50, 1120, 2060, 1120, fill=COL_2, width=5)
-        self.app.c_main.create_line(2010, 1090, 2060, 1120, fill=COL_2, width=5)
-        self.app.c_main.create_line(2010, 1150, 2060, 1120, fill=COL_2, width=5)
+        self.app.c_main.create_line(50, 1120, 2060, 1120, fill=self.settings.second_color, width=5)
+        self.app.c_main.create_line(2010, 1090, 2060, 1120, fill=self.settings.second_color, width=5)
+        self.app.c_main.create_line(2010, 1150, 2060, 1120, fill=self.settings.second_color, width=5)
 
-        self.app.c_main.create_line(50, 1220, 2060, 1220, fill=COL_2, width=5)
-        self.app.c_main.create_line(2010, 1190, 2060, 1220, fill=COL_2, width=5)
-        self.app.c_main.create_line(2010, 1250, 2060, 1220, fill=COL_2, width=5)
+        self.app.c_main.create_line(50, 1220, 2060, 1220, fill=self.settings.second_color, width=5)
+        self.app.c_main.create_line(2010, 1190, 2060, 1220, fill=self.settings.second_color, width=5)
+        self.app.c_main.create_line(2010, 1250, 2060, 1220, fill=self.settings.second_color, width=5)
 
     def _blocks_create(self, arr):
         self.blocks[self.create_mode] = []
@@ -396,13 +407,14 @@ class Setup2:
 
             block_id = self.app.c_main.create_rectangle(startx + i * 250, starty + 150 * j, startx + 200 + i * 250,
                                                         starty + 100 + 150 * j, fill=block[1], tags=tag_block,
-                                                        outline=COL_2,
+                                                        outline=self.settings.second_color,
                                                         width=5)
 
             timer = format_time(block[0])
             category = self.app.c_main.create_text(startx + 100 + i * 250, 275 + j * 150,
-                                                   text=timer, font=FONT, fill=COL_FONT, tags=tag_block)
-            time = self.app.c_main.create_text(startx + 100 + i * 250, 305 + j * 150, text=block[2], fill=COL_FONT,
+                                                   text=timer, font=self.settings.font, fill=self.settings.font_color, tags=tag_block)
+            time = self.app.c_main.create_text(startx + 100 + i * 250, 305 + j * 150, text=block[2],
+                                               fill=self.settings.font_color,
                                                font=("Arial", 15),
                                                tag=tag_block, anchor="center")
             i += 1
@@ -423,7 +435,7 @@ class Setup2:
     # recent blocks binds
     def rc_press(self, e):
         self._press(e)
-        self.app.c_main.itemconfigure(self.saved_add_bg, fill=COL_2)
+        self.app.c_main.itemconfigure(self.saved_add_bg, fill=self.settings.second_color)
         self.app.c_main.itemconfigure(self.saved_add_text, state='normal')
 
     def rc_move(self, e):
@@ -431,14 +443,15 @@ class Setup2:
         if 800 < e.x < 2110 and 150 < e.y < 1000:
             self.app.c_main.itemconfigure(self.blocks[self.category][self.element][0], outline="green")
         else:
-            self.app.c_main.itemconfigure(self.blocks[self.category][self.element][0], outline=COL_2)
+            self.app.c_main.itemconfigure(self.blocks[self.category][self.element][0],
+                                          outline=self.settings.second_color)
 
     def rc_unpress(self, e):
         self._unpress(e)
-        self.app.c_main.itemconfigure(self.saved_add_bg, fill=COL_1)
+        self.app.c_main.itemconfigure(self.saved_add_bg, fill=self.settings.main_color)
         self.app.c_main.itemconfigure(self.saved_add_text, state='hidden')
         if 800 < e.x < 2110 and 150 < e.y < 1000:
-            self.app.c_main.itemconfigure(self.saved_add_bg, fill=COL_1)
+            self.app.c_main.itemconfigure(self.saved_add_bg, fill=self.settings.main_color)
             self.app.c_main.itemconfigure(self.saved_add_text, state='hidden')
 
             timer = self.app.c_main.itemcget(self.blocks[self.category][self.element][1], 'text')
@@ -463,7 +476,7 @@ class Setup2:
         if 735 < e.x < 935 and 900 < e.y < 1020:
             self.app.c_main.itemconfigure(self.blocks[1][self.element][0], outline="red")
         else:
-            self.app.c_main.itemconfigure(self.blocks[1][self.element][0], outline=COL_2)
+            self.app.c_main.itemconfigure(self.blocks[1][self.element][0], outline=self.settings.second_color)
 
     def saved_unpress(self, e):
         self._unpress(e)
@@ -484,12 +497,12 @@ class Setup2:
         if e.x > 2000:
             self.app.c_main.itemconfigure(self.tl_blocks[self.element][0], outline="red")
         else:
-            self.app.c_main.itemconfigure(self.tl_blocks[self.element][0], outline=COL_2)
+            self.app.c_main.itemconfigure(self.tl_blocks[self.element][0], outline=self.settings.second_color)
 
     def tl_unpress(self, e):
         self.app.c_main.itemconfigure(self.tl_trash, state="hidden")
         self.app.c_main.itemconfigure(self.pointer, state='hidden')
-        self.app.c_main.itemconfigure(self.tl_blocks[self.element][0], outline=COL_2)
+        self.app.c_main.itemconfigure(self.tl_blocks[self.element][0], outline=self.settings.second_color)
 
         self.app.c_main.coords(self.tl_blocks[self.element][0], self.timeline_positions[self.element], 1120,
                                self.timeline_positions[self.element] + 200, 1220)
@@ -574,7 +587,7 @@ class Setup2:
             self.restart()
             self.tl_to_file()
 
-        self.app.c_main.itemconfigure(self.tl_add_bg, fill=COL_1)
+        self.app.c_main.itemconfigure(self.tl_add_bg, fill=self.settings.main_color)
         self.app.c_main.itemconfigure(self.tl_add_text, state="hidden")
 
     def _delete_saved(self):
@@ -713,25 +726,30 @@ class Setup2:
             self.tl_add_block(item[0], item[1], item[2], 0)
 
         img = CTkImage(light_image=Image.open("images/timeline/play.png"), size=(50, 50))
-        self.play_pause = CTkButton(self.app, image=img, text="", fg_color=COL_1, hover_color=COL_2,
+
+        self.play_pause = CTkButton(self.app, image=img, text="", fg_color=self.settings.main_color,
+                                    hover_color=self.settings.second_color,
                                     command=self.start_stop_timer)
         self.app.c_main.create_window(1055, 1280, window=self.play_pause, width=70, height=70)
 
         img = CTkImage(light_image=Image.open("images/timeline/next.png"), size=(25, 25))
-        self.next = CTkButton(self.app, image=img, text="", fg_color=COL_1, hover_color=COL_2, command=self.next_block)
+        self.next = CTkButton(self.app, image=img, text="", fg_color=self.settings.main_color,
+                              hover_color=self.settings.second_color, command=self.next_block)
         self.app.c_main.create_window(1155, 1280, window=self.next, width=40, height=40)
 
         img = CTkImage(light_image=Image.open("images/timeline/previous.png"), size=(25, 25))
-        self.previous = CTkButton(self.app, image=img, text="", fg_color=COL_1, hover_color=COL_2,
+        self.previous = CTkButton(self.app, image=img, text="", fg_color=self.settings.main_color,
+                                  hover_color=self.settings.second_color,
                                   command=self.prev_block)
         self.app.c_main.create_window(955, 1280, window=self.previous, width=40, height=40)
 
         self.time_current = self.app.c_main.create_text(500, 1330, text=f"{self.timer}", font=("Arial", 20),
-                                                        fill=COL_FONT)
-        self.block_len = self.app.c_main.create_text(1610, 1330, text="0:00", font=("Arial", 20), fill=COL_FONT)
+                                                        fill=self.settings.font_color)
+        self.block_len = self.app.c_main.create_text(1610, 1330, text="0:00", font=("Arial", 20),
+                                                     fill=self.settings.font_color)
         self.current = self.app.c_main.create_line(self.current_position, 1090, self.current_position, 1250,
-                                                   fill=COL_FONT, width=5)
-        self.line_length = self.app.c_main.create_line(555, 1330, 555, 1330, fill=COL_FONT, width=8)
+                                                   fill=self.settings.font_color, width=5)
+        self.line_length = self.app.c_main.create_line(555, 1330, 555, 1330, fill=self.settings.font_color, width=8)
 
         if len(self.tl_params) > 0:
             self.time = int(self.tl_params[self.current_block][0])

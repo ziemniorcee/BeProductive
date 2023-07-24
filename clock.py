@@ -8,7 +8,8 @@ from CTkMessagebox import *
 
 class Clock(CTkToplevel):
     def __init__(self, root):
-        super().__init__()
+        self.settings = Settings()
+        super().__init__(fg_color = self.settings.main_color)
         self.is_clock_on = True
         self.setup2 = root
 
@@ -43,24 +44,30 @@ class Clock(CTkToplevel):
             self.b_next.destroy()
             self.e_category.destroy()
         self.geometry('%dx%d+%d+%d' % (500, 700, 700, 300))
-        self.head = CTkCanvas(self, width=500, height=70, bg=COL_1, highlightthickness=0)
-        self.header = self.head.create_text(250, 25, text="Select length of focus block", font=FONT, fill=COL_FONT)
-        self.head.create_line(50, 55, 450, 55, fill=COL_2, width=5)
+
+        self.head = CTkCanvas(self, width=500, height=70, bg=self.settings.main_color, highlightthickness=0)
+        self.header = self.head.create_text(250, 25, text="Select length of focus block", font=self.settings.font,
+                                            fill=self.settings.font_color)
+
+        self.head.create_line(50, 55, 450, 55, fill=self.settings.second_color, width=5)
         self.head.grid(row=0, column=0, columnspan=2)
 
-        self.l_timer = CTkLabel(self, text="00:00:00", font=FONT_TIMER, text_color=COL_FONT, width=500, height=50)
+        self.l_timer = CTkLabel(self, text="00:00:00", font=("Arial", 50), text_color=self.settings.font_color, width=500,
+                                height=50)
         self.l_timer.grid(row=1, column=0, columnspan=2)
 
-        self.c_clock = CTkCanvas(self, width=500, height=500, bg=COL_1, highlightthickness=0)
+        self.c_clock = CTkCanvas(self, width=500, height=500, bg=self.settings.main_color, highlightthickness=0)
         self.c_clock.grid(row=2, column=0, columnspan=2)
         self.c_clock.create_image(250, 250, image=create_imagetk("images/clock/clock.png", 500, 500))
         self.img = ImageTk.PhotoImage(file="images/clock/hand2.png")
         self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
 
-        self.b_prev = CTkButton(self, text="Cancel", font=FONT, fg_color=COL_2, hover_color="red", border_color=COL_2,
+        self.b_prev = CTkButton(self, text="Cancel", font=self.settings.font, fg_color=self.settings.second_color, hover_color="red",
+                                border_color=self.settings.second_color,
                                 border_width=5, command=self.quit_clock)
         self.b_prev.grid(row=3, column=0)
-        self.b_next = CTkButton(self, text="Next", font=FONT, fg_color=COL_2, hover_color="green", border_color=COL_2,
+        self.b_next = CTkButton(self, text="Next", font=self.settings.font, fg_color=self.settings.second_color, hover_color="green",
+                                border_color=self.settings.second_color,
                                 border_width=5, command=self.accept_time)
         self.b_next.grid(row=3, column=1)
 
@@ -89,16 +96,17 @@ class Clock(CTkToplevel):
         self.b_next.configure(text="Accept", command=self.accept_settings)
         self.b_prev.configure(text="Previous", command=self.create_setup2_clock)
 
-        self.b_color_picker = CTkButton(self, text="Set Color", fg_color=COL_2, font=("Arial", 30), border_width=5,
-                                        border_color=COL_2, command=self.ask_color)
+        self.b_color_picker = CTkButton(self, text="Set Color", fg_color=self.settings.second_color, font=("Arial", 30),
+                                        border_width=5,
+                                        border_color=self.settings.second_color, command=self.ask_color)
         self.b_color_picker.grid(row=1, column=0, columnspan=2)
-        self.l_info = CTkLabel(self, text="Name category:", font=FONT, text_color=COL_FONT)
+        self.l_info = CTkLabel(self, text="Name category:", font=self.settings.font, text_color=self.settings.font_color)
         self.l_info.grid(row=2, column=0, columnspan=2)
-        self.e_category = CTkEntry(self, width=400, font=FONT_TEXT)
+        self.e_category = CTkEntry(self, width=400, font=("Arial", 20))
         self.e_category.grid(row=3, column=0, columnspan=2, pady=10)
         self.window = 1
 
-        reg = self.register(lambda input1: (FONT_BOX.getbbox(input1)[2] < 350))
+        reg = self.register(lambda input1: (ImageFont.truetype("arial.ttf", 20).getbbox(input1)[2] < 350))
         self.e_category.configure(validate="key", validatecommand=(reg, '%P'))
 
     def ask_color(self):

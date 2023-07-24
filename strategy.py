@@ -2,6 +2,7 @@ from CTkMessagebox import CTkMessagebox
 from CTkColorPicker import AskColor
 from customtkinter import CTkCanvas, CTkButton, CTkFrame, CTkEntry, CTkToplevel, CTkLabel
 from settings import *
+from settings import Settings
 
 
 class Block:
@@ -56,7 +57,7 @@ class Block:
         self.end_pos = start_pos
         self.widget_id = None
         self.tag = None
-        self.width = (FONT_BOX2.getbbox(self.text)[2] * 1.5)
+        self.width = (ImageFont.truetype("arial.ttf", 30).getbbox(self.text)[2] * 1.5)
 
 
 class Strategy:
@@ -75,6 +76,7 @@ class Strategy:
     create_strategy_window():
         Creates life strategy window
     """
+
     def __init__(self, root):
         """
         Constructs necessary attributes for launching strategy window
@@ -84,6 +86,7 @@ class Strategy:
         root :  '__main__.App'
             access to main app
         """
+        self.settings = Settings()
         self.app = root
         self.background = None
 
@@ -98,8 +101,9 @@ class Strategy:
         self.app.create_c_main()
         self.app.page = 4
 
-        self.app.c_main.create_text(1080, 60, text="Life Strategy", font=FONT, fill=COL_FONT)
-        self.app.c_main.create_line(870, 100, 1290, 100, fill=COL_2, width=8)
+        self.app.c_main.create_text(1080, 60, text="Life Strategy", font=self.settings.font,
+                                    fill=self.settings.font_color)
+        self.app.c_main.create_line(870, 100, 1290, 100, fill=self.settings.second_color, width=8)
 
         self.background = Background(self.app)
         self.background.grid(row=0, column=1)
@@ -128,6 +132,7 @@ class Background(CTkFrame):
     bg_unpress():
         Bind left button unpress for background tag
     """
+
     def __init__(self, master):
         """
         Constructs all the necessary attributes for the  background
@@ -137,16 +142,15 @@ class Background(CTkFrame):
         master : __main__.App
             stores connection to the main app
         """
+        self.settings = Settings()
         super().__init__(master, width=2060, height=1170)
 
-        self.grid(row=0, column=1)
         self.move_start = []
         self.move_diff = []
 
-
-        self.c_bg = CTkCanvas(self, width=2060, height=1170, bg=COL_1)
+        self.c_bg = CTkCanvas(self, width=2060, height=1170, bg=self.settings.main_color)
         self.c_bg.grid(row=0, column=0)
-        self.c_bg.create_rectangle(0, 0, 2060, 1170, fill=COL_1, tags="background")
+        self.c_bg.create_rectangle(0, 0, 2060, 1170, fill=self.settings.main_color, tags="background")
         self.c_bg.tag_bind("background", "<Button-1>", self.bg_press)
         self.c_bg.tag_bind("background", "<B1-Motion>", self.bg_move)
         self.c_bg.tag_bind("background", "<ButtonRelease-1>", self.bg_unpress)
@@ -161,8 +165,6 @@ class Background(CTkFrame):
         self.c_bg.create_window(502, 1142, window=self.b_new_line, height=60, width=200)
         self.b_delete_line = ButtonDeleteLine(self)
         self.c_bg.create_window(702, 1142, window=self.b_delete_line, height=60, width=200)
-
-
 
     def bg_press(self, event):
         """
@@ -232,12 +234,15 @@ class Blocks:
         stores connection to the backgorund frame canvas
     blocks : list[Block]
         list of Block objects
-    cur_block : Block
+    current_block : Block
         contains selected block
     new_line_id : int
         constains id of the starting block of a new line
-    lines : list[int]
+    lines : list[list[int]]
         saves widget ids of the lines
+        [0] = line id
+        [1] = connection id
+        [2] = starting block id
     lines_middle : list [list[int]]
          middles of the lines [x, y]
     new_line_start : list [int]
@@ -260,6 +265,7 @@ class Blocks:
     blocks_to_file():
         Saves blocks info to the file
     """
+
     def __init__(self, master):
         """
         Constructs attributes for the blocks and lines management.
@@ -271,11 +277,12 @@ class Blocks:
         master : CTkFrame
             stores connection to the background frame
         """
+        self.settings = Settings()
         self.master = master
         self.c_bg = master.c_bg
 
         self.blocks = []
-        self.cur_block = None
+        self.current_block = None
 
         self.new_line_id = None
         self.lines = []
@@ -304,10 +311,11 @@ class Blocks:
             block_id = self.c_bg.create_rectangle(block.start_pos[0], block.start_pos[1],
                                                   block.start_pos[0] + block.width,
                                                   block.start_pos[1] + 70, fill=block.color, tags=f"block{tag_nr}",
-                                                  outline=COL_2,
+                                                  outline=self.settings.second_color,
                                                   width=3)
             text_id = self.c_bg.create_text(block.start_pos[0] + int(block.width / 2), block.start_pos[1] + 35,
-                                            text=block.text, font=FONT, tags=f"block{tag_nr}")
+                                            text=block.text, font=self.settings.font, tags=f"block{tag_nr}",
+                                            fill=self.settings.font_color)
             block.widget_id = [block_id, text_id]
             block.tag = f"block{tag_nr}"
             if tag_nr == 0:
@@ -332,13 +340,14 @@ class Blocks:
         self.lines_middle = []
         for block in self.blocks:
 
-            for key in block.foreign_ids:
-                foreign_block = self.blocks[key - 1]
-                line = self.c_bg.create_line(block.start_pos[0] + block.width / 2, block.start_pos[1] + 70,
-                                             foreign_block.start_pos[0] + foreign_block.width / 2,
-                                             foreign_block.start_pos[1],
-                                             fill=COL_2, width=3)
-                self.lines.append([line, key])
+            for connection_id in block.foreign_ids:
+                foreign_block = self.blocks[connection_id - 1]
+                line_id = self.c_bg.create_line(block.start_pos[0] + block.width / 2, block.start_pos[1] + 70,
+                                                foreign_block.start_pos[0] + foreign_block.width / 2,
+                                                foreign_block.start_pos[1],
+                                                fill=self.settings.second_color, width=3)
+                self.lines.append([line_id, connection_id, block.primary_id])
+
                 self.lines_middle.append(
                     [(block.start_pos[0] + block.width / 2 + foreign_block.start_pos[0] + foreign_block.width / 2) / 2,
                      (block.start_pos[1] + 70 + foreign_block.start_pos[1]) / 2])
@@ -364,14 +373,13 @@ class Blocks:
         if block_id % 2 == self.even:
             block_id -= 1
         block_id = int(block_id / 2 - self.first)
-        self.cur_block = self.blocks[block_id]
+        self.current_block = self.blocks[block_id]
 
-        print("elif", self.master.b_new_line.new_line_on)
-        if self.master.b_delete_block.delete_block_on:
-            deleted_id = self.cur_block.primary_id
-            self.c_bg.delete(self.cur_block.widget_id[0])
-            self.c_bg.delete(self.cur_block.widget_id[1])
-            self.blocks.remove(self.cur_block)
+        if self.master.b_delete_block.is_on:
+            deleted_id = self.current_block.primary_id
+            self.c_bg.delete(self.current_block.widget_id[0])
+            self.c_bg.delete(self.current_block.widget_id[1])
+            self.blocks.remove(self.current_block)
 
             for block in self.blocks:
                 if deleted_id in block.foreign_ids:
@@ -387,29 +395,29 @@ class Blocks:
             self.create_blocks()
             self.create_lines()
 
-        elif self.master.b_new_line.new_line_on:
+        elif self.master.b_new_line.is_on:
             new_line = self.master.b_new_line
 
-            if new_line.new_line_state == 0:
-                new_line.new_line_state = 1
-                self.new_line_id = self.cur_block.primary_id
-                self.new_line_start = [self.cur_block.start_pos[0] + self.cur_block.width / 2,
-                                       self.cur_block.start_pos[1] + 70]
+            if new_line.state == 0:
+                new_line.state = 1
+                self.new_line_id = self.current_block.primary_id
+                self.new_line_start = [self.current_block.start_pos[0] + self.current_block.width / 2,
+                                       self.current_block.start_pos[1] + 70]
                 self.c_bg.tag_bind("background", "<Motion>", new_line.update_new_line)
                 new_line.new_line = self.c_bg.create_line(self.new_line_start[0], self.new_line_start[1], event.x,
                                                           event.y,
-                                                          fill=COL_2, width=3)
-            elif new_line.new_line_state == 1:
-                if self.new_line_id != self.cur_block.primary_id and self.cur_block.primary_id not in self.blocks[
+                                                          fill=self.settings.second_color, width=3)
+            elif new_line.state == 1:
+                if self.new_line_id != self.current_block.primary_id and self.current_block.primary_id not in self.blocks[
                     self.new_line_id - 1].foreign_ids:
                     self.c_bg.delete(new_line.new_line)
-                    self.blocks[self.new_line_id - 1].foreign_ids.append(self.cur_block.primary_id)
+                    self.blocks[self.new_line_id - 1].foreign_ids.append(self.current_block.primary_id)
                     self.blocks_to_file()
                     self.create_blocks()
-                    new_line.new_line_on = False
-                    new_line.configure(fg_color=COL_2, text="New line")
+                    new_line.is_on = False
+                    new_line.configure(fg_color=self.settings.second_color, text="New line")
                     self.c_bg.tag_unbind("background", "<Motion>")
-                    new_line.new_line_state = 0
+                    new_line.state = 0
                     for block in self.blocks:
                         self.c_bg.tag_bind(block.tag, "<B1-Motion>", self.block_move)
                     self.create_lines()
@@ -429,12 +437,12 @@ class Blocks:
         -------
         None
         """
-        self.c_bg.coords(self.cur_block.widget_id[0], event.x - self.cur_block.width / 2, event.y - 35,
-                         event.x + self.cur_block.width / 2, event.y + 35)
-        self.c_bg.coords(self.cur_block.widget_id[1], event.x, event.y)
+        self.c_bg.coords(self.current_block.widget_id[0], event.x - self.current_block.width / 2, event.y - 35,
+                         event.x + self.current_block.width / 2, event.y + 35)
+        self.c_bg.coords(self.current_block.widget_id[1], event.x, event.y)
 
-        self.cur_block.start_pos = [int(event.x - self.cur_block.width / 2), event.y - 35]
-        self.cur_block.end_pos = [int(event.x - self.cur_block.width / 2), event.y - 35]
+        self.current_block.start_pos = [int(event.x - self.current_block.width / 2), event.y - 35]
+        self.current_block.end_pos = [int(event.x - self.current_block.width / 2), event.y - 35]
 
         self.create_lines()
 
@@ -459,8 +467,8 @@ class Blocks:
         None
         """
         if os.path.isfile("data/strategy.txt"):
-            with open("data/strategy.txt", "r", encoding="utf-8") as f:
-                lines = f.readlines()
+            with open("data/strategy.txt", "r", encoding="utf-8") as file:
+                lines = file.readlines()
                 if len(lines) != 0:
                     for i in range(0, len(lines), 5):
                         if lines[i] != "":
@@ -495,9 +503,9 @@ class ButtonNewBlock(CTkButton):
     ----------
     master : CTkFrame
         connection to the background frame
-    new_block_window_on : bool
+    window_on : bool
         is the window on
-    new_block_object : NewBlock
+    new_block_window : NewBlock
         object of NewBlock class
 
     Methods
@@ -507,6 +515,7 @@ class ButtonNewBlock(CTkButton):
     new_block_on_closing():
         on closing
     """
+
     def __init__(self, master):
         """
         Constructs button and necessary attributes
@@ -516,13 +525,13 @@ class ButtonNewBlock(CTkButton):
         master : CTkFrame
             stores connection to the background frame
         """
-        super().__init__(master, text="New block", fg_color=COL_2, font=("Arial", 30), command=self.create_new_block,
+        self.settings = Settings()
+        super().__init__(master, text="New block", fg_color=self.settings.second_color, font=("Arial", 30),
+                         command=self.create_new_block,
                          border_color="white", border_width=1)
         self.master = master
-
-        self.new_block_window_on = False
-
-        self.new_block_object = None
+        self.window_on = False
+        self.new_block_window = None
 
     def create_new_block(self):
         """
@@ -532,15 +541,15 @@ class ButtonNewBlock(CTkButton):
         --------
         None
         """
-        print(not self.new_block_window_on)
-        if not self.new_block_window_on:
-            self.new_block_object = NewBlock(self.master)
-            self.new_block_object.wm_attributes("-topmost", True)
-            self.new_block_window_on = True
-            self.new_block_object.protocol("WM_DELETE_WINDOW", self.new_block_on_closing)
+
+        if not self.window_on:
+            self.new_block_window = NewBlock(self.master)
+            self.new_block_window.wm_attributes("-topmost", True)
+            self.window_on = True
+            self.new_block_window.protocol("WM_DELETE_WINDOW", self.new_block_on_closing)
         else:
-            self.new_block_window_on = False
-            self.new_block_object.destroy()
+            self.window_on = False
+            self.new_block_window.destroy()
 
     def new_block_on_closing(self):
         """
@@ -550,8 +559,8 @@ class ButtonNewBlock(CTkButton):
         --------
         None
         """
-        self.new_block_window_on = False
-        self.new_block_object.destroy()
+        self.window_on = False
+        self.new_block_window.destroy()
 
 
 class ButtonDeleteBlock(CTkButton):
@@ -561,7 +570,7 @@ class ButtonDeleteBlock(CTkButton):
     ...
     Attributes
     ----------
-    delete_block_on : bool
+    is_on : bool
         is the button selected
     c_bg : CTkCanvas
         background canvas
@@ -574,6 +583,7 @@ class ButtonDeleteBlock(CTkButton):
         click or unclick delete block button
 
     """
+
     def __init__(self, master):
         """
         Constructs button and necessary attributes
@@ -583,10 +593,11 @@ class ButtonDeleteBlock(CTkButton):
         master : CTkFrame
             stores connection to the background frame
         """
-        super().__init__(master, text="Delete block", font=("Arial", 30), fg_color=COL_2,
+        self.settings = Settings()
+        super().__init__(master, text="Delete block", font=("Arial", 30), fg_color=self.settings.second_color,
                          border_color="white",
                          command=self.change_delete_block, border_width=1)
-        self.delete_block_on = False
+        self.is_on = False
         self.c_bg = master.c_bg
         self.blocks = master.blocks
 
@@ -598,14 +609,14 @@ class ButtonDeleteBlock(CTkButton):
         --------
         None
         """
-        self.delete_block_on = not self.delete_block_on
-        if self.delete_block_on:
+        self.is_on = not self.is_on
+        if self.is_on:
 
             self.configure(fg_color="red", text="cancel")
             for block in self.blocks.blocks:
                 self.c_bg.tag_unbind(block.tag, "<B1-Motion>")
         else:
-            self.configure(fg_color=COL_2, text="Delete")
+            self.configure(fg_color=self.settings.second_color, text="Delete")
             for block in self.blocks.blocks:
                 self.c_bg.tag_bind(block.tag, "<B1-Motion>", self.blocks.block_move)
 
@@ -617,13 +628,13 @@ class ButtonNewLine(CTkButton):
     ...
     Attributes
     ----------
-    new_line_on : bool
+    is_on : bool
         is the button selected
     c_bg : CTkCanvas
         background canvas
     blocks : strategy.Blocks
         access to blocks
-    new_line_state : int
+    state : int
         defines current state of new line
         0 = nothing clicked
         1 = starting point clicked
@@ -636,6 +647,7 @@ class ButtonNewLine(CTkButton):
 
 
     """
+
     def __init__(self, master):
         """
         Constructs button and necessary attributes
@@ -645,10 +657,11 @@ class ButtonNewLine(CTkButton):
         master : CTkFrame
              stores connection to the background frame
         """
-        super().__init__(master, text="New line", font=("Arial", 30), fg_color=COL_2,
+        self.settings = Settings()
+        super().__init__(master, text="New line", font=("Arial", 30), fg_color=self.settings.second_color,
                          border_color="white", command=self.change_new_line, border_width=1)
-        self.new_line_on = False
-        self.new_line_state = 0
+        self.is_on = False
+        self.state = 0
         self.c_bg = master.c_bg
         self.blocks = master.blocks
         self.new_line = None
@@ -662,17 +675,17 @@ class ButtonNewLine(CTkButton):
         --------
         None
         """
-        if self.new_line_state == 1:
+        if self.state == 1:
             self.c_bg.delete(self.new_line)
 
-        self.new_line_on = not self.new_line_on
+        self.is_on = not self.is_on
 
-        if self.new_line_on:
+        if self.is_on:
             self.configure(fg_color="red", text="cancel")
             for block in self.blocks.blocks:
                 self.c_bg.tag_unbind(block.tag, "<B1-Motion>")
         else:
-            self.configure(fg_color=COL_2, text="New line")
+            self.configure(fg_color=self.settings.second_color, text="New line")
             self.c_bg.tag_unbind("background", "<Motion>")
 
             for block in self.blocks.blocks:
@@ -681,6 +694,7 @@ class ButtonNewLine(CTkButton):
     def update_new_line(self, event):
         """
         binds cursor motion to the new line
+
         Parameters
         ----------
         event : tkinter.Event, default
@@ -690,7 +704,7 @@ class ButtonNewLine(CTkButton):
         -------
         None
         """
-        if self.new_line_state == 1:
+        if self.state == 1:
             self.c_bg.coords(self.new_line, self.blocks.new_line_start[0], self.blocks.new_line_start[1],
                              event.x, event.y)
 
@@ -704,7 +718,7 @@ class ButtonDeleteLine(CTkButton):
     ----------
     master : CTkFrame
         connection to the background frame
-    delete_line_on : bool
+    is_on : bool
         is the button clicked
     c_bg : CTkCanvas
         background canvas
@@ -718,6 +732,7 @@ class ButtonDeleteLine(CTkButton):
     delete_line(line):
         delete given line
     """
+
     def __init__(self, master):
         """
         Constructs button and necessary attributes
@@ -727,13 +742,14 @@ class ButtonDeleteLine(CTkButton):
         master : CTkFrame
             stores connection to the background frame
         """
-        super().__init__(master, text="Delete line", font=("Arial", 30), fg_color=COL_2, border_color="white",
+        self.settings = Settings()
+        super().__init__(master, text="Delete line", font=("Arial", 30), fg_color=self.settings.second_color,
+                         border_color="white",
                          command=self.change_delete_line, border_width=1)
         self.master = master
-        self.delete_line_on = False
+        self.is_on = False
         self.c_bg = master.c_bg
         self.blocks = master.blocks
-
 
     def change_delete_line(self):
         """
@@ -745,20 +761,20 @@ class ButtonDeleteLine(CTkButton):
         --------
         None
         """
-        self.delete_line_on = not self.delete_line_on
-        if self.delete_line_on:
+        self.is_on = not self.is_on
+        if self.is_on:
             self.delete_buttons = []
             self.configure(fg_color="red", text="cancel")
 
             for i in range(len(self.blocks.lines_middle)):
-                b_delete = CTkButton(self.master, text="×", font=("Arial", 90), fg_color=COL_2,
+                b_delete = CTkButton(self.master, text="×", font=("Arial", 90), fg_color=self.settings.second_color,
                                      command=lambda x=i: self.delete_line(self.blocks.lines[x]))
                 self.c_bg.create_window(int(self.blocks.lines_middle[i][0]), int(self.blocks.lines_middle[i][1]),
                                         window=b_delete,
                                         height=50, width=50)
                 self.delete_buttons.append(b_delete)
         else:
-            self.configure(fg_color=COL_2, text="Delete line")
+            self.configure(fg_color=self.settings.second_color, text="Delete line")
             for b_delete in self.delete_buttons:
                 b_delete.destroy()
                 self.blocks.create_blocks()
@@ -776,16 +792,14 @@ class ButtonDeleteLine(CTkButton):
         None
         """
         self.c_bg.delete(line[0])
-        for block in self.blocks.blocks:
-            for key in block.foreign_ids:
-                if key == line[1]:
-                    block.foreign_ids.remove(key)
-                    self.blocks.blocks_to_file()
+        self.blocks.blocks[line[2] - 1].foreign_ids.remove(line[1])
+        self.blocks.blocks_to_file()
+
         for b_delete in self.delete_buttons:
             b_delete.destroy()
             self.blocks.create_blocks()
-        self.configure(fg_color=COL_2, text="Delete line")
-        self.delete_line_on = False
+        self.configure(fg_color=self.settings.second_color, text="Delete line")
+        self.is_on = False
 
 
 class NewBlock(CTkToplevel):
@@ -813,7 +827,8 @@ class NewBlock(CTkToplevel):
     accept()
         command for accept button
     """
-    def __init__(self, root):
+
+    def __init__(self, root, ):
         """
         Constructs attributes for NewBlock object
 
@@ -822,7 +837,10 @@ class NewBlock(CTkToplevel):
         root : CTkFrame
             access to the background frame
         """
-        super().__init__()
+
+        self.settings = Settings()
+        super().__init__(fg_color=self.settings.main_color)
+
         self.root = root
         self.blocks = root.blocks
         self.color = None
@@ -841,25 +859,30 @@ class NewBlock(CTkToplevel):
         self.geometry('%dx%d+%d+%d' % (500, 300, 450, 930))
 
         self.title("New block")
+        head = CTkCanvas(self, width=500, height=70, bg=self.settings.main_color, highlightthickness=0)
+        head.create_text(250, 25, text="Create new block", font=self.settings.font, fill=self.settings.font_color)
 
-        head = CTkCanvas(self, width=500, height=70, bg=COL_1, highlightthickness=0)
-        head.create_text(250, 25, text="Create new block", font=FONT, fill=COL_FONT)
-        head.create_line(50, 55, 450, 55, fill=COL_2, width=5)
+        head.create_line(50, 55, 450, 55, fill=self.settings.second_color, width=5)
         head.grid(row=0, column=0, columnspan=2)
 
-        self.b_color_picker = CTkButton(self, text="Set Color", fg_color=COL_2, font=("Arial", 30), border_width=5,
-                                        border_color=COL_2, command=self.ask_color)
+        self.b_color_picker = CTkButton(self, text="Set Color", fg_color=self.settings.second_color, font=("Arial", 30),
+                                        border_width=5, bg_color=self.settings.main_color,
+                                        border_color=self.settings.second_color, command=self.ask_color)
         self.b_color_picker.grid(row=1, column=0, columnspan=2)
 
-        l_info = CTkLabel(self, text="Name category:", font=FONT, text_color=COL_FONT)
+        l_info = CTkLabel(self, text="Name category:", font=self.settings.font, text_color=self.settings.font_color)
         l_info.grid(row=2, column=0, columnspan=2)
-        self.e_name = CTkEntry(self, width=400, font=FONT_TEXT)
+        self.e_name = CTkEntry(self, width=400, font=("Arial", 20))
         self.e_name.grid(row=3, column=0, columnspan=2, pady=10)
-        b_cancel = CTkButton(self, text="Cancel", font=FONT, fg_color=COL_2, hover_color="red", border_color=COL_2,
-                                  border_width=5, command=self.quit_window)
+        b_cancel = CTkButton(self, text="Cancel", font=self.settings.font, fg_color=self.settings.second_color,
+                             hover_color="red",
+                             border_color=self.settings.second_color,
+                             border_width=5, command=self.quit_window)
         b_cancel.grid(row=4, column=0)
-        b_accept = CTkButton(self, text="Next", font=FONT, fg_color=COL_2, hover_color="green", border_color=COL_2,
-                                  border_width=5, command=self.accept)
+        b_accept = CTkButton(self, text="Next", font=self.settings.font, fg_color=self.settings.second_color,
+                             hover_color="green",
+                             border_color=self.settings.second_color,
+                             border_width=5, command=self.accept)
         b_accept.grid(row=4, column=1)
 
     def ask_color(self):
@@ -883,7 +906,7 @@ class NewBlock(CTkToplevel):
         -------
         None
         """
-        self.root.b_new_block.new_block_window_on = False
+        self.root.b_new_block.window_on = False
         self.destroy()
 
     def accept(self):
