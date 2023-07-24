@@ -6,6 +6,7 @@ from Data import Date
 
 class Habit_tracker:
     def __init__(self, root):
+        self.settings = Settings()
         self.app = root
 
         self.today_data = Date()
@@ -19,15 +20,17 @@ class Habit_tracker:
         self.y_pos = 0
         self.app.create_c_main()
 
-        self.app.c_main.create_text(1080, 60, text="Habit Tracker", font=FONT, fill=COL_FONT)
-        self.app.c_main.create_line(870, 100, 1290, 100, fill=COL_2, width=8)
-        self.b_new = CTkButton(self.app, text="New", font=FONT, fg_color=COL_2,
-                               hover_color=COL_1, border_color=COL_2, border_width=5,
+        self.app.c_main.create_text(1080, 60, text="Habit Tracker", font=self.settings.font, fill=self.settings.font_color)
+        self.app.c_main.create_line(870, 100, 1290, 100, fill=self.settings.second_color, width=8)
+        self.b_new = CTkButton(self.app, text="New", font=self.settings.font, fg_color=self.settings.second_color,
+                               hover_color=self.settings.main_color, border_color=self.settings.second_color,
+                               border_width=5,
                                command=self.new_habit)
         self.app.c_main.create_window(125, 150, window=self.b_new, width=150, height=50)
 
-        self.b_configure = CTkButton(self.app, text="Configure", font=FONT, fg_color=COL_2,
-                                     hover_color=COL_1, border_color=COL_2, border_width=5,
+        self.b_configure = CTkButton(self.app, text="Configure", font=self.settings.font, fg_color=self.settings.second_color,
+                                     hover_color=self.settings.main_color, border_color=self.settings.second_color,
+                                     border_width=5,
                                      command=self.configure_habits)
         self.app.c_main.create_window(300, 150, window=self.b_configure, width=150, height=50)
 
@@ -35,7 +38,8 @@ class Habit_tracker:
         iteration = 0
         for name, completes in self.habits.items():
 
-            self.app.c_main.create_text(50, 200 + self.y_pos * 50, text=name, font=FONT_TEXT, fill=COL_FONT,
+            self.app.c_main.create_text(50, 200 + self.y_pos * 50, text=name, font=("Arial", 20),
+                                        fill=self.settings.font_color,
                                         justify="left", anchor="w")
             self.y_pos += 1
 
@@ -65,16 +69,16 @@ class Habit_tracker:
 
     def new_habit(self):
         self._clear()
-        self.e_new = CTkEntry(self.app, font=FONT_TEXT)
+        self.e_new = CTkEntry(self.app, font=("Arial", 20))
         self.app.c_main.create_window(212, 200 + self.y_pos * 50, window=self.e_new, width=325, height=50)
-        self.b_accept = CTkButton(self.app, text="✓", font=("Arial", 50), fg_color=COL_2,
+        self.b_accept = CTkButton(self.app, text="✓", font=("Arial", 50), fg_color=self.settings.second_color,
                                   command=self.habit_accept, border_width=5, hover_color="green",
-                                  border_color=COL_2)
+                                  border_color=self.settings.second_color)
         self.app.c_main.create_window(425, 200 + self.y_pos * 50, window=self.b_accept, width=50, height=50)
 
-        self.b_cancel = CTkButton(self.app, text="✕", font=("Arial", 50), fg_color=COL_2,
+        self.b_cancel = CTkButton(self.app, text="✕", font=("Arial", 50), fg_color=self.settings.second_color,
                                   command=self._clear, border_width=5, hover_color="red",
-                                  border_color=COL_2)
+                                  border_color=self.settings.second_color)
         self.app.c_main.create_window(500, 200 + self.y_pos * 50, window=self.b_cancel, width=50, height=50)
         self.current_widgets = [self.e_new, self.b_accept, self.b_cancel]
 
@@ -83,9 +87,9 @@ class Habit_tracker:
         self.b_configure.configure(fg_color="red", text="cancel", command=self.create_habit_window)
 
         for i in range(self.y_pos):
-            b_cancel = CTkButton(self.app, text="✕", font=("Arial", 50), fg_color=COL_2,
+            b_cancel = CTkButton(self.app, text="✕", font=("Arial", 50), fg_color=self.settings.second_color,
                                  command=lambda k=i: self.delete_habit(k), border_width=5, hover_color="red",
-                                 border_color=COL_2)
+                                 border_color=self.settings.second_color)
             self.app.c_main.create_window(25, 200 + i * 50, window=b_cancel, width=50, height=50)
             self.current_widgets.append(b_cancel)
 
@@ -142,15 +146,17 @@ class Habit_tracker:
         self.page = 1
         self.current_widgets = []
         self.last_habit = self.new_checks
-        self.app.c_main.create_text(1760, 185, text="Habits Tracker", font=("Arial", 30), fill=COL_FONT)
-        self.app.c_main.create_line(1610, 210, 1910, 210, fill=COL_2, width=5)
+        self.app.c_main.create_text(1760, 185, text="Habits Tracker", font=("Arial", 30), fill=self.settings.font_color)
+        self.app.c_main.create_line(1610, 210, 1910, 210, fill=self.settings.second_color, width=5)
 
         img = CTkImage(light_image=Image.open("images/goals/up2.png"), size=(50, 50))
-        self.arr_up = CTkButton(self.app, image=img, text="", fg_color=COL_1, hover_color=COL_2,
+        self.arr_up = CTkButton(self.app, image=img, text="", fg_color=self.settings.main_color,
+                                hover_color=self.settings.second_color,
                                 command=lambda: self.change_page(-1))
         self.app.c_main.create_window(1935, 190, window=self.arr_up, width=70, height=70)
         img = CTkImage(light_image=Image.open("images/goals/down2.png"), size=(50, 50))
-        self.arr_down = CTkButton(self.app, image=img, text="", fg_color=COL_1, hover_color=COL_2,
+        self.arr_down = CTkButton(self.app, image=img, text="", fg_color=self.settings.main_color,
+                                  hover_color=self.settings.second_color,
                                   command=lambda: self.change_page(1))
         self.app.c_main.create_window(1585, 190, window=self.arr_down, width=70, height=70)
         self.habits_from_file()
@@ -171,13 +177,13 @@ class Habit_tracker:
 
         for i in range((self.page - 1) * 3, self.last_habit):
             checkbox = CTkCheckBox(self.app, text="", checkbox_width=38, checkbox_height=38,
-                                   command=lambda k=i: self.change_check(k),
-                                   border_color=COL_2, width=50, height=50,
+                                   command=lambda k=i: self.change_check(k), bg_color=self.settings.main_color,
+                                   border_color=self.settings.second_color, width=50, height=50,
                                    variable=IntVar(value=self.new_checks[i]))
             self.app.c_main.create_window(1590, 260 + (i % 3) * 50, window=checkbox)
 
-            text = self.app.c_main.create_text(1620, 260 + (i % 3) * 50, text=list(self.habits)[i], font=FONT_TEXT,
-                                               fill=COL_FONT, justify="left", anchor="w")
+            text = self.app.c_main.create_text(1620, 260 + (i % 3) * 50, text=list(self.habits)[i], font=("Arial", 20),
+                                               fill=self.settings.font_color, justify="left", anchor="w")
             self.current_widgets.append([checkbox, text])
 
     def change_page(self, direction):
