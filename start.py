@@ -44,7 +44,7 @@ class Start_window:
         self.app.c_main.create_window(1080, 800, window=self.b_start, width=400, height=150)
         self.app.c_main.create_line(555, 1330, 1555, 1330, fill=self.settings.second_color, width=6)
 
-        self.app.habit.widget_habits()
+        self.app.habit.habits_widget.widget_habits()
 
     def _b_start_make(self):
         option = 3

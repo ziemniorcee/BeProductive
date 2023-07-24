@@ -4,7 +4,7 @@ from settings import *
 from settings import Settings
 from setup import Setup1, Setup2
 from start import Start_window
-from habit import Habit_tracker
+from habit import Habit
 from strategy import Strategy
 
 
@@ -26,7 +26,7 @@ class App(CTk):
         self.main = Start_window(self)
         self.setup1 = Setup1(self)
         self.setup2 = Setup2(self)
-        self.habit = Habit_tracker(self)
+        self.habit = Habit(self)
         self.strategy = Strategy(self)
         self.page = 0
 
@@ -67,7 +67,7 @@ class App(CTk):
                                          fg_color=self.settings.second_color,
                                          bg_color=self.settings.second_color, hover_color="black",
                                          border_color=self.settings.second_color,
-                                         border_width=10, command=self.habit.create_habit_window)
+                                         border_width=10)
         self.c_sidebar.create_window(200, 225, window=self.b_habit_tracker, width=300, height=100)
 
         self.b_strategy = CTkButton(self, text="Life Strategy", font=("Arial", 40), fg_color=self.settings.second_color,
