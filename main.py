@@ -4,7 +4,8 @@ from settings import *
 from settings import Settings
 from setup import Setup1, Setup2
 from start import Start_window
-from habit import Habit
+from habit import HabitTracker
+
 from strategy import Strategy
 
 
@@ -16,7 +17,6 @@ class App(CTk):
         width, height = self.winfo_screenwidth(), self.winfo_screenheight()
         self.geometry("%dx%d+0+0" % (width, height))
         self.after(0, lambda: self.state('zoomed'))
-        print("typ", type(self))
         self.bind("<Configure>", self.resize)
 
         self.today_data = Date()
@@ -26,7 +26,8 @@ class App(CTk):
         self.main = Start_window(self)
         self.setup1 = Setup1(self)
         self.setup2 = Setup2(self)
-        self.habit = Habit(self)
+        self.habit = HabitTracker(self)
+
         self.strategy = Strategy(self)
         self.page = 0
 
@@ -38,10 +39,8 @@ class App(CTk):
 
     # create elements
     def create_c_main(self):
-        # self.settings = Settings()
         if self.c_main is not None:
             self.c_main.destroy()
-        print("alalaga", self.settings)
         self.c_main = CTkCanvas(self, width=2160, height=1440, bg=self.settings.main_color, highlightthickness=0)
         self.c_main.grid(row=0, column=1)
 
@@ -57,24 +56,24 @@ class App(CTk):
                                    bg="#202020", highlightthickness=0)
         self.c_sidebar.grid(row=0, column=0)
 
-        self.b_dayinfo = CTkButton(self, text="Day info", font=("Arial", 40), fg_color=self.settings.second_color,
+        b_dayinfo = CTkButton(self, text="Day info", font=("Arial", 40), fg_color=self.settings.second_color,
                                    bg_color=self.settings.second_color, hover_color="black",
                                    border_color=self.settings.second_color,
                                    border_width=10, command=self.main.create_main_window)
-        self.c_sidebar.create_window(200, 100, window=self.b_dayinfo, width=300, height=100)
+        self.c_sidebar.create_window(200, 100, window=b_dayinfo, width=300, height=100)
 
-        self.b_habit_tracker = CTkButton(self, text="Habit Tracker", font=("Arial", 40),
+        b_habit_tracker = CTkButton(self, text="Habit Tracker", font=("Arial", 40),
                                          fg_color=self.settings.second_color,
                                          bg_color=self.settings.second_color, hover_color="black",
                                          border_color=self.settings.second_color,
-                                         border_width=10)
-        self.c_sidebar.create_window(200, 225, window=self.b_habit_tracker, width=300, height=100)
+                                         border_width=10, command=self.habit.create_habit_window)
+        self.c_sidebar.create_window(200, 225, window=b_habit_tracker, width=300, height=100)
 
-        self.b_strategy = CTkButton(self, text="Life Strategy", font=("Arial", 40), fg_color=self.settings.second_color,
+        b_strategy = CTkButton(self, text="Life Strategy", font=("Arial", 40), fg_color=self.settings.second_color,
                                     bg_color=self.settings.second_color, hover_color="black",
                                     border_color=self.settings.second_color,
                                     border_width=10, command=self.strategy.create_strategy_window)
-        self.c_sidebar.create_window(200, 350, window=self.b_strategy, width=300, height=100)
+        self.c_sidebar.create_window(200, 350, window=b_strategy, width=300, height=100)
 
         self.c_sidebar.create_line(30, 1230, 370, 1230, fill=self.settings.second_color, width=5)
         self.c_sidebar.create_text(260, 1300, text=f" {self.today_data.formatted_date} ", font=self.settings.font,

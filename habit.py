@@ -2,19 +2,18 @@ from actions import *
 from settings import *
 from customtkinter import *
 from Data import Date
+from customtkinter import CTkFrame
 
 
-class Habit:
-    def __init__(self, root):
+class HabitManagement:
+    def __init__(self):
         self.settings = Settings()
         self.today_data = Date()
 
-        self.app = root
         self.new_checks = []
         self.habits = {}
 
         self.habits_from_file()
-        self.habits_widget = HabitsWidget(self)
 
     def habits_from_file(self):
         if os.path.isfile("data/habits.txt"):
@@ -45,7 +44,6 @@ class Habit:
                 pass
 
     def habits_to_file(self, new_checks):
-        print(self.new_checks)
         with open("data/habits.txt", "w+") as file:
             file.write(f"{self.today_data.formatted_date}\n")
             file.write(''.join(map(str, new_checks)))
@@ -56,37 +54,36 @@ class Habit:
 
 
 class HabitsWidget(CTkFrame):
-    def __init__(self, root):
+    def __init__(self, *args):
         self.settings = Settings()
-        self.master = root
-        self.new_checks = root.new_checks
-        self.app = root.app
-        self.habits = self.master.habits
+        super().__init__(*args, width=420, height=500)
 
-
-    def widget_habits(self):
+        self.management = HabitManagement()
         self.page = 1
         self.current_widgets = []
-        self.last_habit = self.new_checks
-        self.app.c_main.create_text(1760, 185, text="Habits Tracker", font=("Arial", 30), fill=self.settings.font_color)
-        self.app.c_main.create_line(1610, 210, 1910, 210, fill=self.settings.second_color, width=5)
+        self.new_checks = self.management.new_checks
+        self.last_habit = self.management.new_checks
+        self.habits = self.management.habits
+
+        self.c_frame = CTkCanvas(self, width=420, height=500, bg=self.settings.main_color, highlightthickness=0)
+        self.c_frame.grid(row=0, column=0)
+
+        self.c_frame.create_text(210, 25, text="Habits Tracker", font=("Arial", 30), fill=self.settings.font_color)
+        self.c_frame.create_line(60, 50, 370, 50, fill=self.settings.second_color, width=5)
 
         img = CTkImage(light_image=Image.open("images/goals/up2.png"), size=(50, 50))
-        self.arr_up = CTkButton(self.app, image=img, text="", fg_color=self.settings.main_color,
-                                hover_color=self.settings.second_color,
-                                command=lambda: self.change_page(-1))
-        self.app.c_main.create_window(1935, 190, window=self.arr_up, width=70, height=70)
-        img = CTkImage(light_image=Image.open("images/goals/down2.png"), size=(50, 50))
-        self.arr_down = CTkButton(self.app, image=img, text="", fg_color=self.settings.main_color,
-                                  hover_color=self.settings.second_color,
-                                  command=lambda: self.change_page(1))
-        self.app.c_main.create_window(1585, 190, window=self.arr_down, width=70, height=70)
-        self.master.habits_from_file()
-        self._show_habits()
+        self.arr_up = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
+                                hover_color=self.settings.second_color, command=lambda: self.change_page(-1))
+        self.c_frame.create_window(385, 30, window=self.arr_up, width=70, height=60)
 
-    def _show_habits(self):
-        print("xd", self.habits)
-        print("xd2", self.new_checks)
+        img = CTkImage(light_image=Image.open("images/goals/down2.png"), size=(50, 50))
+        self.arr_down = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
+                                  hover_color=self.settings.second_color, command=lambda: self.change_page(1))
+        self.c_frame.create_window(35, 30, window=self.arr_down, width=70, height=60)
+
+        self.show_habits()
+
+    def show_habits(self):
         if len(self.new_checks) > self.page * 3:
             self.last_habit = self.page * 3
             self.arr_down.configure(state="normal")
@@ -99,59 +96,62 @@ class HabitsWidget(CTkFrame):
         else:
             self.arr_up.configure(state="normal")
 
-        print((self.page - 1) * 3, self.last_habit)
         for i in range((self.page - 1) * 3, self.last_habit):
-            print("olo")
-            checkbox = CTkCheckBox(self.app, text="", checkbox_width=38, checkbox_height=38,
+            checkbox = CTkCheckBox(self, text="", checkbox_width=38, checkbox_height=38,
                                    command=lambda k=i: self.change_check(k), bg_color=self.settings.main_color,
                                    border_color=self.settings.second_color, width=50, height=50,
                                    variable=IntVar(value=self.new_checks[i]))
-            self.app.c_main.create_window(1590, 260 + (i % 3) * 50, window=checkbox)
+            self.c_frame.create_window(40, 100 + (i % 3) * 50, window=checkbox)
 
-            text = self.app.c_main.create_text(1620, 260 + (i % 3) * 50, text=list(self.habits)[i], font=("Arial", 20),
-                                               fill=self.settings.font_color, justify="left", anchor="w")
+            text = self.c_frame.create_text(70, 100 + (i % 3) * 50, text=list(self.habits)[i], font=("Arial", 20),
+                                            fill=self.settings.font_color, justify="left", anchor="w")
             self.current_widgets.append([checkbox, text])
 
     def change_page(self, direction):
         self.page += direction
         for i in self.current_widgets:
             i[0].destroy()
-            self.app.c_main.delete(i[1])
+            self.c_frame.delete(i[1])
         self.current_widgets = []
-        self._show_habits()
+        self.show_habits()
 
     def change_check(self, i):
         self.new_checks[i] = int(not self.new_checks[i])
-        print("xd")
-        print(self.new_checks)
-        self.master.habits_to_file(self.new_checks)
+        self.management.habits_to_file(self.new_checks)
 
 
 class HabitTracker:
     def __init__(self, root):
         self.settings = Settings()
+        self.today_data = Date()
+        self.management = HabitManagement()
         self.app = root
 
-        self.today_data = Date()
-
         self.new_checks = []
-        self.habits = {}
-
-        self.current_widgets = []
-
-    def create_habit_window(self):
-        self.app.page = 3
+        self.habits = []
         self.current_widgets = []
         self.y_pos = 0
+
+        self.b_configure = None
+
+    def create_habit_window(self):
         self.app.create_c_main()
+        self.management.habits_from_file()
+        self.app.page = 3
+
+        self.y_pos = 0
+        self.new_checks = self.management.new_checks
+        self.habits = self.management.habits
+        self.current_widgets = []
+
 
         self.app.c_main.create_text(1080, 60, text="Habit Tracker", font=self.settings.font,
                                     fill=self.settings.font_color)
         self.app.c_main.create_line(870, 100, 1290, 100, fill=self.settings.second_color, width=8)
-        self.b_new = CTkButton(self.app, text="New", font=self.settings.font, fg_color=self.settings.second_color,
+        b_new = CTkButton(self.app, text="New", font=self.settings.font, fg_color=self.settings.second_color,
                                hover_color=self.settings.main_color, border_color=self.settings.second_color,
                                border_width=5, command=self.new_habit)
-        self.app.c_main.create_window(125, 150, window=self.b_new, width=150, height=50)
+        self.app.c_main.create_window(125, 150, window=b_new, width=150, height=50)
 
         self.b_configure = CTkButton(self.app, text="Configure", font=self.settings.font,
                                      fg_color=self.settings.second_color,
@@ -160,7 +160,7 @@ class HabitTracker:
                                      command=self.configure_habits)
         self.app.c_main.create_window(300, 150, window=self.b_configure, width=150, height=50)
 
-        self.habits_from_file()
+        self.management.habits_from_file()
         iteration = 0
         for name, completes in self.habits.items():
 
@@ -186,7 +186,7 @@ class HabitTracker:
 
     def change_check(self, i):
         self.new_checks[i] = int(not self.new_checks[i])
-        self.habits_to_file()
+        self.management.habits_to_file(self.new_checks)
 
     def _clear(self):
         for i in self.current_widgets:
@@ -195,18 +195,18 @@ class HabitTracker:
 
     def new_habit(self):
         self._clear()
-        self.e_new = CTkEntry(self.app, font=("Arial", 20))
-        self.app.c_main.create_window(212, 200 + self.y_pos * 50, window=self.e_new, width=325, height=50)
-        self.b_accept = CTkButton(self.app, text="✓", font=("Arial", 50), fg_color=self.settings.second_color,
+        e_new = CTkEntry(self.app, font=("Arial", 20))
+        self.app.c_main.create_window(212, 200 + self.y_pos * 50, window=e_new, width=325, height=50)
+        b_accept = CTkButton(self.app, text="✓", font=("Arial", 50), fg_color=self.settings.second_color,
                                   command=self.habit_accept, border_width=5, hover_color="green",
                                   border_color=self.settings.second_color)
-        self.app.c_main.create_window(425, 200 + self.y_pos * 50, window=self.b_accept, width=50, height=50)
+        self.app.c_main.create_window(425, 200 + self.y_pos * 50, window=b_accept, width=50, height=50)
 
-        self.b_cancel = CTkButton(self.app, text="✕", font=("Arial", 50), fg_color=self.settings.second_color,
+        b_cancel = CTkButton(self.app, text="✕", font=("Arial", 50), fg_color=self.settings.second_color,
                                   command=self._clear, border_width=5, hover_color="red",
                                   border_color=self.settings.second_color)
-        self.app.c_main.create_window(500, 200 + self.y_pos * 50, window=self.b_cancel, width=50, height=50)
-        self.current_widgets = [self.e_new, self.b_accept, self.b_cancel]
+        self.app.c_main.create_window(500, 200 + self.y_pos * 50, window=b_cancel, width=50, height=50)
+        self.current_widgets = [e_new, b_accept, b_cancel]
 
     def configure_habits(self):
         self._clear()
@@ -222,11 +222,11 @@ class HabitTracker:
     def delete_habit(self, habit):
         self.habits.pop(list(self.habits)[habit])
         self.new_checks.pop()
-        self.habits_to_file()
+        self.management.habits_to_file(self.new_checks)
         self.create_habit_window()
 
     def habit_accept(self):
-        self.habits[self.e_new.get()] = "p" + "3" + "2" * 29
+        self.habits[self.current_widgets[0].get()] = "p" + "3" + "2" * 29
         self.new_checks.append(0)
-        self.habits_to_file()
+        self.management.habits_to_file(self.new_checks)
         self.create_habit_window()

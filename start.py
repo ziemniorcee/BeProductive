@@ -2,6 +2,7 @@ from actions import *
 from settings import *
 from customtkinter import *
 from Data import Date, Weather
+from habit import HabitsWidget
 
 
 class Start_window:
@@ -44,7 +45,8 @@ class Start_window:
         self.app.c_main.create_window(1080, 800, window=self.b_start, width=400, height=150)
         self.app.c_main.create_line(555, 1330, 1555, 1330, fill=self.settings.second_color, width=6)
 
-        self.app.habit.habits_widget.widget_habits()
+        habits_widget = HabitsWidget(self.app)
+        self.app.c_main.create_window(1760, 185, window = habits_widget, anchor="n")
 
     def _b_start_make(self):
         option = 3
