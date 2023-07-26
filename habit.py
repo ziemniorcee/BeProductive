@@ -1,13 +1,40 @@
+from customtkinter import CTkFrame
 from actions import *
-from settings import *
+from settings import Settings
 from customtkinter import *
 from Data import Date
-from customtkinter import CTkFrame
 
 
 class HabitManagement:
+    """
+    A class to Manage Habit classes
+
+    ...
+    Attributes
+    ----------
+    today_data : Date
+         date object
+    new_checks : list[int]
+        list of today's checks
+    habits : dict{str:str}
+        dict with key as a habit name and value of month checks
+
+    Methods
+    ---------
+    habits_from_file():
+        Get habits data from file
+    habits_to_file():
+        Saves habits data to file
+    """
+
+
+
     def __init__(self):
-        self.settings = Settings()
+        """
+        Constructs attributes used in other habit classes
+
+        Gets data from file
+        """
         self.today_data = Date()
 
         self.new_checks = []
@@ -16,6 +43,15 @@ class HabitManagement:
         self.habits_from_file()
 
     def habits_from_file(self):
+        """
+        Get habits data from file
+
+        If file doesn't exist, it is created
+
+        Returns
+        --------
+        None
+        """
         if os.path.isfile("data/habits.txt"):
             with open("data/habits.txt", "r", encoding="utf-8") as file:
                 lines = file.readlines()
@@ -44,6 +80,19 @@ class HabitManagement:
                 pass
 
     def habits_to_file(self, new_checks):
+        """
+        Saves habits data to file
+
+        Parameters
+        ----------
+        new_checks : list[int]
+            list of today's checks
+
+        Returns
+        --------
+        None
+        """
+        print("new_checks", new_checks)
         with open("data/habits.txt", "w+") as file:
             file.write(f"{self.today_data.formatted_date}\n")
             file.write(''.join(map(str, new_checks)))
@@ -54,9 +103,49 @@ class HabitManagement:
 
 
 class HabitsWidget(CTkFrame):
-    def __init__(self, *args):
+    """
+    A class for widget creation
+
+    ...
+    Attributes
+    -----------
+    settings : Settings
+         app settings
+    management : HabitManagement
+        habit management connection
+    page : int
+        currently open site of goals
+    current_widgets = list[int]
+        ids of widgets to destroy in future
+    new_checks : list[int]
+        list of today's checks
+    habits : dict{str:str}
+        dict with key as a habit name and value of month checks
+    c_frame : int
+        id of the canvas c_frame
+    b_arr_up : int
+        id of the button b_arr_up
+
+    Methods
+    ---------
+    show_habit():
+        displays habits
+    change_page():
+        changes viewed habits
+    change_check():
+        changes checkbox value
+    """
+    def __init__(self, master):
+        """
+        Constructs attributes for the widget
+
+        Parameters
+        ----------
+        master : __main__.App
+            stores connection to the main app
+        """
         self.settings = Settings()
-        super().__init__(*args, width=420, height=500)
+        super().__init__(master, width=420, height=500)
 
         self.management = HabitManagement()
         self.page = 1
@@ -72,29 +161,33 @@ class HabitsWidget(CTkFrame):
         self.c_frame.create_line(60, 50, 370, 50, fill=self.settings.second_color, width=5)
 
         img = CTkImage(light_image=Image.open("images/goals/up2.png"), size=(50, 50))
-        self.arr_up = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
-                                hover_color=self.settings.second_color, command=lambda: self.change_page(-1))
-        self.c_frame.create_window(385, 30, window=self.arr_up, width=70, height=60)
+        self.b_arr_up = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
+                                  hover_color=self.settings.second_color, command=lambda: self.change_page(-1))
+        self.c_frame.create_window(385, 30, window=self.b_arr_up, width=70, height=60)
 
         img = CTkImage(light_image=Image.open("images/goals/down2.png"), size=(50, 50))
-        self.arr_down = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
-                                  hover_color=self.settings.second_color, command=lambda: self.change_page(1))
-        self.c_frame.create_window(35, 30, window=self.arr_down, width=70, height=60)
+        self.b_arr_down = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
+                                    hover_color=self.settings.second_color, command=lambda: self.change_page(1))
+        self.c_frame.create_window(35, 30, window=self.b_arr_down, width=70, height=60)
 
         self.show_habits()
 
     def show_habits(self):
+        """
+        displays habits
+
+        """
         if len(self.new_checks) > self.page * 3:
             self.last_habit = self.page * 3
-            self.arr_down.configure(state="normal")
+            self.b_arr_down.configure(state="normal")
         else:
             self.last_habit = len(self.new_checks)
-            self.arr_down.configure(state="disabled")
+            self.b_arr_down.configure(state="disabled")
 
         if self.page == 1:
-            self.arr_up.configure(state="disabled")
+            self.b_arr_up.configure(state="disabled")
         else:
-            self.arr_up.configure(state="normal")
+            self.b_arr_up.configure(state="normal")
 
         for i in range((self.page - 1) * 3, self.last_habit):
             checkbox = CTkCheckBox(self, text="", checkbox_width=38, checkbox_height=38,
@@ -108,6 +201,18 @@ class HabitsWidget(CTkFrame):
             self.current_widgets.append([checkbox, text])
 
     def change_page(self, direction):
+        """
+        changes displayed page of habits
+
+        Parameters
+        ----------
+        direction : int
+            changes page attribute
+
+        Returns
+        --------
+        None
+        """
         self.page += direction
         for i in self.current_widgets:
             i[0].destroy()
@@ -116,25 +221,92 @@ class HabitsWidget(CTkFrame):
         self.show_habits()
 
     def change_check(self, i):
+        """
+        changes checkbox value
+
+        Parameters
+        ----------
+        i : int
+        habits id
+
+        Returns
+        --------
+        None
+        """
         self.new_checks[i] = int(not self.new_checks[i])
         self.management.habits_to_file(self.new_checks)
 
 
 class HabitTracker:
+    """
+    A class for full habit tracker window
+
+    ...
+    Attributes
+    ----------
+    app : '__main__.App'
+        root of main app
+    settings : Settings
+         app settings
+    management : HabitManagement
+        habit management connection
+    current_widgets = list[int]
+        ids of widgets to destroy in future
+    new_checks : list[int]
+        list of today's checks
+    habits : dict{str:str}
+        dict with key as a habit name and value of month checks
+    y_pos : int
+        current new widget y iteration
+    b_configure : int
+        id of b_configure
+
+    Methods
+    ---------
+    create_habit_window():
+        creates habit tracker window
+    change_check():
+        changes checkbox state
+    _clear():
+        destroys all objects
+    new_habit():
+        builds adding new habit feature
+    configure_habits():
+        build removing habits buttons
+    delete_habit():
+        deletes selected habit
+    habit_accept():
+        adds new habit to the file
+
+    """
     def __init__(self, root):
-        self.settings = Settings()
-        self.today_data = Date()
-        self.management = HabitManagement()
+        """
+        Constructs attributes for habit tracker window
+
+        Parameters
+        ----------
+        root :  '__main__.App'
+            access to main app
+        """
         self.app = root
+        self.settings = Settings()
+        self.management = HabitManagement()
 
         self.new_checks = []
-        self.habits = []
+        self.habits = {}
         self.current_widgets = []
         self.y_pos = 0
 
         self.b_configure = None
 
     def create_habit_window(self):
+        """
+        creates habit tracker window
+
+        Returns
+        -------
+        None
+        """
         self.app.create_c_main()
         self.management.habits_from_file()
         self.app.page = 3
@@ -185,15 +357,36 @@ class HabitTracker:
             iteration += 1
 
     def change_check(self, i):
+        """
+        changes checkbutton state
+
+        Returns
+        -------
+        None
+        """
         self.new_checks[i] = int(not self.new_checks[i])
         self.management.habits_to_file(self.new_checks)
 
     def _clear(self):
+        """
+        Destroys all widgets
+
+        Returns
+        -------
+        None
+        """
         for i in self.current_widgets:
             i.destroy()
         self.current_widgets = []
 
     def new_habit(self):
+        """
+        Creates new habit widget to add new habit
+
+        Returns
+        -------
+        None
+        """
         self._clear()
         e_new = CTkEntry(self.app, font=("Arial", 20))
         self.app.c_main.create_window(212, 200 + self.y_pos * 50, window=e_new, width=325, height=50)
@@ -209,6 +402,13 @@ class HabitTracker:
         self.current_widgets = [e_new, b_accept, b_cancel]
 
     def configure_habits(self):
+        """
+        BUilds buttons to delete habits
+
+        Returns
+        -------
+        None
+        """
         self._clear()
         self.b_configure.configure(fg_color="red", text="cancel", command=self.create_habit_window)
 
@@ -220,12 +420,29 @@ class HabitTracker:
             self.current_widgets.append(b_cancel)
 
     def delete_habit(self, habit):
+        """
+        Deletes selected habit
+
+        habit : int
+            id of the widget to delete
+
+        Returns
+        -------
+        None
+        """
         self.habits.pop(list(self.habits)[habit])
         self.new_checks.pop()
         self.management.habits_to_file(self.new_checks)
         self.create_habit_window()
 
     def habit_accept(self):
+        """
+        Adds new habit
+
+        Returns
+        -------
+        None
+        """
         self.habits[self.current_widgets[0].get()] = "p" + "3" + "2" * 29
         self.new_checks.append(0)
         self.management.habits_to_file(self.new_checks)
