@@ -1,33 +1,47 @@
+from customtkinter import CTkCanvas, CTkImage, CTkButton, CTk
 from Data import Date, Weather
 from actions import *
 from settings import *
-from settings import Settings
 from setup import Setup1, Setup2
 from start import Start_window
-from habit import HabitTracker
-
+from habit import HabitWindow
 from strategy import Strategy
-
+from goals import GoalsWindow
 
 class App(CTk):
+    """
+    A class for the app construct
+
+    Methods
+    ---------
+    create_c_main():
+        creates main canvas
+    create_c_sidebar():
+        creates sidebar canvas
+    open_settings():
+        opens settings window
+    settings_on_closing():
+        closes settings window
+    """
     def __init__(self):
+        """
+        Constructs all needed attributes and objects
+        """
         self.settings = Settings()
         super().__init__()
         self.title("Better Tomorrow")
         width, height = self.winfo_screenwidth(), self.winfo_screenheight()
-        self.geometry("%dx%d+0+0" % (width, height))
+        self.geometry(f"{width}dx{height}+0+0")
         self.after(0, lambda: self.state('zoomed'))
-        self.bind("<Configure>", self.resize)
 
         self.today_data = Date()
         self.weather_data = Weather()
         self.c_main = None
 
         self.main = Start_window(self)
-        self.setup1 = Setup1(self)
+        self.goals = GoalsWindow(self)
         self.setup2 = Setup2(self)
-        self.habit = HabitTracker(self)
-
+        self.habit = HabitWindow(self)
         self.strategy = Strategy(self)
         self.page = 0
 
@@ -37,8 +51,14 @@ class App(CTk):
         self.settings_object = None
         self.settings_window_on = False
 
-    # create elements
     def create_c_main(self):
+        """
+        creates main canvas
+
+        Returns
+        -------
+        None
+        """
         if self.c_main is not None:
             self.c_main.destroy()
         self.c_main = CTkCanvas(self, width=2160, height=1440, bg=self.settings.main_color, highlightthickness=0)
@@ -46,12 +66,19 @@ class App(CTk):
 
         img = CTkImage(light_image=Image.open("images/settings.png"), size=(50, 50))
 
-        self.b_settings = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
+        b_settings = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                                     hover_color=self.settings.second_color,
                                     command=self.open_settings, )
-        self.c_main.create_window(2120, 30, window=self.b_settings, height=50, width=70)
+        self.c_main.create_window(2120, 30, window=b_settings, height=50, width=70)
 
     def create_c_sidebar(self):
+        """
+        creates canvas sidebar
+
+        Returns
+        -------
+        None
+        """
         self.c_sidebar = CTkCanvas(self, width=400, height=1440,
                                    bg="#202020", highlightthickness=0)
         self.c_sidebar.grid(row=0, column=0)
@@ -80,10 +107,14 @@ class App(CTk):
                                    fill=self.settings.font_color)
         self.c_sidebar.create_image(90, 1300, image=create_imagetk(self.weather_data.image, 150, 150))
 
-    def resize(self, e):
-        pass
-
     def open_settings(self):
+        """
+        opens settings window
+
+        Returns
+        -------
+        None
+        """
         if not self.settings_window_on or not self.settings_object.settings_on:
             self.settings_object = SettingsButton(self)
             self.settings_object.wm_attributes("-topmost", True)
@@ -94,6 +125,13 @@ class App(CTk):
             self.settings_window_on = False
 
     def settings_on_closing(self):
+        """
+        destroys settings window
+
+        Returns
+        -------
+        None
+        """
         self.settings_window_on = False
         self.settings_object.destroy()
 

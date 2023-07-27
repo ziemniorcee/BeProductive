@@ -27,8 +27,6 @@ class HabitManagement:
         Saves habits data to file
     """
 
-
-
     def __init__(self):
         """
         Constructs attributes used in other habit classes
@@ -135,6 +133,7 @@ class HabitsWidget(CTkFrame):
     change_check():
         changes checkbox value
     """
+
     def __init__(self, master):
         """
         Constructs attributes for the widget
@@ -176,6 +175,9 @@ class HabitsWidget(CTkFrame):
         """
         displays habits
 
+        Returns
+        --------
+        None
         """
         if len(self.new_checks) > self.page * 3:
             self.last_habit = self.page * 3
@@ -237,7 +239,7 @@ class HabitsWidget(CTkFrame):
         self.management.habits_to_file(self.new_checks)
 
 
-class HabitTracker:
+class HabitWindow:
     """
     A class for full habit tracker window
 
@@ -279,6 +281,7 @@ class HabitTracker:
         adds new habit to the file
 
     """
+
     def __init__(self, root):
         """
         Constructs attributes for habit tracker window
@@ -316,13 +319,12 @@ class HabitTracker:
         self.habits = self.management.habits
         self.current_widgets = []
 
-
         self.app.c_main.create_text(1080, 60, text="Habit Tracker", font=self.settings.font,
                                     fill=self.settings.font_color)
         self.app.c_main.create_line(870, 100, 1290, 100, fill=self.settings.second_color, width=8)
         b_new = CTkButton(self.app, text="New", font=self.settings.font, fg_color=self.settings.second_color,
-                               hover_color=self.settings.main_color, border_color=self.settings.second_color,
-                               border_width=5, command=self.new_habit)
+                          hover_color=self.settings.main_color, border_color=self.settings.second_color,
+                          border_width=5, command=self.new_habit)
         self.app.c_main.create_window(125, 150, window=b_new, width=150, height=50)
 
         self.b_configure = CTkButton(self.app, text="Configure", font=self.settings.font,
@@ -391,13 +393,13 @@ class HabitTracker:
         e_new = CTkEntry(self.app, font=("Arial", 20))
         self.app.c_main.create_window(212, 200 + self.y_pos * 50, window=e_new, width=325, height=50)
         b_accept = CTkButton(self.app, text="✓", font=("Arial", 50), fg_color=self.settings.second_color,
-                                  command=self.habit_accept, border_width=5, hover_color="green",
-                                  border_color=self.settings.second_color)
+                             command=self.habit_accept, border_width=5, hover_color="green",
+                             border_color=self.settings.second_color)
         self.app.c_main.create_window(425, 200 + self.y_pos * 50, window=b_accept, width=50, height=50)
 
         b_cancel = CTkButton(self.app, text="✕", font=("Arial", 50), fg_color=self.settings.second_color,
-                                  command=self._clear, border_width=5, hover_color="red",
-                                  border_color=self.settings.second_color)
+                             command=self._clear, border_width=5, hover_color="red",
+                             border_color=self.settings.second_color)
         self.app.c_main.create_window(500, 200 + self.y_pos * 50, window=b_cancel, width=50, height=50)
         self.current_widgets = [e_new, b_accept, b_cancel]
 
