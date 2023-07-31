@@ -2,11 +2,12 @@ from customtkinter import CTkCanvas, CTkImage, CTkButton, CTk
 from Data import Date, Weather
 from actions import *
 from settings import *
-from setup import Setup1, Setup2
+from setup import Setup2
 from start import Start_window
 from habit import HabitWindow
 from strategy import Strategy
 from goals import GoalsWindow
+from timeline import TimelineWindow
 
 class App(CTk):
     """
@@ -40,9 +41,11 @@ class App(CTk):
 
         self.main = Start_window(self)
         self.goals = GoalsWindow(self)
-        self.setup2 = Setup2(self)
+        self.timeline = TimelineWindow(self)
+        # self.setup2 = Setup2(self)
         self.habit = HabitWindow(self)
         self.strategy = Strategy(self)
+
         self.page = 0
 
         self.create_c_sidebar()

@@ -13,7 +13,7 @@ class HabitManagement:
     Attributes
     ----------
     today_data : Date
-         date object
+         today's date
     new_checks : list[int]
         list of today's checks
     habits : dict{str:str}
@@ -74,7 +74,7 @@ class HabitManagement:
                         self.new_checks = [0 for i in range(len(self.habits))]
                         self.habits_to_file(self.new_checks)
         else:
-            with open("data/habits.txt", "x"):
+            with open("data/habits.txt", "x", encoding="utf-8"):
                 pass
 
     def habits_to_file(self, new_checks):
@@ -96,8 +96,8 @@ class HabitManagement:
             file.write(''.join(map(str, new_checks)))
             file.write("\n")
             for name, completes in self.habits.items():
-                file.write('%s\n' % name)
-                file.write('%s\n' % completes)
+                file.write(f'{name}\n')
+                file.write(f'{completes}\n')
 
 
 class HabitsWidget(CTkFrame):
@@ -123,6 +123,8 @@ class HabitsWidget(CTkFrame):
         id of the canvas c_frame
     b_arr_up : int
         id of the button b_arr_up
+    b_arr_down : int
+        id of the button b_arr_down
 
     Methods
     ---------

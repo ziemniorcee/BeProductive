@@ -5,14 +5,37 @@ from settings import *
 
 
 class GoalsManagement:
+    """
+    A class for goals classes management
+
+    Methods
+    ---------
+    goals_from_file():
+        gets goals data from file
+    save_goals_to_file():
+        saves goals data to file
+    """
+
     def __init__(self):
+        """
+        Constructs today's data attribute
+        """
         self.today_data = Date()
 
     def goals_from_file(self):
+        """
+        Gets goals from file
+
+        If file doesn't exist, it's created
+
+        Returns
+        --------
+        List[str]
+        """
         goals_texts = []
         if os.path.isfile("data/goals.txt"):
-            with open("data/goals.txt", "r") as f:
-                lines = f.readlines()
+            with open("data/goals.txt", "r", encoding="utf-8") as file:
+                lines = file.readlines()
                 if len(lines) != 0:
                     for i in range(len(lines)):
                         lines[i] = lines[i].strip()
@@ -21,23 +44,63 @@ class GoalsManagement:
                         goals_texts = lines[1:]
 
         else:
-            with open("data/goals.txt", 'x'):
+            with open("data/goals.txt", 'x', encoding="utf-8"):
                 pass
 
         return goals_texts
 
     def save_goals_to_file(self, goals_texts):
-        if len(goals_texts) == 0:
-            for i in range(len(goals_texts)):
-                goals_texts.append(self.app.c_main.itemcget(goals_texts[i], 'text'))
+        """
+        Saves goals to file
 
-        with open('data/goals.txt', 'w+') as file:
+        Parameters
+        ----------
+        goals_texts : List[str]
+
+        Returns
+        --------
+        None
+        """
+        with open('data/goals.txt', 'w+', encoding="utf-8") as file:
             file.write(f"{self.today_data.formatted_date}\n")
             for goals in goals_texts:
-                file.write('%s\n' % goals)
+                file.write(f"{goals}\n")
 
 
 class GoalsWidget(CTkFrame):
+    """
+    A class to create goals widget
+
+    ...
+    Attributes
+    ----------
+    settings : Settings
+         app settings
+    management : GoalsManagement
+        goals management connection
+    display : list[list[str]]
+        contains list of pages to display
+    current_site : int
+        currently shown site of goals
+    widget : list[int]
+        currently displayed widgets
+    c_frame : int
+        id of the canvas c_frame
+    b_arr_up : int
+        id of the button b_arr_up
+    b_arr_down : int
+        id of the button b_arr_down
+
+    Methods
+    ---------
+    show_goals():
+        displays selected goal site
+    format_goals():
+        breaks goals into lists of limited lines to 420 pixels
+    get_display():
+        breaks list of lines into list of them
+    """
+
     def __init__(self, master):
         self.settings = Settings()
         super().__init__(master, width=500, height=500)
@@ -67,8 +130,17 @@ class GoalsWidget(CTkFrame):
 
         self.show_goals()
 
-    def show_goals(self, site=0):
-        self.current_site += site
+    def show_goals(self, direction=0):
+        """
+        Displays goals
+
+        Parameters
+        ----------
+        direction : int
+            determines which site of display will be shown
+        :return:
+        """
+        self.current_site += direction
         for widget in self.widgets:
             self.c_frame.delete(widget)
 
@@ -81,15 +153,27 @@ class GoalsWidget(CTkFrame):
         else:
             self.b_arr_down.configure(state="normal")
 
-        row = 0
-        for line in self.display[self.current_site]:
-            text = self.c_frame.create_text(0, 100 + row * 40, text=line, font=("Arial", 20),
-                                            fill=self.settings.font_color, justify="left", anchor="w")
-            self.widgets.append(text)
-            row += 1
 
+        if len(self.display) != 0:
+            row = 0
+            for line in self.display[self.current_site]:
+                text = self.c_frame.create_text(0, 100 + row * 40, text=line, font=("Arial", 20),
+                                                fill=self.settings.font_color, justify="left", anchor="w")
+                self.widgets.append(text)
+                row += 1
 
     def format_goals(self, texts):
+        """
+        Formats given list of strings
+
+        Parameters
+        ----------
+        texts : list[str]
+
+        Returns
+        --------
+        list[list[str]]
+        """
         formated = []
         goal_nr = 1
         for text in texts:
@@ -115,6 +199,18 @@ class GoalsWidget(CTkFrame):
         return formated
 
     def get_display(self, goals):
+        """
+        Breaks goal lines into display
+
+        Parameters
+        ----------
+        goals : list[list[str]]
+            formatted goals
+
+        Returns
+        -------
+        list[list[str]]
+        """
         display = []
 
         new = []
@@ -135,18 +231,49 @@ class GoalsWidget(CTkFrame):
 
         return display
 
+
 class GoalsWindow:
+    """
+    A class for goals creation window
+
+    ...
+    Attirbutes
+    ----------
+    settings : Settings
+         app settings class
+    management : GoalsManagement
+        goals management class conection
+    today_data : Date
+        object of Date class
+    goals_texts : list[str]
+        list of goals
+    goals_widgets : list[int]
+        list of ids currently displayed
+    e_todo : int
+        id of entry for goals
+    dots : int
+        id of dots widget
+    shadow :
+
+
+    """
     def __init__(self, root):
+        self.app = root
         self.settings = Settings()
         self.management = GoalsManagement()
         self.today_data = Date()
 
-        self.app = root
         self.goals_texts = self.management.goals_from_file()
         self.goals_widgets = []
 
         self.shadow_line_position = 0
         self.goal_widgets_yposes = []
+
+        self.e_todo = None
+        self.dots = None
+        self.shadow = None
+        self.line = None
+        self.goal = 0
 
 
     def create_setup1_window(self):
@@ -159,26 +286,27 @@ class GoalsWindow:
             for goal in self.goals_texts:
                 self.show_goal(goal)
 
-        self.app.c_main.create_text(1080, 60, text="Create goals for today", font=self.settings.font, fill=self.settings.font_color)
+        self.app.c_main.create_text(1080, 60, text="Create goals for today", font=self.settings.font,
+                                    fill=self.settings.font_color)
 
         self.app.c_main.create_line(870, 100, 1290, 100, fill=self.settings.second_color, width=8)
         self.app.c_main.create_image(75, 750, image=create_imagetk("images/goals/arrow.png", ))
-        self.app.c_main.create_text(20, 750, text="Importance", font=self.settings.font, fill=self.settings.font_color, anchor="nw",
-                                    angle=90)
+        self.app.c_main.create_text(20, 750, text="Importance", font=self.settings.font, fill=self.settings.font_color,
+                                    anchor="nw", angle=90)
 
         self.e_todo = CTkEntry(self.app, font=("Arial", 20))
         self.e_todo.focus()
         self.app.c_main.create_window(1030, 1295, window=self.e_todo, width=1760, height=50)
-        self.b_add = CTkButton(self.app, text="+", font=("Arial", 60), fg_color=self.settings.second_color,
+        b_add = CTkButton(self.app, text="+", font=("Arial", 60), fg_color=self.settings.second_color,
                                command=self.add_goal, border_width=5, hover_color=self.settings.main_color,
                                border_color=self.settings.second_color)
-        self.app.c_main.create_window(75, 1295, window=self.b_add, height=50, width=50)
+        self.app.c_main.create_window(75, 1295, window=b_add, height=50, width=50)
 
-        self.b_submit = CTkButton(self.app, text="Submit", font=self.settings.font, fg_color=self.settings.second_color,
+        b_submit = CTkButton(self.app, text="Submit", font=self.settings.font, fg_color=self.settings.second_color,
                                   hover_color=self.settings.main_color, border_color=self.settings.second_color,
                                   border_width=5,
-                                  command=self.app.setup2.create_setup2_window)
-        self.app.c_main.create_window(2035, 1295, window=self.b_submit, width=150, height=50)
+                                  command=self.app.timeline.create_window)
+        self.app.c_main.create_window(2035, 1295, window=b_submit, width=150, height=50)
 
         self.dots = self.app.c_main.create_image(125, 210, image=create_imagetk("images/goals/dots.png"),
                                                  tags=("dots",), state='hidden')
@@ -246,27 +374,27 @@ class GoalsWindow:
     def strike_off(self, event):
         self.app.c_main.itemconfigure(event.widget.find_withtag("current")[0], font=("Arial", 20))
 
-    def position(self, e):
+    def position(self, event):
         flag = 0
         y = 0
         for posy in self.goal_widgets_yposes:
-            if posy - 25 < e.y < posy + 25 and 110 < e.x < 140:
+            if posy - 25 < event.y < posy + 25 and 110 < event.x < 140:
                 y = posy
                 flag = 1
 
-        if flag == 1 and y - 14 < e.y < y + 14:
+        if flag == 1 and y - 14 < event.y < y + 14:
             self.app.c_main.itemconfigure(self.dots, state='normal')
             self.app.c_main.moveto(self.dots, 100, y - 25)
         else:
             self.app.c_main.itemconfigure(self.dots, state='hidden')
 
-    def press_dots(self, e):
+    def press_dots(self, event):
         flag = 0
         text = ""
         self.goal = 0
         self.app.c_main.itemconfigure(self.line, state='normal')
         for posy in self.goal_widgets_yposes:
-            if posy - 25 < e.y < posy + 25:
+            if posy - 25 < event.y < posy + 25:
                 text = self.app.c_main.itemcget(self.goals_widgets[self.goal], 'text')
                 flag = 1
             elif flag == 0:
@@ -274,21 +402,21 @@ class GoalsWindow:
         self.app.c_main.itemconfigure(self.shadow, text=text)
         self.app.c_main.unbind("<Motion>")
 
-    def move_dots(self, e):
+    def move_dots(self, event):
         self.app.c_main.itemconfigure(self.shadow, state="normal")
 
-        if e.y < 200:
+        if event.y < 200:
             self.shadow_line_position = 0
-        elif e.y > self.goal_widgets_yposes[-1]:
+        elif event.y > self.goal_widgets_yposes[-1]:
             self.shadow_line_position = len(self.goal_widgets_yposes)
         else:
-            self.shadow_line_position = int((e.y - 110) / 60) - 1
+            self.shadow_line_position = int((event.y - 110) / 60) - 1
 
         self.app.c_main.moveto(self.line, 150, 150 + self.shadow_line_position * 60)
 
-        if 200 < e.y < self.goal_widgets_yposes[-1]:
-            self.app.c_main.moveto(self.dots, 100, e.y - 25)
-            self.app.c_main.moveto(self.shadow, 150, e.y - 20)
+        if 200 < event.y < self.goal_widgets_yposes[-1]:
+            self.app.c_main.moveto(self.dots, 100, event.y - 25)
+            self.app.c_main.moveto(self.shadow, 150, event.y - 20)
 
     def unpress_dots(self, *_):
         self.app.c_main.itemconfigure(self.line, state='hidden')
