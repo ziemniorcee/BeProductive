@@ -212,7 +212,6 @@ class TimelineWindow:
 
         self.tl_blocks = None
 
-
     def create_window(self):
         self.app.page = 2
         self.app.create_c_main()
@@ -224,11 +223,11 @@ class TimelineWindow:
         self.app.c_main.create_line(800, 150, 800, 1000, fill=self.settings.second_color, width=5)
 
         self.pointer = self.app.c_main.create_line(100, 1070, 100, 1270, fill="#155255", width=5, state="hidden")
+        self.tl_add_bg = self.app.c_main.create_rectangle(50, 1120, 2060, 1220, fill=self.settings.main_color, width=0)
 
         self.tl_blocks = TimelineBlocks(self.app)
         self.rc_blocks = RecentlyBlocks(self.app)
         self.saved_blocks = SavedBlocks(self.app)
-
 
         self.app.c_main.tag_raise(self.pointer)
 
@@ -244,56 +243,61 @@ class Block:
 
 
 class Blocks:
-    def __init__(self, root, file_name):
+    def __init__(self, root, file_name, startx, width):
         self.app = root
         self.settings = Settings()
         self.management = TimelineManagement()
         self.params = self.management.from_file(file_name)
         self.timeline = self.app.timeline.tl_blocks
         self.blocks = []
+        self.width = width
+        self.startx = startx
+        self.delete = 0
 
         self.selected_block = None
         self.timeline_positions = self.timeline.timeline_positions
-        print(self.timeline_positions)
         self.current_pos = 0
 
-        self.tl_add_bg = self.app.c_main.create_rectangle(50, 1120, 2060, 1220, fill=self.settings.main_color, width=0)
-        self.app.c_main.tag_lower(self.tl_add_bg)
+
+
         self.tl_add_text = self.app.c_main.create_text(1055, 1280, font=("Arial", 30), fill=self.settings.font_color,
                                                        state="hidden", text="Add to the timeline")
-
         self.pointer = self.app.timeline.pointer
+        self.pos_counter = [0, 0]
 
-    def create(self, startx, width, length):
-        i = 0
-        j = 0
         for param in self.params:
-            tag_name = f"b{width}_{j * 10 + i}"
-            block_id = self.app.c_main.create_rectangle(startx + i * 250, 225 + 150 * j, startx + 200 + i * 250,
-                                                        325 + 150 * j, fill=param[1], tags=tag_name,
-                                                        outline=self.settings.second_color, width=5)
+            self.add_block(param)
 
-            timer = format_time(param[0])
-            timer_id = self.app.c_main.create_text(startx + 100 + i * 250, 275 + j * 150,
-                                                   text=timer, font=self.settings.font,
-                                                   fill=self.settings.font_color, tags=tag_name)
-            category_id = self.app.c_main.create_text(startx + 100 + i * 250, 305 + j * 150, text=param[2],
-                                                      tag=tag_name, fill=self.settings.font_color, font=("Arial", 15),
-                                                      anchor="center")
-            self.blocks.append(Block(param[1], param[0], param[2], [block_id, timer_id, category_id], tag_name,
-                                     [startx + i * 250, 225 + 150 * j]))
-            i += 1
-            if i % width == 0:
-                j += 1
-                i = 0
+    def add_block(self, param):
+        tag_name = f"b{self.width}_{self.pos_counter[1] * 10 + self.pos_counter[0]}_{self.delete}"
+        block_id = self.app.c_main.create_rectangle(self.startx + self.pos_counter[0] * 250,
+                                                    225 + 150 * self.pos_counter[1],
+                                                    self.startx + 200 + self.pos_counter[0] * 250,
+                                                    325 + 150 * self.pos_counter[1], fill=param[1], tags=tag_name,
+                                                    outline=self.settings.second_color, width=5)
+        timer = format_time(param[0])
+        timer_id = self.app.c_main.create_text(self.startx + 100 + self.pos_counter[0] * 250,
+                                               275 + self.pos_counter[1] * 150, text=timer, font=self.settings.font,
+                                               fill=self.settings.font_color, tags=tag_name)
+        category_id = self.app.c_main.create_text(self.startx + 100 + self.pos_counter[0] * 250,
+                                                  305 + self.pos_counter[1] * 150, text=param[2], tag=tag_name,
+                                                  fill=self.settings.font_color, font=("Arial", 15), anchor="center")
+        self.blocks.append(Block(param[1], param[0], param[2], [block_id, timer_id, category_id], tag_name,
+                                 [self.startx + self.pos_counter[0] * 250, 225 + 150 * self.pos_counter[1]]))
+        self.pos_counter[0] += 1
+        if self.pos_counter[0] % self.width == 0:
+            self.pos_counter[1] += 1
+            self.pos_counter[0] = 0
 
+    # def add_block(self):
     def press(self, e):
         pressed_id = (e.widget.find_withtag("current")[0])
         for block in self.blocks:
             if pressed_id in block.element_ids:
                 self.selected_block = block
                 break
-        self.app.c_main.itemconfigure(self.tl_add_bg, fill="#313131")
+
+        self.app.c_main.itemconfigure(self.app.timeline.tl_add_bg, fill="#313131")
         self.app.c_main.itemconfigure(self.tl_add_text, state="normal")
 
     def move(self, e):
@@ -321,8 +325,9 @@ class Blocks:
         if self.pointer is not None:
             self.app.c_main.itemconfigure(self.pointer, state='hidden')
 
-        self.app.c_main.itemconfigure(self.tl_add_bg, fill=self.settings.main_color)
+        self.app.c_main.itemconfigure(self.app.timeline.tl_add_bg, fill=self.settings.main_color)
         self.app.c_main.itemconfigure(self.tl_add_text, state="hidden")
+
 
         self.app.c_main.moveto(self.selected_block.element_ids[0], self.selected_block.start_pos[0],
                                self.selected_block.start_pos[1])
@@ -331,8 +336,7 @@ class Blocks:
         self.app.c_main.coords(self.selected_block.element_ids[2], self.selected_block.start_pos[0] + 100,
                                self.selected_block.start_pos[1] + 85)
 
-
-        if 1090 < e.y < 1390 and len(self.timeline.blocks) < 9:
+        if 1050 < e.y < 1300 and len(self.timeline.blocks) < 9:
             self.timeline.add([self.selected_block.timer, self.selected_block.color, self.selected_block.text])
 
             element = len(self.timeline.blocks)
@@ -341,33 +345,33 @@ class Blocks:
             poped = self.timeline.blocks.pop(element - 1)
             self.timeline.blocks.insert(self.timeline.change, poped)
 
-            for item in self.timeline.blocks[self.timeline.change:element + 1]:
-                item.start_pos[0] = new_pos
-                self.app.c_main.coords(item.element_ids[0], new_pos, 1120, new_pos + 200, 1220)
-                self.app.c_main.coords(item.element_ids[1], new_pos + 100, 1170)
-                self.app.c_main.coords(item.element_ids[2], new_pos + 100, 1200)
-                new_pos += 200
-
-
-        # if self.element != self.change:
-        #     self.restart()
-        #     self.tl_to_file()
-        #
+            self.timeline.shift(self.timeline.blocks[self.timeline.change:element + 1], new_pos)
 
 
 class RecentlyBlocks(Blocks):
     def __init__(self, root):
-        super().__init__(root, "blocks.txt")
+        super().__init__(root, "blocks.txt", 75, 3)
+        self.new_block = None
         self.app = root
         self.saved_add_bg = self.app.c_main.create_rectangle(800, 150, 2110, 1000, fill=self.settings.main_color,
                                                              outline=self.settings.second_color, width=5)
         self.saved_add_text = self.app.c_main.create_text(1455, 975, font=("Arial", 30), fill=self.settings.font_color,
                                                           state="hidden", text="Drop here to save")
-        self.create(75, 3, 45)
+        self.b_rc_create = CTkButton(self.app, text="+", font=("Arial", 70), fg_color=self.settings.main_color,
+                                     command=self.rc_add)
+        self.app.c_main.create_window(80, 970, window=self.b_rc_create, height=50, width=50)
+
+        self.clock_window = None
+        self.is_clock_window_on = False
+        self.new_block = None
+
         for block in self.blocks:
-            self.app.c_main.tag_bind(block.tag, "<Button-1>", self.rc_press)
-            self.app.c_main.tag_bind(block.tag, "<B1-Motion>", self.rc_move)
-            self.app.c_main.tag_bind(block.tag, "<ButtonRelease-1>", self.rc_unpress)
+            self.bind(block.tag)
+
+    def bind(self, tag):
+        self.app.c_main.tag_bind(tag, "<Button-1>", self.rc_press)
+        self.app.c_main.tag_bind(tag, "<B1-Motion>", self.rc_move)
+        self.app.c_main.tag_bind(tag, "<ButtonRelease-1>", self.rc_unpress)
 
     def rc_press(self, e):
         self.press(e)
@@ -386,20 +390,69 @@ class RecentlyBlocks(Blocks):
         self.app.c_main.itemconfigure(self.saved_add_bg, fill=self.settings.main_color)
         self.app.c_main.itemconfigure(self.saved_add_text, state='hidden')
 
+        if 800 < e.x < 2110 and 150 < e.y < 1000:
+            self.app.c_main.itemconfigure(self.saved_add_bg, fill=self.settings.main_color)
+            self.app.c_main.itemconfigure(self.saved_add_text, state='hidden')
+            self.app.c_main.itemconfigure(self.selected_block.element_ids[0], outline=self.settings.second_color)
+            params = [self.selected_block.timer, self.selected_block.color, self.selected_block.text]
+
+            self.app.timeline.saved_blocks.add_block(params)
+            self.app.timeline.saved_blocks.bind(self.app.timeline.saved_blocks.blocks[-1].tag)
+
+    def rc_add(self):
+        if not self.is_clock_window_on or not self.clock_window.is_clock_on:
+            self.clock_window = Clock(self)
+            self.clock_window.wm_attributes("-topmost", True)
+            self.is_clock_window_on = True
+            self.clock_window.protocol("WM_DELETE_WINDOW", self.clock_on_closing)
+
+    def clock_on_closing(self):
+        start_pos = self.blocks[0].start_pos
+        if self.new_block is not None:
+            for i in range(len(self.blocks)):
+                if i < len(self.blocks) - 1:
+                    self.blocks[i].start_pos = self.blocks[i + 1].start_pos
+                else:
+                    self.blocks[i].start_pos = [self.startx + self.pos_counter[0] * 250,
+                                                225 + 150 * self.pos_counter[1]]
+                self.app.c_main.moveto(self.blocks[i].element_ids[0], self.blocks[i].start_pos[0],
+                                       self.blocks[i].start_pos[1])
+                self.app.c_main.moveto(self.blocks[i].element_ids[1], self.blocks[i].start_pos[0] + 50,
+                                       self.blocks[i].start_pos[1] + 30)
+                self.app.c_main.coords(self.blocks[i].element_ids[2], self.blocks[i].start_pos[0] + 100,
+                                       self.blocks[i].start_pos[1] + 85)
+
+            self.pos_counter[0] += 1
+            if self.pos_counter[0] % self.width == 0:
+                self.pos_counter[1] += 1
+                self.pos_counter[0] = 0
+            self.delete += 1
+
+            self.add_block(self.new_block)
+            self.blocks[-1].start_pos = start_pos
+            self.app.c_main.moveto(self.blocks[-1].element_ids[0], start_pos[0], start_pos[1])
+            self.app.c_main.moveto(self.blocks[-1].element_ids[1], start_pos[0] + 50, start_pos[1] + 30)
+            self.app.c_main.coords(self.blocks[-1].element_ids[2], start_pos[0] + 100, start_pos[1] + 85)
+            self.bind(self.blocks[-1].tag)
+
+        self.clock_window.destroy()
+        self.is_clock_window_on = False
+
 
 class SavedBlocks(Blocks):
     def __init__(self, root):
-        super().__init__(root, "saved_blocks.txt")
+        super().__init__(root, "saved_blocks.txt", 825, 5)
         self.app = root
         self.saved_trash = self.app.c_main.create_image(835, 960, image=create_imagetk("images/blocks/trash.png"),
                                                         state="hidden")
 
-        self.create(startx=825, width=5, length=225)
-
         for block in self.blocks:
-            self.app.c_main.tag_bind(block.tag, "<Button-1>", self.saved_press)
-            self.app.c_main.tag_bind(block.tag, "<B1-Motion>", self.saved_move)
-            self.app.c_main.tag_bind(block.tag, "<ButtonRelease-1>", self.saved_unpress)
+            self.bind(block.tag)
+
+    def bind(self, tag):
+        self.app.c_main.tag_bind(tag, "<Button-1>", self.saved_press)
+        self.app.c_main.tag_bind(tag, "<B1-Motion>", self.saved_move)
+        self.app.c_main.tag_bind(tag, "<ButtonRelease-1>", self.saved_unpress)
 
     def saved_press(self, e):
         self.press(e)
@@ -415,8 +468,29 @@ class SavedBlocks(Blocks):
     def saved_unpress(self, e):
         self.unpress(e)
         self.app.c_main.itemconfigure(self.saved_trash, state='hidden')
-        # if 735 < e.x < 935 and 900 < e.y < 1020:
-        #     self._delete_saved()
+        if 735 < e.x < 935 and 900 < e.y < 1020:
+            previous_pos = None
+
+            save_pos = None
+            for block in self.blocks[self.blocks.index(self.selected_block):]:
+                if previous_pos is not None:
+                    self.app.c_main.moveto(block.element_ids[0], previous_pos[0], previous_pos[1])
+                    self.app.c_main.moveto(block.element_ids[1], previous_pos[0] + 50, previous_pos[1] + 30)
+                    self.app.c_main.coords(block.element_ids[2], previous_pos[0] + 100, previous_pos[1] + 85)
+                    save_pos = previous_pos
+                previous_pos = block.start_pos
+                block.start_pos = save_pos
+
+            if self.pos_counter[0] > 0:
+                self.pos_counter[0] -= 1
+            else:
+                self.pos_counter[1] -= 1
+                self.pos_counter[0] = self.width - 1
+
+            self.app.c_main.delete(self.selected_block.element_ids[0])
+            self.app.c_main.delete(self.selected_block.element_ids[1])
+            self.app.c_main.delete(self.selected_block.element_ids[2])
+            self.blocks.remove(self.selected_block)
 
 
 class TimelineBlocks:
@@ -424,10 +498,11 @@ class TimelineBlocks:
         self.settings = Settings()
         self.app = root
         self.management = TimelineManagement()
-        self.params = self.management.from_file("tl_blocks.txt")
+
         self.blocks = []
         self.timeline_positions = [100]
         self.current_pos = 0
+        self.change = None
         self.selected_block = None
 
         self.pointer = self.app.timeline.pointer
@@ -442,10 +517,9 @@ class TimelineBlocks:
 
         self.tl_trash = self.app.c_main.create_image(2100, 1170, image=create_imagetk("images/blocks/trash.png"),
                                                      state="hidden")
-
+        self.params = self.management.from_file("tl_blocks.txt")
         for param in self.params:
             self.add(param)
-
 
     def add(self, param):
         tag_name = f"tl{self.tag_ig}"
@@ -473,7 +547,6 @@ class TimelineBlocks:
 
     def tl_press(self, e):
         pressed_id = (e.widget.find_withtag("current")[0])
-        print("pressedid", pressed_id)
         for block in self.blocks:
             if pressed_id in block.element_ids:
                 self.selected_block = block
@@ -512,8 +585,6 @@ class TimelineBlocks:
         poped = self.blocks.pop(element)
         self.blocks.insert(self.change, poped)
 
-        new_pos = None
-        arr = None
         if element == self.change:
             self.app.c_main.coords(self.selected_block.element_ids[0], self.selected_block.start_pos[0], 1120,
                                    self.selected_block.start_pos[0] + 200, 1220)
@@ -521,46 +592,26 @@ class TimelineBlocks:
             self.app.c_main.coords(self.selected_block.element_ids[2], self.selected_block.start_pos[0] + 100, 1200)
         elif self.change > element:
             new_pos = self.selected_block.start_pos[0]
-            print("ster", element, " ", self.change)
-            for item in self.blocks[element:self.change+1]:
-                item.start_pos[0] = new_pos
-                self.app.c_main.coords(item.element_ids[0], new_pos, 1120, new_pos + 200, 1220)
-                self.app.c_main.coords(item.element_ids[1], new_pos + 100, 1170)
-                self.app.c_main.coords(item.element_ids[2], new_pos + 100, 1200)
-                new_pos += 200
+            self.shift(self.blocks[element:self.change + 1], new_pos)
         else:
             new_pos = 100 + self.change * 200
-            for item in self.blocks:
-                print(item)
-            for item in self.blocks[self.change:element+1]:
-                item.start_pos[0] = new_pos
-                self.app.c_main.coords(item.element_ids[0], new_pos, 1120, new_pos + 200, 1220)
-                self.app.c_main.coords(item.element_ids[1], new_pos + 100, 1170)
-                self.app.c_main.coords(item.element_ids[2], new_pos + 100, 1200)
-                new_pos += 200
-            print("po")
-            for item in self.blocks:
-                print(item)
-        # else:
+            self.shift(self.blocks[self.change:element + 1], new_pos)
 
-        # for item in self.blocks:
-        #     self.app.c_main.itemconfigure(self.tl_blocks[i][0], fill=blocks[i][0])
-        #     self.app.c_main.itemconfigure(self.tl_blocks[i][1], text=blocks[i][1])
-        #     self.app.c_main.itemconfigure(self.tl_blocks[i][2], text=blocks[i][2])
-        # if self.element != self.change:
-        #     self.restart()
-        # self._tl_shift(new_tl)
+        if e.x > 2000:
+            self.current_pos -= 1
+            self.timeline_positions.pop(-1)
+            self.app.c_main.delete(self.selected_block.element_ids[0])
+            self.app.c_main.delete(self.selected_block.element_ids[1])
+            self.app.c_main.delete(self.selected_block.element_ids[2])
+            self.blocks.pop(-1)
 
-        # if e.x > 2000:
-        #     self.current_pos -= 1
-        #     self.timeline_positions.pop(-1)
-        #     self.app.c_main.delete(self.tl_blocks[-1][0])
-        #     self.app.c_main.delete(self.tl_blocks[-1][1])
-        #     self.app.c_main.delete(self.tl_blocks[-1][2])
-        #     self.tl_blocks.pop(-1)
-        #     new_tl.pop(-1)
-        #
-        # self.tl_to_file()
+    def shift(self, arr, start):
+        for item in arr:
+            item.start_pos[0] = start
+            self.app.c_main.coords(item.element_ids[0], start, 1120, start + 200, 1220)
+            self.app.c_main.coords(item.element_ids[1], start + 100, 1170)
+            self.app.c_main.coords(item.element_ids[2], start + 100, 1200)
+            start += 200
 
     def get_change(self, x):
         i = 0
