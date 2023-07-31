@@ -33,6 +33,8 @@ class Setup2:
         self.current_position = 100
         self.create_mode = 0
 
+        self.tl_blocks = None
+
     def create_setup2_window(self):
         self.app.page = 2
 
@@ -453,120 +455,3 @@ class Setup2:
         self.is_clock_window_on = False
 
     # methods for main window
-
-    def widget_timeline(self):
-        self.current_pos = 0
-        self.timeline_positions = [100]
-        self.tl_blocks = []
-        self.tl_params = []
-        self.current_block = 0
-        self.timer = "0:00"
-        self.current_line_len = 555
-        self.current_time = 0
-
-        self._tl_bg_create()
-        self.tl_from_file()
-        for item in self.tl_params:
-            self.tl_add_block(item[0], item[1], item[2], 0)
-
-        img = CTkImage(light_image=Image.open("images/timeline/play.png"), size=(50, 50))
-
-        self.play_pause = CTkButton(self.app, image=img, text="", fg_color=self.settings.main_color,
-                                    hover_color=self.settings.second_color,
-                                    command=self.start_stop_timer)
-        self.app.c_main.create_window(1055, 1280, window=self.play_pause, width=70, height=70)
-
-        img = CTkImage(light_image=Image.open("images/timeline/next.png"), size=(25, 25))
-        self.next = CTkButton(self.app, image=img, text="", fg_color=self.settings.main_color,
-                              hover_color=self.settings.second_color, command=self.next_block)
-        self.app.c_main.create_window(1155, 1280, window=self.next, width=40, height=40)
-
-        img = CTkImage(light_image=Image.open("images/timeline/previous.png"), size=(25, 25))
-        self.previous = CTkButton(self.app, image=img, text="", fg_color=self.settings.main_color,
-                                  hover_color=self.settings.second_color,
-                                  command=self.prev_block)
-        self.app.c_main.create_window(955, 1280, window=self.previous, width=40, height=40)
-
-        self.time_current = self.app.c_main.create_text(500, 1330, text=f"{self.timer}", font=("Arial", 20),
-                                                        fill=self.settings.font_color)
-        self.block_len = self.app.c_main.create_text(1610, 1330, text="0:00", font=("Arial", 20),
-                                                     fill=self.settings.font_color)
-        self.current = self.app.c_main.create_line(self.current_position, 1090, self.current_position, 1250,
-                                                   fill=self.settings.font_color, width=5)
-        self.line_length = self.app.c_main.create_line(555, 1330, 555, 1330, fill=self.settings.font_color, width=8)
-
-        if len(self.tl_params) > 0:
-            self.time = int(self.tl_params[self.current_block][0])
-            self.app.c_main.itemconfigure(self.block_len, text=f"{self.time}:00")
-            self.pause_on = False
-        if self.current_pos == 0:
-            self.play_pause.configure(state="disabled")
-
-    def start_stop_timer(self):
-        self.pause_on = not self.pause_on
-        self.play_pause.configure(command=None)
-        self.app.after(500, lambda: self.play_pause.configure(command=self.start_stop_timer))
-
-        if self.pause_on:
-            self._change_img("pause")
-            self.time = int(self.tl_params[self.current_block][0])
-            self.current_speed = 200 / (self.time * 60)
-            self.line_speed = 1000 / (self.time * 60)
-
-            if self.current_time == 0:
-                self.count_down(0)
-            else:
-                self.count_down(self.current_time)
-
-    def count_down(self, count):
-        if count <= self.time * 60 and self.pause_on:
-            self.timer = f"{int(count / 60)}:{count % 60 if count % 60 > 9 else f'0{count % 60}'}"
-            if self.app.page == 0:
-                self.app.c_main.itemconfigure(self.time_current, text=self.timer)
-                self.app.c_main.coords(self.current, self.current_position, 1090, self.current_position, 1250)
-                self.app.c_main.coords(self.line_length, 555, 1330, self.current_line_len, 1330)
-
-            self.current_time = count + 1
-            self.app.after(1000, self.count_down, count + 1)
-            self.current_position += self.current_speed
-            self.current_line_len += self.line_speed
-        elif not count < self.time * 60:
-            self.next_block()
-        else:
-            self._change_img("play")
-
-    def next_block(self):
-        self.play_pause.configure(command=None)
-        self.app.after(500, lambda: self.play_pause.configure(command=self.start_stop_timer))
-        if len(self.tl_params) - 1 > self.current_block:
-            self.current_block += 1
-            self.reset()
-
-    def prev_block(self):
-        self.play_pause.configure(command=None)
-        self.app.after(500, lambda: self.play_pause.configure(command=self.start_stop_timer))
-        if self.current_block > 0 and self.current_time == 0:
-            self.current_block -= 1
-        self.reset()
-
-    def restart(self):
-        self.current_block = 0
-        self._value_reset()
-
-    def reset(self):
-        self._value_reset()
-        self.app.c_main.itemconfigure(self.block_len, text=f"{self.tl_params[self.current_block][0]}:00")
-        self.app.c_main.itemconfigure(self.time_current, text=f"0:00")
-        self.app.c_main.coords(self.line_length, 555, 1400, 555, 1400)
-        self.app.c_main.coords(self.current, self.current_position, 1090, self.current_position, 1250)
-
-    def _change_img(self, file):
-        img = CTkImage(light_image=Image.open(f"images/timeline/{file}.png"), size=(50, 50))
-        self.play_pause.configure(image=img)
-
-    def _value_reset(self):
-        self.pause_on = False
-        self.current_position = 100 + self.current_block * 200
-        self._change_img("play")
-        self.current_time = 0
-        self.current_line_len = 555

@@ -501,7 +501,7 @@ class ButtonNewBlock(CTkButton):
     ...
     Attributes
     ----------
-    master : CTkFrame
+    master : Background
         connection to the background frame
     window_on : bool
         is the window on
@@ -544,6 +544,7 @@ class ButtonNewBlock(CTkButton):
 
         if not self.window_on:
             self.new_block_window = NewBlock(self.master)
+            print(type(self.master), "master")
             self.new_block_window.wm_attributes("-topmost", True)
             self.window_on = True
             self.new_block_window.protocol("WM_DELETE_WINDOW", self.new_block_on_closing)

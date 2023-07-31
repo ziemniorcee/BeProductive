@@ -210,6 +210,9 @@ class TimelineWindow:
         self.settings = Settings()
         self.app = root
 
+        self.tl_blocks = None
+
+
     def create_window(self):
         self.app.page = 2
         self.app.create_c_main()
@@ -222,9 +225,10 @@ class TimelineWindow:
 
         self.pointer = self.app.c_main.create_line(100, 1070, 100, 1270, fill="#155255", width=5, state="hidden")
 
+        self.tl_blocks = TimelineBlocks(self.app)
         self.rc_blocks = RecentlyBlocks(self.app)
         self.saved_blocks = SavedBlocks(self.app)
-        self.tl_blocks = TimelineBlocks(self.app)
+
 
         self.app.c_main.tag_raise(self.pointer)
 
@@ -245,13 +249,16 @@ class Blocks:
         self.settings = Settings()
         self.management = TimelineManagement()
         self.params = self.management.from_file(file_name)
+        self.timeline = self.app.timeline.tl_blocks
         self.blocks = []
 
         self.selected_block = None
-        self.timeline_positions = [100]
+        self.timeline_positions = self.timeline.timeline_positions
+        print(self.timeline_positions)
         self.current_pos = 0
 
         self.tl_add_bg = self.app.c_main.create_rectangle(50, 1120, 2060, 1220, fill=self.settings.main_color, width=0)
+        self.app.c_main.tag_lower(self.tl_add_bg)
         self.tl_add_text = self.app.c_main.create_text(1055, 1280, font=("Arial", 30), fill=self.settings.font_color,
                                                        state="hidden", text="Add to the timeline")
 
@@ -297,6 +304,8 @@ class Blocks:
             self.app.c_main.moveto(self.selected_block.element_ids[1], e.x - 50, 1150)
             self.app.c_main.coords(self.selected_block.element_ids[2], e.x, 1200)
 
+            self.timeline.get_change(e.x)
+
         else:
             self.app.c_main.moveto(self.selected_block.element_ids[0], e.x - 100, e.y - 50)
             self.app.c_main.moveto(self.selected_block.element_ids[1], e.x - 50, e.y - 20)
@@ -322,21 +331,24 @@ class Blocks:
         self.app.c_main.coords(self.selected_block.element_ids[2], self.selected_block.start_pos[0] + 100,
                                self.selected_block.start_pos[1] + 85)
 
-        # if 1090 < e.y < 1390 and len(self.tl_blocks) < 9:
-        #     col = self.app.c_main.itemcget(self.blocks[self.category][self.element][0], 'fill')
-        #     timer = self.app.c_main.itemcget(self.blocks[self.category][self.element][1], 'text')
-        #     text = self.app.c_main.itemcget(self.blocks[self.category][self.element][2], 'text')
-        #
-        #     timer = deformat_time(timer)
-        #     self.tl_add_block(timer, col, text)
-        #
-        #     self.element = len(self.tl_blocks)
-        #
-        #     new_tl = self.tl_blocks[:]
-        #     poped = new_tl.pop(self.element - 1)
-        #     new_tl.insert(self.change, poped)
-        #     self._tl_shift(new_tl)
-        #
+
+        if 1090 < e.y < 1390 and len(self.timeline.blocks) < 9:
+            self.timeline.add([self.selected_block.timer, self.selected_block.color, self.selected_block.text])
+
+            element = len(self.timeline.blocks)
+            new_pos = 100 + self.timeline.change * 200
+
+            poped = self.timeline.blocks.pop(element - 1)
+            self.timeline.blocks.insert(self.timeline.change, poped)
+
+            for item in self.timeline.blocks[self.timeline.change:element + 1]:
+                item.start_pos[0] = new_pos
+                self.app.c_main.coords(item.element_ids[0], new_pos, 1120, new_pos + 200, 1220)
+                self.app.c_main.coords(item.element_ids[1], new_pos + 100, 1170)
+                self.app.c_main.coords(item.element_ids[2], new_pos + 100, 1200)
+                new_pos += 200
+
+
         # if self.element != self.change:
         #     self.restart()
         #     self.tl_to_file()
@@ -419,7 +431,7 @@ class TimelineBlocks:
         self.selected_block = None
 
         self.pointer = self.app.timeline.pointer
-
+        self.tag_ig = 0
         self.app.c_main.create_line(50, 1120, 2060, 1120, fill=self.settings.second_color, width=5)
         self.app.c_main.create_line(2010, 1090, 2060, 1120, fill=self.settings.second_color, width=5)
         self.app.c_main.create_line(2010, 1150, 2060, 1120, fill=self.settings.second_color, width=5)
@@ -431,35 +443,33 @@ class TimelineBlocks:
         self.tl_trash = self.app.c_main.create_image(2100, 1170, image=create_imagetk("images/blocks/trash.png"),
                                                      state="hidden")
 
-        self.create()
-
-    def create(self):
-        tag_id = 0
         for param in self.params:
-            tag_name = f"tl{tag_id}"
-            block_id = self.app.c_main.create_rectangle(self.timeline_positions[self.current_pos], 1120,
-                                                        self.timeline_positions[self.current_pos] + 200,
-                                                        1220, fill=param[1], outline=self.settings.second_color,
-                                                        width=5,
-                                                        tags=tag_name)
+            self.add(param)
 
-            timer = format_time(param[0])
-            timer_id = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1170,
-                                                   text=timer, font=self.settings.font, fill=self.settings.font_color,
-                                                   tags=tag_name)
-            category_id = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1200,
-                                                      text=param[2], font=("Arial", 15), fill=self.settings.font_color,
-                                                      tags=tag_name)
 
-            self.app.c_main.tag_bind(tag_name, "<B1-Motion>", self.tl_move)
-            self.app.c_main.tag_bind(tag_name, "<Button-1>", self.tl_press)
-            self.app.c_main.tag_bind(tag_name, "<ButtonRelease-1>", self.tl_unpress)
-            self.blocks.append(Block(param[1], param[0], param[2], [block_id, timer_id, category_id], tag_name,
-                                     [self.timeline_positions[self.current_pos]]))
+    def add(self, param):
+        tag_name = f"tl{self.tag_ig}"
+        block_id = self.app.c_main.create_rectangle(self.timeline_positions[self.current_pos], 1120,
+                                                    self.timeline_positions[self.current_pos] + 200,
+                                                    1220, fill=param[1], outline=self.settings.second_color,
+                                                    width=5,
+                                                    tags=tag_name)
 
-            self.timeline_positions.append(self.timeline_positions[self.current_pos] + 200)
-            self.current_pos += 1
-            tag_id += 1
+        timer = format_time(param[0])
+        timer_id = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1170,
+                                               text=timer, font=self.settings.font, fill=self.settings.font_color,
+                                               tags=tag_name)
+        category_id = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1200,
+                                                  text=param[2], font=("Arial", 15), fill=self.settings.font_color,
+                                                  tags=tag_name)
+
+        self.app.c_main.tag_bind(tag_name, "<B1-Motion>", self.tl_move)
+        self.app.c_main.tag_bind(tag_name, "<Button-1>", self.tl_press)
+        self.app.c_main.tag_bind(tag_name, "<ButtonRelease-1>", self.tl_unpress)
+        self.blocks.append(Block(param[1], param[0], param[2], [block_id, timer_id, category_id], tag_name,
+                                 [self.timeline_positions[self.current_pos]]))
+        self.timeline_positions.append(self.timeline_positions[self.current_pos] + 200)
+        self.current_pos += 1
 
     def tl_press(self, e):
         pressed_id = (e.widget.find_withtag("current")[0])
@@ -468,6 +478,10 @@ class TimelineBlocks:
             if pressed_id in block.element_ids:
                 self.selected_block = block
                 break
+
+        self.app.c_main.tag_raise(self.selected_block.element_ids[0])
+        self.app.c_main.tag_raise(self.selected_block.element_ids[1])
+        self.app.c_main.tag_raise(self.selected_block.element_ids[2])
 
         self.app.c_main.itemconfigure(self.pointer, state='normal')
         self.app.c_main.itemconfigure(self.tl_trash, state="normal")
@@ -491,58 +505,43 @@ class TimelineBlocks:
         self.app.c_main.itemconfigure(self.pointer, state='hidden')
         self.app.c_main.itemconfigure(self.selected_block.element_ids[0], outline=self.settings.second_color)
 
-
-        element = int((self.selected_block.start_pos[0]-100)/200)
-        print(element)
+        element = int((self.selected_block.start_pos[0] - 100) / 200)
         if element < self.change:
             self.change -= 1
-
-        print(self.change)
 
         poped = self.blocks.pop(element)
         self.blocks.insert(self.change, poped)
 
-        print(self.selected_block.start_pos[0])
+        new_pos = None
+        arr = None
         if element == self.change:
-            print("xd")
             self.app.c_main.coords(self.selected_block.element_ids[0], self.selected_block.start_pos[0], 1120,
                                    self.selected_block.start_pos[0] + 200, 1220)
             self.app.c_main.coords(self.selected_block.element_ids[1], self.selected_block.start_pos[0] + 100, 1170)
             self.app.c_main.coords(self.selected_block.element_ids[2], self.selected_block.start_pos[0] + 100, 1200)
-
         elif self.change > element:
             new_pos = self.selected_block.start_pos[0]
             print("ster", element, " ", self.change)
             for item in self.blocks[element:self.change+1]:
-                if item.start_pos[0] > self.selected_block.start_pos[0]:
-                    item.start_pos[0] = new_pos
-                elif item.start_pos[0] == self.selected_block.start_pos[0]:
-
-                    item.start_pos[0] = new_pos
-                else:
-                    break
+                item.start_pos[0] = new_pos
                 self.app.c_main.coords(item.element_ids[0], new_pos, 1120, new_pos + 200, 1220)
                 self.app.c_main.coords(item.element_ids[1], new_pos + 100, 1170)
                 self.app.c_main.coords(item.element_ids[2], new_pos + 100, 1200)
                 new_pos += 200
         else:
             new_pos = 100 + self.change * 200
+            for item in self.blocks:
+                print(item)
             for item in self.blocks[self.change:element+1]:
-                if item.start_pos[0] > self.selected_block.start_pos[0]:
-                    item.start_pos[0] = new_pos
-                elif item.start_pos[0] == self.selected_block.start_pos[0]:
-                    item.start_pos[0] = new_pos
-                else:
-                    break
+                item.start_pos[0] = new_pos
                 self.app.c_main.coords(item.element_ids[0], new_pos, 1120, new_pos + 200, 1220)
                 self.app.c_main.coords(item.element_ids[1], new_pos + 100, 1170)
                 self.app.c_main.coords(item.element_ids[2], new_pos + 100, 1200)
                 new_pos += 200
-
+            print("po")
+            for item in self.blocks:
+                print(item)
         # else:
-
-
-
 
         # for item in self.blocks:
         #     self.app.c_main.itemconfigure(self.tl_blocks[i][0], fill=blocks[i][0])
