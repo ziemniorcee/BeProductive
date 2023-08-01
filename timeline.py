@@ -7,53 +7,13 @@ from settings import Settings
 from dataclasses import dataclass
 
 
-class TimelineManagement:
-    def __init__(self):
-        self.today_data = Date()
-
-    def from_file(self, file_name):
-        parameters = []
-        if os.path.isfile(f"data/{file_name}"):
-            with open(f"data/{file_name}", 'r') as file:
-                lines = file.readlines()
-                if len(lines) != 0:
-
-                    if file_name == "tl_blocks.txt":
-                        if str(self.today_data.formatted_date) == lines[0][:-1]:
-                            for i in range(1, len(lines), 3):
-                                parameters.append([lines[i].strip(), lines[i + 1].strip(), lines[i + 2].strip()])
-                    else:
-                        for i in range(0, len(lines), 3):
-                            parameters.append([lines[i].strip(), lines[i + 1].strip(), lines[i + 2].strip()])
-        else:
-            with open("data/tl_blocks.txt", 'x'):
-                pass
-        return parameters
-
-    # def to_file(self, file_name, length):
-    #     with open(f"data/{file_name}", "r+") as file:
-    #         lines = file.readlines()
-    #     if len(self.new_block) == 3:
-    #         if len(lines) < length:
-    #             for item in lines[:len(lines)]:
-    #                 self.new_block.append(item.strip())
-    #         else:
-    #             for item in lines[:self.file_length[self.category] - 3]:
-    #                 self.new_block.append(item.strip())
-    #
-    #         with open(f"data/{self.blocks_files[self.category]}", 'w+') as file:
-    #             for element in self.new_block:
-    #                 file.write('%s\n' % element)
-
-
 class TimelineWidget(CTkFrame):
     def __init__(self, master):
         self.settings = Settings()
         super().__init__(master, width=2060, height=270)
         self.app = master
-
-        self.management = TimelineManagement()
-        self.blocks = self.management.from_file("tl_blocks.txt")
+        self.today_data = Date()
+        self.blocks = self.from_file()
 
         self.c_timeline = CTkCanvas(self, width=2060, height=160, bg=self.settings.main_color, highlightthickness=0)
         self.c_timeline.grid(row=0, column=0)
@@ -80,6 +40,19 @@ class TimelineWidget(CTkFrame):
             self.c_timeline.create_text(200 + i * 200, 110, text=self.blocks[i][2], font=("Arial", 15),
                                         fill=self.settings.font_color)
 
+    def from_file(self):
+        parameters = []
+        if os.path.isfile("data/tl_blocks.txt"):
+            with open("data/tl_blocks.txt", 'r') as file:
+                lines = file.readlines()
+                if len(lines) != 0:
+                    if str(self.today_data.formatted_date) == lines[0][:-1]:
+                        for i in range(1, len(lines), 3):
+                            parameters.append([lines[i].strip(), lines[i + 1].strip(), lines[i + 2].strip()])
+        else:
+            with open("data/tl_blocks.txt", 'x'):
+                pass
+        return parameters
 
 class Timer(CTkCanvas):
     def __init__(self, master, timers):
@@ -222,6 +195,12 @@ class TimelineWindow:
         self.app.c_main.create_rectangle(50, 150, 2110, 1000, outline=self.settings.second_color, width=5)
         self.app.c_main.create_line(800, 150, 800, 1000, fill=self.settings.second_color, width=5)
 
+        self.b_submit = CTkButton(self.app, text="Submit", font=self.settings.font, fg_color=self.settings.second_color,
+                                  hover_color=self.settings.main_color, border_color=self.settings.second_color,
+                                  border_width=5, command=self.app.main.create_main_window)
+        self.app.c_main.create_window(2035, 1295, window=self.b_submit, width=150, height=50)
+
+
         self.pointer = self.app.c_main.create_line(100, 1070, 100, 1270, fill="#155255", width=5, state="hidden")
         self.tl_add_bg = self.app.c_main.create_rectangle(50, 1120, 2060, 1220, fill=self.settings.main_color, width=0)
 
@@ -246,18 +225,18 @@ class Blocks:
     def __init__(self, root, file_name, startx, width):
         self.app = root
         self.settings = Settings()
-        self.management = TimelineManagement()
-        self.params = self.management.from_file(file_name)
+        self.params = self.from_file(file_name)
         self.timeline = self.app.timeline.tl_blocks
         self.blocks = []
         self.width = width
         self.startx = startx
         self.delete = 0
 
+
         self.selected_block = None
         self.timeline_positions = self.timeline.timeline_positions
         self.current_pos = 0
-
+        self.change = 0
 
 
         self.tl_add_text = self.app.c_main.create_text(1055, 1280, font=("Arial", 30), fill=self.settings.font_color,
@@ -289,7 +268,6 @@ class Blocks:
             self.pos_counter[1] += 1
             self.pos_counter[0] = 0
 
-    # def add_block(self):
     def press(self, e):
         pressed_id = (e.widget.find_withtag("current")[0])
         for block in self.blocks:
@@ -346,13 +324,36 @@ class Blocks:
             self.timeline.blocks.insert(self.timeline.change, poped)
 
             self.timeline.shift(self.timeline.blocks[self.timeline.change:element + 1], new_pos)
+            self.app.timeline.tl_blocks.to_file()
+
+    def from_file(self, file_name):
+        parameters = []
+        if os.path.isfile(f"data/{file_name}"):
+            with open(f"data/{file_name}", 'r') as file:
+                lines = file.readlines()
+                if len(lines) != 0:
+                    for i in range(0, len(lines), 3):
+                        parameters.append([lines[i].strip(), lines[i + 1].strip(), lines[i + 2].strip()])
+        else:
+            with open("data/tl_blocks.txt", 'x'):
+                pass
+
+        return parameters
+
+    def to_file(self,file_name):
+        with open(f"data/{file_name}", "w+") as file:
+            for block in self.blocks:
+                file.write(f"{block.timer}\n{block.color}\n{block.text}\n")
 
 
 class RecentlyBlocks(Blocks):
     def __init__(self, root):
-        super().__init__(root, "blocks.txt", 75, 3)
-        self.new_block = None
+        super().__init__(root, "rc_blocks.txt", 75, 3)
         self.app = root
+        self.today_data = Date()
+
+        self.app.c_main.create_text(425, 175, font=("Arial", 30), fill=self.settings.font_color,
+                                    text="Recently created")
         self.saved_add_bg = self.app.c_main.create_rectangle(800, 150, 2110, 1000, fill=self.settings.main_color,
                                                              outline=self.settings.second_color, width=5)
         self.saved_add_text = self.app.c_main.create_text(1455, 975, font=("Arial", 30), fill=self.settings.font_color,
@@ -390,7 +391,7 @@ class RecentlyBlocks(Blocks):
         self.app.c_main.itemconfigure(self.saved_add_bg, fill=self.settings.main_color)
         self.app.c_main.itemconfigure(self.saved_add_text, state='hidden')
 
-        if 800 < e.x < 2110 and 150 < e.y < 1000:
+        if 800 < e.x < 2110 and 150 < e.y < 1000 and len(self.app.timeline.saved_blocks.blocks) < 25:
             self.app.c_main.itemconfigure(self.saved_add_bg, fill=self.settings.main_color)
             self.app.c_main.itemconfigure(self.saved_add_text, state='hidden')
             self.app.c_main.itemconfigure(self.selected_block.element_ids[0], outline=self.settings.second_color)
@@ -398,6 +399,7 @@ class RecentlyBlocks(Blocks):
 
             self.app.timeline.saved_blocks.add_block(params)
             self.app.timeline.saved_blocks.bind(self.app.timeline.saved_blocks.blocks[-1].tag)
+            self.app.timeline.saved_blocks.to_file("saved_blocks.txt")
 
     def rc_add(self):
         if not self.is_clock_window_on or not self.clock_window.is_clock_on:
@@ -422,10 +424,7 @@ class RecentlyBlocks(Blocks):
                 self.app.c_main.coords(self.blocks[i].element_ids[2], self.blocks[i].start_pos[0] + 100,
                                        self.blocks[i].start_pos[1] + 85)
 
-            self.pos_counter[0] += 1
-            if self.pos_counter[0] % self.width == 0:
-                self.pos_counter[1] += 1
-                self.pos_counter[0] = 0
+
             self.delete += 1
 
             self.add_block(self.new_block)
@@ -433,8 +432,16 @@ class RecentlyBlocks(Blocks):
             self.app.c_main.moveto(self.blocks[-1].element_ids[0], start_pos[0], start_pos[1])
             self.app.c_main.moveto(self.blocks[-1].element_ids[1], start_pos[0] + 50, start_pos[1] + 30)
             self.app.c_main.coords(self.blocks[-1].element_ids[2], start_pos[0] + 100, start_pos[1] + 85)
+            poped = self.blocks.pop(-1)
+            self.blocks.insert(0, poped)
             self.bind(self.blocks[-1].tag)
 
+            if len(self.blocks) > 15:
+                self.app.c_main.delete(self.blocks[-1].element_ids[0])
+                self.app.c_main.delete(self.blocks[-1].element_ids[1])
+                self.app.c_main.delete(self.blocks[-1].element_ids[2])
+                self.blocks.pop(-1)
+        self.to_file("rc_blocks.txt")
         self.clock_window.destroy()
         self.is_clock_window_on = False
 
@@ -445,7 +452,7 @@ class SavedBlocks(Blocks):
         self.app = root
         self.saved_trash = self.app.c_main.create_image(835, 960, image=create_imagetk("images/blocks/trash.png"),
                                                         state="hidden")
-
+        self.app.c_main.create_text(1425, 175, font=("Arial", 30), fill=self.settings.font_color, text="Saved")
         for block in self.blocks:
             self.bind(block.tag)
 
@@ -497,7 +504,7 @@ class TimelineBlocks:
     def __init__(self, root):
         self.settings = Settings()
         self.app = root
-        self.management = TimelineManagement()
+        self.today_data = Date()
 
         self.blocks = []
         self.timeline_positions = [100]
@@ -517,7 +524,7 @@ class TimelineBlocks:
 
         self.tl_trash = self.app.c_main.create_image(2100, 1170, image=create_imagetk("images/blocks/trash.png"),
                                                      state="hidden")
-        self.params = self.management.from_file("tl_blocks.txt")
+        self.params = self.from_file()
         for param in self.params:
             self.add(param)
 
@@ -605,6 +612,8 @@ class TimelineBlocks:
             self.app.c_main.delete(self.selected_block.element_ids[2])
             self.blocks.pop(-1)
 
+        self.to_file()
+
     def shift(self, arr, start):
         for item in arr:
             item.start_pos[0] = start
@@ -624,3 +633,23 @@ class TimelineBlocks:
                 break
 
             i += 1
+
+    def from_file(self):
+        parameters = []
+        if os.path.isfile("data/tl_blocks.txt"):
+            with open("data/tl_blocks.txt", 'r') as file:
+                lines = file.readlines()
+                if len(lines) != 0:
+                    if str(self.today_data.formatted_date) == lines[0][:-1]:
+                        for i in range(1, len(lines), 3):
+                            parameters.append([lines[i].strip(), lines[i + 1].strip(), lines[i + 2].strip()])
+        else:
+            with open("data/tl_blocks.txt", 'x'):
+                pass
+        return parameters
+
+    def to_file(self):
+        with open("data/tl_blocks.txt", "w+") as file:
+            file.write(f"{self.today_data.formatted_date}\n")
+            for block in self.blocks:
+                file.write(f"{block.timer}\n{block.color}\n{block.text}\n")

@@ -2,7 +2,6 @@ from customtkinter import CTkCanvas, CTkImage, CTkButton, CTk
 from Data import Date, Weather
 from actions import *
 from settings import *
-from setup import Setup2
 from start import Start_window
 from habit import HabitWindow
 from strategy import Strategy
@@ -49,6 +48,7 @@ class App(CTk):
         self.page = 0
 
         self.create_c_sidebar()
+        self.create_c_main()
         self.main.create_main_window()
 
         self.settings_object = None
