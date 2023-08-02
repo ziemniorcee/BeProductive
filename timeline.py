@@ -20,7 +20,7 @@ class TimelineWidget(CTkFrame):
         app parameters
     today_data : Date
         today's date parameters
-    blocks : list[int, str, str]
+    blocks : list[str]
         contains block's timer, color and category
     c_timeline : CTkCanvas
         timeline canvas
@@ -89,7 +89,7 @@ class TimelineWidget(CTkFrame):
 
         Returns
         --------
-        list[int, str, str]
+        list[str]
         """
         parameters = []
         if os.path.isfile("data/tl_blocks.txt"):
@@ -510,7 +510,7 @@ class Blocks:
         current position iteration [i, j]
         i = column
         j = row
-    params : list[int, str, str]
+    params : list[str]
         contains block's timer, color and category
     tl_add_text : int
         id of text widget
@@ -569,7 +569,7 @@ class Blocks:
         """
         creates new block based on parameters
 
-        Parameters : list[int, str,str]
+        Parameters : list[str]
 
         Returns
         ---------
@@ -700,7 +700,7 @@ class Blocks:
 
         Returns
         -------
-        list[int, str, str]
+        list[str]
         """
         parameters = []
         if os.path.isfile(f"data/{file_name}"):
@@ -751,7 +751,7 @@ class RecentlyBlocks(Blocks):
         contains clock window
     is_clock_window_on : bool
         is clock window opened
-    new_block : list[int, str, str]
+    new_block : list[str]
         new block parameters
 
     Methods
@@ -887,7 +887,7 @@ class RecentlyBlocks(Blocks):
         -------
         None
         """
-        if not self.is_clock_window_on or not self.clock_window.is_clock_on:
+        if not self.is_clock_window_on or not self.clock_window.window_on:
             self.clock_window = NewRCBlock(self)
             self.clock_window.wm_attributes("-topmost", True)
             self.is_clock_window_on = True
@@ -1154,7 +1154,7 @@ class TimelineBlocks:
 
         Parameters
         ----------
-        param : list[int, str,str]
+        param : list[str]
             block data
 
         Returns
