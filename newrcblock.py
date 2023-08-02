@@ -6,7 +6,7 @@ from CTkColorPicker import *
 from CTkMessagebox import *
 
 
-class Clock(CTkToplevel):
+class NewRCBlock(CTkToplevel):
     def __init__(self, root):
         self.settings = Settings()
         super().__init__(fg_color = self.settings.main_color)
@@ -23,7 +23,6 @@ class Clock(CTkToplevel):
         self.dot_pos = (250, 163)
         self.click = 0
 
-        self.categories = {"#0000FF": "work", "#FFFF00": "study"}
         self.buttons = []
         self.window = 0
         self.color = None
