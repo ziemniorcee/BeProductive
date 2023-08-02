@@ -2,25 +2,30 @@ from PIL import ImageFont, Image, ImageColor
 from customtkinter import *
 from CTkColorPicker import *
 
-images_src = ["/weather/src-wi-cloud.png", "/weather/src-wi-day-sunny.png", "/weather/src-wi-dust.png",
-              "/weather/src-wi-night-clear.png", "/weather/src-wi-rain.png", "/weather/src-wi-snow.png",
-              "/weather/src-wi-thunderstorm.png", "/habits/src-checked.png", "/habits/src-unchecked.png",
-              "/goals/src-arrow.png", "/clock/src-clock.png", "/clock/src-hand2.png"]
-
-images = ["/weather/wi-cloud.png", "/weather/wi-day-sunny.png", "/weather/wi-dust.png",
-          "/weather/wi-night-clear.png", "/weather/wi-rain.png", "/weather/wi-snow.png",
-          "/weather/wi-thunderstorm.png", "/habits/checked.png", "/habits/unchecked.png", "/goals/arrow.png",
-          "/clock/clock.png", "/clock/hand2.png"]
-
-
-# FONT_TIMER = ("Arial", 50)
-# FONT_ADD = ("Arial", 60)
-# FONT_BOX = ImageFont.truetype("arial.ttf", 20)
-# FONT_BOX2 = ImageFont.truetype("arial.ttf", 30)
-
-
 class Settings:
+    """
+    A class for getting settings
+
+    Attributes
+    ----------
+    main_color : str
+        main color used in app
+    second_color : str
+        secondary color used in app
+    font_color : str
+        used folor font
+    font : tuple(str, int)
+        defines mainly used font
+
+    Methods
+    -------
+    setup_color():
+        gets color from file
+    """
     def __init__(self):
+        """
+        Constructs necessary settings
+        """
         self.main_color = None
         self.second_color = None
         self.font_color = "#D4D4D4"
@@ -29,6 +34,13 @@ class Settings:
         self.setup_color()
 
     def setup_color(self):
+        """
+        sets up colors for app
+
+        Returns
+        -------
+        None
+        """
         with open("data/settings.txt", "r") as f:
             lines = f.readlines()
             self.main_color = lines[0].strip()
@@ -36,16 +48,54 @@ class Settings:
 
 
 class SettingsButton(CTkToplevel):
+    """
+    A class for Settings window
+
+    Attributes
+    ----------
+    settings : Settings
+        contains settings of the app
+    settings_on : bool
+        is the settings window on
+    main : App
+        connection to the app
+
+    Methods
+    -------
+    create_window():
+        builds settings window
+    ask_color():
+        creates color picker
+    save():
+        saves selected settings and restarts app
+    change_images():
+        changes images colors
+    """
     def __init__(self, root):
+        """
+        Constructs attributes for class
+
+        Parameters
+        ----------
+        root : App
+            connection to the app
+        """
         self.settings = Settings()
         super().__init__()
         self.settings_on = True
         self.main = root
 
 
-        self.create_settings_window()
+        self.create_window()
 
-    def create_settings_window(self):
+    def create_window(self):
+        """
+        builds settings window
+
+        Returns
+        -------
+        None
+        """
         self.title("Settings")
         self.resizable(False, False)
 
@@ -66,20 +116,54 @@ class SettingsButton(CTkToplevel):
         self.c_settings.create_window(150, 550, window=self.b_save, width=250, height=50)
 
     def ask_color(self):
+        """
+        opens color picker
+
+        Returns
+        -------
+        None
+        """
         pick_color = AskColor()
         self.color = pick_color.get()
         if self.color is not None:
             self.b_set_color.configure(border_color=self.color)
 
     def save(self):
+        """
+        saves settings and restarts app
+
+        Returns
+        -------
+        None
+        """
         self.change_images()
         self.main.destroy()
         os.system("python main.py")
 
     def change_images(self):
+        """
+        changes color of the images
+
+        Returns
+        -------
+        None
+        """
+        images = ["/weather/wi-cloud.png", "/weather/wi-day-sunny.png", "/weather/wi-dust.png",
+                  "/weather/wi-night-clear.png", "/weather/wi-rain.png", "/weather/wi-snow.png",
+                  "/weather/wi-thunderstorm.png", "/habits/checked.png", "/habits/unchecked.png", "/goals/arrow.png",
+                  "/clock/clock.png", "/clock/hand2.png"]
+
         rgb = ImageColor.getcolor(self.color, "RGB")
-        for i in range(len(images_src)):
-            img = Image.open(f"images{images_src[i]}")
+        for image in images:
+            last_index = 0
+            for j, char in enumerate(image):
+                if char == "/":
+                    last_index = j
+
+
+            image_src = image[:last_index+1] + "src-" + image[last_index+1:]
+
+            img = Image.open(f"images{image_src}")
             img = img.convert("RGBA")
             data = img.getdata()
             new_image = []
@@ -93,8 +177,9 @@ class SettingsButton(CTkToplevel):
                     new_image.append((255, 255, 255, 0))
 
             img.putdata(new_image)
-            img.save(f"images{images[i]}")
+            img.save(f"images{image}")
 
             with open("data/settings.txt", "w+") as file:
                 file.write("#242424\n")
-                file.write('%s\n' % self.color)
+                file.write(f"self.color\n")
+

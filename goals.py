@@ -249,15 +249,54 @@ class GoalsWindow:
         list of goals
     goals_widgets : list[int]
         list of ids currently displayed
+    shadow_line_position : int
+        current index of shadow position
+    goal_widgets_yposes : list[int]
+        list of currently widgets y positions
     e_todo : int
         id of entry for goals
     dots : int
         id of dots widget
-    shadow :
+    shadow : int
+        id of shadow text widget
+    line : int
+        id of line to show current place
+    goal : int
+        pressed goal index
 
+    Methods
+    ---------
+    create_window():
+        shows goals window
+    show_goal():
+        builds and shows goal
+    add_goal():
+        creates new goal
+    delete_goal():
+        deletes selected goal
+    strike_on():
+        strikes font of goal
+    strike_off():
+        turns off strikes font
+    position():
+        binds motion
+    press_dots():
+        binds dots press
+    move_dots():
+        binds dots movement
+    unpress_dots():
+        binds dots unpress
 
     """
     def __init__(self, root):
+        """
+        Constructs core attributes for class
+
+        Parameters
+        ----------
+        root : App
+            connection to the main app
+        """
         self.app = root
         self.settings = Settings()
         self.management = GoalsManagement()
@@ -275,8 +314,14 @@ class GoalsWindow:
         self.line = None
         self.goal = 0
 
+    def create_window(self):
+        """
+        shows goals window
 
-    def create_setup1_window(self):
+        Returns
+        -------
+        None
+        """
         self.app.page = 1
         self.app.create_c_main()
 
@@ -325,6 +370,18 @@ class GoalsWindow:
         self.e_todo.configure(validate="key", validatecommand=(reg, '%P'))
 
     def show_goal(self, text):
+        """
+        builds and shows goal
+
+        Parameters
+        ----------
+        text : str
+            string to display
+
+        Returns
+        ------
+        None
+        """
         i = len(self.goals_widgets) + 1
         goal = self.app.c_main.create_text(150, 140 + i * 60, text=f"{text}",
                                            font=("Arial", 20),
@@ -337,6 +394,13 @@ class GoalsWindow:
         self.app.c_main.tag_bind(f"todo{i}", '<Button-1>', self.delete_goal)
 
     def add_goal(self, *_):
+        """
+        creates new goal
+
+        Returns
+        -------
+        None
+        """
         value = self.e_todo.get()
         if value != "":
             self.show_goal(value)
@@ -347,6 +411,18 @@ class GoalsWindow:
         self.management.save_goals_to_file(self.goals_texts)
 
     def delete_goal(self, event):
+        """
+        deletes selected goal
+
+        Parameters
+        ----------
+        event : tkinter.Event, default
+            event handler param
+
+        Returns
+        -------
+        None
+        """
         widget_name = event.widget.find_withtag("current")[0]
 
         index = self.goals_widgets.index(widget_name)
@@ -369,12 +445,48 @@ class GoalsWindow:
 
     # binds for adding goals
     def strike_on(self, event):
+        """
+        strikes font of goal
+
+        Parameters
+        ----------
+        event : tkinter.Event, default
+            event handler param
+
+        Returns
+        -------
+        None
+        """
         self.app.c_main.itemconfigure(event.widget.find_withtag("current")[0], font=("Arial", 20, "overstrike", "bold"))
 
     def strike_off(self, event):
+        """
+        turns off strikes font
+
+        Parameters
+        ----------
+        event : tkinter.Event, default
+            event handler param
+
+        Returns
+        -------
+        None
+        """
         self.app.c_main.itemconfigure(event.widget.find_withtag("current")[0], font=("Arial", 20))
 
     def position(self, event):
+        """
+        binds motion
+
+        Parameters
+        ----------
+        event : tkinter.Event, default
+            event handler param
+
+        Returns
+        -------
+        None
+        """
         flag = 0
         y = 0
         for posy in self.goal_widgets_yposes:
@@ -389,6 +501,18 @@ class GoalsWindow:
             self.app.c_main.itemconfigure(self.dots, state='hidden')
 
     def press_dots(self, event):
+        """
+        binds dots press
+
+        Parameters
+        ----------
+        event : tkinter.Event, default
+            event handler param
+
+        Returns
+        -------
+        None
+        """
         flag = 0
         text = ""
         self.goal = 0
@@ -403,6 +527,18 @@ class GoalsWindow:
         self.app.c_main.unbind("<Motion>")
 
     def move_dots(self, event):
+        """
+        binds dots movement
+
+        Parameters
+        ----------
+        event : tkinter.Event, default
+            event handler param
+
+        Returns
+        -------
+        None
+        """
         self.app.c_main.itemconfigure(self.shadow, state="normal")
 
         if event.y < 200:
@@ -419,6 +555,13 @@ class GoalsWindow:
             self.app.c_main.moveto(self.shadow, 150, event.y - 20)
 
     def unpress_dots(self, *_):
+        """
+        binds dots unpress
+
+        Returns
+        -------
+        None
+        """
         self.app.c_main.itemconfigure(self.line, state='hidden')
         self.app.c_main.bind('<Motion>', self.position)
         self.app.c_main.itemconfigure(self.shadow, state="hidden")

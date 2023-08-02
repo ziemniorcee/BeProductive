@@ -41,7 +41,6 @@ class App(CTk):
         self.main = Start_window(self)
         self.goals = GoalsWindow(self)
         self.timeline = TimelineWindow(self)
-        # self.setup2 = Setup2(self)
         self.habit = HabitWindow(self)
         self.strategy = Strategy(self)
 

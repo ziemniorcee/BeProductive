@@ -6,12 +6,85 @@ from CTkColorPicker import *
 from CTkMessagebox import *
 
 
-class Clock(CTkToplevel):
+class NewRCBlock(CTkToplevel):
+    """
+    A class for new block creation
+    
+    Attributes
+    ----------
+    settings : Settings
+        constains app settings
+    window_on : bool
+        defines if window is on
+    timeline : Timeline
+        connection to the timeline
+    last : float
+        last angle
+    round1 : int
+        defines current round of the clock
+    hour : int
+        hour to display
+    minutes : int
+        minutes to display
+    direction : int
+        direction of the clock hand
+    reverse : int
+        reverse state
+    angle : int
+        current angle of the hand
+    dot_pos : list[int]
+        current hand's dot position
+    click : int
+        is dots clicked
+    window : int
+        currently displayed window
+    color : str
+        selected color value
+    b_prev : int
+        id of previous button
+    b_next : int
+        id of next button
+
+    Methods
+    ----------
+    create_window():
+        builds new block window
+    quit_clock():
+        after quitting
+    accept_time():
+        checks if time is not 0
+    go_next():
+        builds next window
+    ask_color():
+        color picker
+    accept_settings():
+        accepting settings
+    calculate_angle():
+        calculates current angle
+    clock_time():
+        defines time based on angle
+    dot_validation():
+        checks if button is clicked
+    move():
+        move bind for dot
+    press():
+        press bind for dot
+    unpress():
+        unpress bind for dot
+    """
     def __init__(self, root):
+        """
+        Constructs essential attributes for class
+
+        Parameters
+        ----------
+        root : App
+            connection to the app
+        """
         self.settings = Settings()
         super().__init__(fg_color = self.settings.main_color)
-        self.is_clock_on = True
-        self.setup2 = root
+        self.window_on = True
+        self.timeline = root
 
         self.last = 0
         self.round1 = 0
@@ -23,16 +96,21 @@ class Clock(CTkToplevel):
         self.dot_pos = (250, 163)
         self.click = 0
 
-        self.categories = {"#0000FF": "work", "#FFFF00": "study"}
-        self.buttons = []
         self.window = 0
         self.color = None
 
         self.b_prev = None
         self.b_next = None
-        self.create_setup2_clock()
+        self.create_window()
 
-    def create_setup2_clock(self):
+    def create_window(self):
+        """
+        builds new block window
+
+        Returns
+        -------
+        None
+        """
         self.hour = 0
         self.minutes = 0
 
@@ -77,16 +155,37 @@ class Clock(CTkToplevel):
         self.window = 0
 
     def quit_clock(self):
-        self.is_clock_on = False
+        """
+        after quitting
+
+        Returns
+        -------
+        None
+        """
+        self.window_on = False
         self.destroy()
 
     def accept_time(self):
+        """
+        checks if time is not 0
+
+        Returns
+        -------
+        None
+        """
         if self.hour != 0 or self.minutes != 0:
             self.go_next()
         else:
             CTkMessagebox(title="Error", message="Enter length of focus")
 
     def go_next(self):
+        """
+        builds next window
+
+        Returns
+        -------
+        None
+        """
         self.c_clock.destroy()
         self.head.itemconfigure(self.header, text="Select category")
         self.l_timer.destroy()
@@ -94,7 +193,7 @@ class Clock(CTkToplevel):
         self.b_prev.grid(row=4, column=0)
         self.b_next.grid(row=4, column=1)
         self.b_next.configure(text="Accept", command=self.accept_settings)
-        self.b_prev.configure(text="Previous", command=self.create_setup2_clock)
+        self.b_prev.configure(text="Previous", command=self.create_window)
 
         self.b_color_picker = CTkButton(self, text="Set Color", fg_color=self.settings.second_color, font=("Arial", 30),
                                         border_width=5,
@@ -110,12 +209,26 @@ class Clock(CTkToplevel):
         self.e_category.configure(validate="key", validatecommand=(reg, '%P'))
 
     def ask_color(self):
+        """
+        color picker
+
+        Returns
+        -------
+        None
+        """
         pick_color = AskColor()
         self.color = pick_color.get()
         if self.color is not None:
             self.b_color_picker.configure(border_color=self.color)
 
     def accept_settings(self):
+        """
+        accepting settings
+
+        Returns
+        -------
+        None
+        """
         message = ""
         value = self.e_category.get()
         if value == "" and self.color is None:
@@ -128,12 +241,24 @@ class Clock(CTkToplevel):
         if message != "":
             CTkMessagebox(title="Error", message=message)
         else:
-            print("xd2")
-            self.setup2.new_block = [self.hour * 60 + self.minutes, self.color, value]
-            self.setup2.clock_on_closing()
+            self.timeline.new_block = [self.hour * 60 + self.minutes, self.color, value]
+            self.timeline.clock_on_closing()
 
     def calculate_angle(self, x, y):
-        """Return angle based on cursor """
+        """
+        calculates current angle
+
+        Parameters
+        ----------
+        x : int
+            x position
+        y : int
+            y position
+
+        Returns
+        -------
+        None
+        """
         if y <= 250 and x >= 250:
             a = 250 - y
             b = x - 250
@@ -173,7 +298,14 @@ class Clock(CTkToplevel):
         return int(self.angle)
 
     def clock_time(self):
-        """returns time based on angle"""
+        """
+        Calculates the time based on the angle.
+
+        Returns
+        -------
+        str:
+        The time in the format of "HH:MM:SS".
+        """
         if self.last > self.angle:
             self.direction = 0
             self.round1 = 1
@@ -205,6 +337,13 @@ class Clock(CTkToplevel):
         return f"{prompt_hour}:{prompt_minutes}:00"
 
     def dot_validation(self):
+        """
+        checks if button is clicked
+
+        Returns
+        -------
+        None
+        """
         y = int(math.cos(math.radians(self.angle)) * 87)
         x = int(math.sin(math.radians(self.angle)) * 87)
 
@@ -212,25 +351,56 @@ class Clock(CTkToplevel):
 
         # setup2 features
 
-    def move(self, e):
+    def move(self, event):
+        """
+        move bind for dot
+
+        Parameters
+        ----------
+        event : tkinter.Event, default
+            event handler param
+
+        Returns
+        -------
+        None
+        """
         if self.click:
-            self.calculate_angle(e.x, e.y)
+            self.calculate_angle(event.x, event.y)
             self.img = Image.open("images/clock/hand2_c.png")
             self.img = ImageTk.PhotoImage(self.img.rotate(-self.angle))
             self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
             self.l_timer.configure(text=self.clock_time())
             self.dot_validation()
 
-    def press(self, e):
+    def press(self, event):
+        """
+        press bind for dot
+
+        Parameters
+        ----------
+        event : tkinter.Event, default
+            event handler param
+
+        Returns
+        -------
+        None
+        """
         x = self.dot_pos[0]
         y = self.dot_pos[1]
-        if x + 17 > e.x > x - 17 and y + 17 > e.y > y - 17:
+        if x + 17 > event.x > x - 17 and y + 17 > event.y > y - 17:
             self.img = Image.open("images/clock/hand2_c.png")
             self.img = ImageTk.PhotoImage(self.img.rotate(-self.angle))
             self.hand1 = self.c_clock.create_image(250, 250, image=self.img, tags=("meta",))
             self.click = 1
 
     def unpress(self, *_):
+        """
+        unpress bind for dot
+
+        Returns
+        -------
+        None
+        """
         self.click = 0
         self.img = Image.open("images/clock/hand2.png")
         self.img = ImageTk.PhotoImage(self.img.rotate(-self.angle))
