@@ -29,8 +29,8 @@ class Settings:
         self.main_color = None
         self.second_color = None
         self.font_color = "#D4D4D4"
-
-        self.font = ("Arial", 30)
+        self.resolution = [1, 1]
+        self.font = ("Arial", int(30 * self.resolution[0]))
         self.setup_color()
 
     def setup_color(self):
@@ -41,8 +41,8 @@ class Settings:
         -------
         None
         """
-        with open("data/settings.txt", "r") as f:
-            lines = f.readlines()
+        with open("data/settings.txt", "r") as file:
+            lines = file.readlines()
             self.main_color = lines[0].strip()
             self.second_color = lines[1].strip()
 
@@ -84,7 +84,6 @@ class SettingsButton(CTkToplevel):
         super().__init__()
         self.settings_on = True
         self.main = root
-
 
         self.create_window()
 
@@ -181,5 +180,5 @@ class SettingsButton(CTkToplevel):
 
             with open("data/settings.txt", "w+") as file:
                 file.write("#242424\n")
-                file.write(f"self.color\n")
+                file.write(f"{self.color}\n")
 

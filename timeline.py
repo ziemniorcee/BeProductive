@@ -34,6 +34,7 @@ class TimelineWidget(CTkFrame):
     from_file():
         gets timeline blocks parameters
     """
+
     def __init__(self, master):
         """
         Constructs attributes for the widget
@@ -46,12 +47,15 @@ class TimelineWidget(CTkFrame):
             stores connection to the main app
 
         """
-        super().__init__(master, width=2060, height=270)
-        self.app = master
         self.settings = Settings()
+        super().__init__(master, width=2210 * self.settings.resolution[0], height=270 * self.settings.resolution[1],
+                         fg_color=self.settings.main_color)
+        self.app = master
         self.today_data = Date()
         self.blocks = self.from_file()
-        self.c_timeline = CTkCanvas(self, width=2060, height=160, bg=self.settings.main_color, highlightthickness=0)
+        self.c_timeline = CTkCanvas(self, width=2210 * self.settings.resolution[0],
+                                    height=160 * self.settings.resolution[1], bg=self.settings.main_color,
+                                    highlightthickness=0)
         self.c_timeline.grid(row=0, column=0)
         self.create_timeline()
 
@@ -67,20 +71,30 @@ class TimelineWidget(CTkFrame):
         --------
         None
         """
-        self.c_timeline.create_line(50, 30, 2060, 30, fill=self.settings.second_color, width=5)
-        self.c_timeline.create_line(2010, 60, 2060, 30, fill=self.settings.second_color, width=5)
-        self.c_timeline.create_line(2010, 0, 2060, 30, fill=self.settings.second_color, width=5)
+        res = self.settings.resolution
+        self.c_timeline.create_line(50 * res[0], 30 * res[1], 2060 * res[0], 30 * res[1],
+                                    fill=self.settings.second_color, width=5)
+        self.c_timeline.create_line(2010 * res[0], 60 * res[1], 2060 * res[0], 30 * res[1],
+                                    fill=self.settings.second_color, width=5)
+        self.c_timeline.create_line(2010 * res[0], 0 * res[1], 2060 * res[0], 30 * res[1],
+                                    fill=self.settings.second_color, width=5)
 
-        self.c_timeline.create_line(50, 130, 2060, 130, fill=self.settings.second_color, width=5)
-        self.c_timeline.create_line(2010, 160, 2060, 130, fill=self.settings.second_color, width=5)
-        self.c_timeline.create_line(2010, 100, 2060, 130, fill=self.settings.second_color, width=5)
+        self.c_timeline.create_line(50 * res[0], 130 * res[1], 2060 * res[0], 130 * res[1],
+                                    fill=self.settings.second_color, width=5)
+        self.c_timeline.create_line(2010 * res[0], 160 * res[1], 2060 * res[0], 130 * res[1],
+                                    fill=self.settings.second_color, width=5)
+        self.c_timeline.create_line(2010 * res[0], 100 * res[1], 2060 * res[0], 130 * res[1],
+                                    fill=self.settings.second_color, width=5)
 
         for i in range(len(self.blocks)):
-            self.c_timeline.create_rectangle(100 + i * 200, 30, 300 + i * 200, 130, fill=self.blocks[i][1],
+            self.c_timeline.create_rectangle((100 + i * 200) * res[0], 30 * res[1], (300 + i * 200) * res[0],
+                                             130 * res[1], fill=self.blocks[i][1],
                                              outline=self.settings.second_color, width=5)
-            self.c_timeline.create_text(200 + i * 200, 80, text=format_time(self.blocks[i][0]), font=self.settings.font,
+            self.c_timeline.create_text((200 + i * 200) * res[0], 80 * res[1], text=format_time(self.blocks[i][0]),
+                                        font=self.settings.font,
                                         fill=self.settings.font_color)
-            self.c_timeline.create_text(200 + i * 200, 110, text=self.blocks[i][2], font=("Arial", 15),
+            self.c_timeline.create_text((200 + i * 200) * res[0], 110 * res[1], text=self.blocks[i][2],
+                                        font=("Arial", 15),
                                         fill=self.settings.font_color)
 
     def from_file(self):
@@ -103,6 +117,7 @@ class TimelineWidget(CTkFrame):
             with open("data/tl_blocks.txt", 'x', encoding="utf-8"):
                 pass
         return parameters
+
 
 class BlocksPlayer(CTkCanvas):
     """
@@ -166,6 +181,7 @@ class BlocksPlayer(CTkCanvas):
         resets player values
 
     """
+
     def __init__(self, master, timers):
         """
         Constructs timer's attributes
@@ -178,7 +194,8 @@ class BlocksPlayer(CTkCanvas):
             stores timers of timeline blocks
         """
         self.settings = Settings()
-        super().__init__(master, width=2060, height=110, bg=self.settings.main_color, highlightthickness=0)
+        super().__init__(master, width=2060 * self.settings.resolution[0], height=110 * self.settings.resolution[1],
+                         bg=self.settings.main_color, highlightthickness=0)
         self.master = master
         self.timers = timers
         self.timer_len = None
@@ -199,7 +216,6 @@ class BlocksPlayer(CTkCanvas):
         self.horizontal_len = 555
         self.horizontal_speed = None
 
-
         self.play_pause = None
         self.create_timer()
 
@@ -211,28 +227,33 @@ class BlocksPlayer(CTkCanvas):
         ---------
         None
         """
-        img = CTkImage(light_image=Image.open("images/timeline/play.png"), size=(50, 50))
+        res = self.settings.resolution
+        img = CTkImage(light_image=Image.open("images/timeline/play.png"), size=(50 * res[0], 50 * res[1]))
         self.play_pause = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                                     hover_color=self.settings.second_color, command=self.start_stop_timer)
-        self.create_window(1055, 30, window=self.play_pause, width=70, height=60)
+        self.create_window(1055 * res[0], 30 * res[1], window=self.play_pause, width=70 * res[0], height=60 * res[1])
 
-        img = CTkImage(light_image=Image.open("images/timeline/next.png"), size=(25, 25))
+        img = CTkImage(light_image=Image.open("images/timeline/next.png"), size=(25 * res[0], 25 * res[1]))
         self.next = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                               hover_color=self.settings.second_color, command=self.next_block)
-        self.create_window(1155, 30, window=self.next, width=40, height=40)
+        self.create_window(1155 * res[0], 30 * res[1], window=self.next, width=40 * res[0], height=40 * res[1])
 
-        img = CTkImage(light_image=Image.open("images/timeline/previous.png"), size=(25, 25))
+        img = CTkImage(light_image=Image.open("images/timeline/previous.png"), size=(25 * res[0], 25 * res[1]))
         self.previous = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                                   hover_color=self.settings.second_color, command=self.prev_block)
-        self.create_window(955, 30, window=self.previous, width=40, height=40)
+        self.create_window(955 * res[0], 30 * res[1], window=self.previous, width=40 * res[0], height=40 * res[1])
 
-        self.time_current = self.create_text(500, 80, text=f"{self.current_timer}", font=("Arial", 20),
+        self.time_current = self.create_text(500 * res[0], 80 * res[1], text=f"{self.current_timer}",
+                                             font=("Arial", 20),
                                              fill=self.settings.font_color)
-        self.end_timer = self.create_text(1610, 80, text="0:00", font=("Arial", 20),
+        self.end_timer = self.create_text(1610 * res[0], 80 * res[1], text="0:00", font=("Arial", 20),
                                           fill=self.settings.font_color)
-        self.vertical = self.master.c_timeline.create_line(100, 0, 100, 160, fill=self.settings.font_color, width=5)
-        self.create_line(555, 80, 1555, 80, fill=self.settings.second_color, width=6)
-        self.horizontal = self.create_line(555, 80, 555, 80, fill=self.settings.font_color, width=8)
+        self.vertical = self.master.c_timeline.create_line(100 * res[0], 0 * res[1], 100 * res[0], 160 * res[1],
+                                                           fill=self.settings.font_color, width=5)
+        self.create_line(555 * res[0], 80 * res[1], 1555 * res[0], 80 * res[1], fill=self.settings.second_color,
+                         width=6)
+        self.horizontal = self.create_line(555 * res[0], 80 * res[1], 555 * res[0], 80 * res[1],
+                                           fill=self.settings.font_color, width=8)
 
         if len(self.timers) > 0:
             self.timer_len = self.timers[0]
@@ -399,6 +420,7 @@ class TimelineWindow:
     create_window():
         creates timeline window
     """
+
     def __init__(self, root):
         """
         Constructs essential attributes
@@ -433,10 +455,9 @@ class TimelineWindow:
         self.app.c_main.create_line(800, 150, 800, 1000, fill=self.settings.second_color, width=5)
 
         b_submit = CTkButton(self.app, text="Submit", font=self.settings.font, fg_color=self.settings.second_color,
-                                  hover_color=self.settings.main_color, border_color=self.settings.second_color,
-                                  border_width=5, command=self.app.main.create_main_window)
+                             hover_color=self.settings.main_color, border_color=self.settings.second_color,
+                             border_width=5, command=self.app.main.create_main_window)
         self.app.c_main.create_window(2035, 1295, window=b_submit, width=150, height=50)
-
 
         self.pointer = self.app.c_main.create_line(100, 1070, 100, 1270, fill="#155255", width=5, state="hidden")
         self.tl_add_bg = self.app.c_main.create_rectangle(50, 1120, 2060, 1220, fill=self.settings.main_color, width=0)
@@ -531,6 +552,7 @@ class Blocks:
         saves params to the file
 
     """
+
     def __init__(self, root, file_name, startx, width):
         """
         Constructs attributes and creates blocks
@@ -669,7 +691,6 @@ class Blocks:
         self.app.c_main.itemconfigure(self.app.timeline.tl_add_bg, fill=self.settings.main_color)
         self.app.c_main.itemconfigure(self.tl_add_text, state="hidden")
 
-
         self.app.c_main.moveto(self.selected_block.element_ids[0], self.selected_block.start_pos[0],
                                self.selected_block.start_pos[1])
         self.app.c_main.moveto(self.selected_block.element_ids[1], self.selected_block.start_pos[0] + 50,
@@ -715,7 +736,7 @@ class Blocks:
 
         return parameters
 
-    def to_file(self,file_name):
+    def to_file(self, file_name):
         """
         saves params to the file
 
@@ -769,6 +790,7 @@ class RecentlyBlocks(Blocks):
     clock_on_closing():
         after clock was closed
     """
+
     def __init__(self, root):
         """
         constructs attributes and builds upon Blocks
@@ -789,7 +811,7 @@ class RecentlyBlocks(Blocks):
         self.saved_add_text = self.app.c_main.create_text(1455, 975, font=("Arial", 30), fill=self.settings.font_color,
                                                           state="hidden", text="Drop here to save")
         b_rc_create = CTkButton(self.app, text="+", font=("Arial", 70), fg_color=self.settings.main_color,
-                                     command=self.rc_add)
+                                command=self.rc_add)
         self.app.c_main.create_window(80, 970, window=b_rc_create, height=50, width=50)
 
         self.clock_window = None
@@ -916,7 +938,6 @@ class RecentlyBlocks(Blocks):
                 self.app.c_main.coords(self.blocks[i].element_ids[2], self.blocks[i].start_pos[0] + 100,
                                        self.blocks[i].start_pos[1] + 85)
 
-
             self.delete += 1
 
             self.add_block(self.new_block)
@@ -960,6 +981,7 @@ class SavedBlocks(Blocks):
     saved_unpress():
         after unpress bind
     """
+
     def __init__(self, root):
         """
         Constructs attributes for the class
@@ -1113,6 +1135,7 @@ class TimelineBlocks:
     to_file():
         saves params to file
     """
+
     def __init__(self, root):
         """
         Constructs attributes necessary for class

@@ -1,6 +1,8 @@
 import datetime
 import requests
-
+from customtkinter import *
+from actions import *
+from settings import *
 
 class Date:
     """Class for returning Date elements"""
@@ -72,3 +74,19 @@ class Weather:
             self.image = "images/weather/wi-day-sunny.png"
         else:
             self.image = "images/weather/wi-cloud.png"
+
+class WeatherWidget(CTkFrame):
+    def __init__(self, master):
+        super().__init__(master,width=500, height=500)
+        self.weather_data = Weather()
+        self.app = master
+        self.settings = Settings()
+        res = self.settings.resolution
+        self.c_frame = CTkCanvas(self, width=int(500* res[0]), height=int(500* res[1]), bg=self.settings.main_color, highlightthickness=0)
+        self.c_frame.grid(row=0, column=0)
+
+        self.c_frame.create_image(250* res[0], 0* res[1], image=create_imagetk(self.weather_data.image, int(500* res[0]), int(500* res[1])), anchor="n")
+        self.c_frame.create_text(250* res[0], 200* res[1], text=f" {self.weather_data.temperature[0]}", font=self.settings.font,
+                                    fill=self.settings.font_color, anchor="n")
+        self.c_frame.create_text(250* res[0], 245* res[1], text=f"Feels like: {self.weather_data.temperature[1]}", font=("Arial", 15),
+                                    fill=self.settings.font_color, anchor="n")
