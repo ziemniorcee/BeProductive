@@ -18,6 +18,8 @@ class TimelineWidget(CTkFrame):
         connection to the main app
     settings : Settings
         app parameters
+    res : float
+        app resolution multiplier
     today_data : Date
         today's date parameters
     blocks : list[str]
@@ -34,6 +36,7 @@ class TimelineWidget(CTkFrame):
     from_file():
         gets timeline blocks parameters
     """
+
     def __init__(self, master):
         """
         Constructs attributes for the widget
@@ -46,12 +49,15 @@ class TimelineWidget(CTkFrame):
             stores connection to the main app
 
         """
-        super().__init__(master, width=2060, height=270)
-        self.app = master
         self.settings = Settings()
+        self.res = self.settings.resolution
+        super().__init__(master, width=2210 * self.res[0], height=270 * self.res[1], fg_color=self.settings.main_color)
+        self.app = master
         self.today_data = Date()
         self.blocks = self.from_file()
-        self.c_timeline = CTkCanvas(self, width=2060, height=160, bg=self.settings.main_color, highlightthickness=0)
+        self.c_timeline = CTkCanvas(self, width=2210 * self.settings.resolution[0],
+                                    height=160 * self.settings.resolution[1], bg=self.settings.main_color,
+                                    highlightthickness=0)
         self.c_timeline.grid(row=0, column=0)
         self.create_timeline()
 
@@ -67,20 +73,29 @@ class TimelineWidget(CTkFrame):
         --------
         None
         """
-        self.c_timeline.create_line(50, 30, 2060, 30, fill=self.settings.second_color, width=5)
-        self.c_timeline.create_line(2010, 60, 2060, 30, fill=self.settings.second_color, width=5)
-        self.c_timeline.create_line(2010, 0, 2060, 30, fill=self.settings.second_color, width=5)
+        self.c_timeline.create_line(50 * self.res[0], 30 * self.res[1], 2060 * self.res[0], 30 * self.res[1],
+                                    fill=self.settings.second_color, width=5)
+        self.c_timeline.create_line(2010 * self.res[0], 60 * self.res[1], 2060 * self.res[0], 30 * self.res[1],
+                                    fill=self.settings.second_color, width=5)
+        self.c_timeline.create_line(2010 * self.res[0], 0 * self.res[1], 2060 * self.res[0], 30 * self.res[1],
+                                    fill=self.settings.second_color, width=5)
 
-        self.c_timeline.create_line(50, 130, 2060, 130, fill=self.settings.second_color, width=5)
-        self.c_timeline.create_line(2010, 160, 2060, 130, fill=self.settings.second_color, width=5)
-        self.c_timeline.create_line(2010, 100, 2060, 130, fill=self.settings.second_color, width=5)
+        self.c_timeline.create_line(50 * self.res[0], 130 * self.res[1], 2060 * self.res[0], 130 * self.res[1],
+                                    fill=self.settings.second_color, width=5)
+        self.c_timeline.create_line(2010 * self.res[0], 160 * self.res[1], 2060 * self.res[0], 130 * self.res[1],
+                                    fill=self.settings.second_color, width=5)
+        self.c_timeline.create_line(2010 * self.res[0], 100 * self.res[1], 2060 * self.res[0], 130 * self.res[1],
+                                    fill=self.settings.second_color, width=5)
 
         for i in range(len(self.blocks)):
-            self.c_timeline.create_rectangle(100 + i * 200, 30, 300 + i * 200, 130, fill=self.blocks[i][1],
+            self.c_timeline.create_rectangle((100 + i * 200) * self.res[0], 30 * self.res[1], (300 + i * 200) * self.res[0],
+                                             130 * self.res[1], fill=self.blocks[i][1],
                                              outline=self.settings.second_color, width=5)
-            self.c_timeline.create_text(200 + i * 200, 80, text=format_time(self.blocks[i][0]), font=self.settings.font,
+            self.c_timeline.create_text((200 + i * 200) * self.res[0], 80 * self.res[1], text=format_time(self.blocks[i][0]),
+                                        font=self.settings.font,
                                         fill=self.settings.font_color)
-            self.c_timeline.create_text(200 + i * 200, 110, text=self.blocks[i][2], font=("Arial", 15),
+            self.c_timeline.create_text((200 + i * 200) * self.res[0], 110 * self.res[1], text=self.blocks[i][2],
+                                        font=("Arial", 15),
                                         fill=self.settings.font_color)
 
     def from_file(self):
@@ -104,6 +119,7 @@ class TimelineWidget(CTkFrame):
                 pass
         return parameters
 
+
 class BlocksPlayer(CTkCanvas):
     """
     A class for player canvas in timeline widget
@@ -113,6 +129,8 @@ class BlocksPlayer(CTkCanvas):
     ----------
     settings : Settings
         contains settings of the app
+    res : float
+        app resolution multiplier
     master : CTkFrame
         access to the widget
     timer_len : str
@@ -166,6 +184,7 @@ class BlocksPlayer(CTkCanvas):
         resets player values
 
     """
+
     def __init__(self, master, timers):
         """
         Constructs timer's attributes
@@ -178,7 +197,9 @@ class BlocksPlayer(CTkCanvas):
             stores timers of timeline blocks
         """
         self.settings = Settings()
-        super().__init__(master, width=2060, height=110, bg=self.settings.main_color, highlightthickness=0)
+        self.res = self.settings.resolution
+        super().__init__(master, width=2060 * self.res[0], height=110 * self.res[1],
+                         bg=self.settings.main_color, highlightthickness=0)
         self.master = master
         self.timers = timers
         self.timer_len = None
@@ -193,12 +214,12 @@ class BlocksPlayer(CTkCanvas):
 
         self.vertical = None
         self.vertical_speed = None
-        self.vertical_position = 100
+        self.vertical_position = 100 * self.res[1]
+        self.vertical_position = 100 * self.res[1]
 
         self.horizontal = None
-        self.horizontal_len = 555
+        self.horizontal_len = 555 * self.res[0]
         self.horizontal_speed = None
-
 
         self.play_pause = None
         self.create_timer()
@@ -211,28 +232,39 @@ class BlocksPlayer(CTkCanvas):
         ---------
         None
         """
-        img = CTkImage(light_image=Image.open("images/timeline/play.png"), size=(50, 50))
+
+        img = CTkImage(light_image=Image.open("images/timeline/play.png"), size=(50 * self.res[0], 50 * self.res[1]))
         self.play_pause = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                                     hover_color=self.settings.second_color, command=self.start_stop_timer)
-        self.create_window(1055, 30, window=self.play_pause, width=70, height=60)
+        self.create_window(1055 * self.res[0], 30 * self.res[1], window=self.play_pause, width=70 * self.res[0],
+                           height=60 * self.res[1])
 
-        img = CTkImage(light_image=Image.open("images/timeline/next.png"), size=(25, 25))
+        img = CTkImage(light_image=Image.open("images/timeline/next.png"), size=(25 * self.res[0], 25 * self.res[1]))
         self.next = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                               hover_color=self.settings.second_color, command=self.next_block)
-        self.create_window(1155, 30, window=self.next, width=40, height=40)
+        self.create_window(1155 * self.res[0], 30 * self.res[1], window=self.next, width=40 * self.res[0],
+                           height=40 * self.res[1])
 
-        img = CTkImage(light_image=Image.open("images/timeline/previous.png"), size=(25, 25))
+        img = CTkImage(light_image=Image.open("images/timeline/previous.png"),
+                       size=(25 * self.res[0], 25 * self.res[1]))
         self.previous = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                                   hover_color=self.settings.second_color, command=self.prev_block)
-        self.create_window(955, 30, window=self.previous, width=40, height=40)
+        self.create_window(955 * self.res[0], 30 * self.res[1], window=self.previous, width=40 * self.res[0],
+                           height=40 * self.res[1])
 
-        self.time_current = self.create_text(500, 80, text=f"{self.current_timer}", font=("Arial", 20),
+        self.time_current = self.create_text(500 * self.res[0], 80 * self.res[1], text=f"{self.current_timer}",
+                                             font=("Arial", 20),
                                              fill=self.settings.font_color)
-        self.end_timer = self.create_text(1610, 80, text="0:00", font=("Arial", 20),
+        self.end_timer = self.create_text(1610 * self.res[0], 80 * self.res[1], text="0:00", font=("Arial", 20),
                                           fill=self.settings.font_color)
-        self.vertical = self.master.c_timeline.create_line(100, 0, 100, 160, fill=self.settings.font_color, width=5)
-        self.create_line(555, 80, 1555, 80, fill=self.settings.second_color, width=6)
-        self.horizontal = self.create_line(555, 80, 555, 80, fill=self.settings.font_color, width=8)
+        self.vertical = self.master.c_timeline.create_line(100 * self.res[0], 0 * self.res[1], 100 * self.res[0],
+                                                           160 * self.res[1],
+                                                           fill=self.settings.font_color, width=5)
+        self.create_line(555 * self.res[0], 80 * self.res[1], 1555 * self.res[0], 80 * self.res[1],
+                         fill=self.settings.second_color,
+                         width=6)
+        self.horizontal = self.create_line(555 * self.res[0], 80 * self.res[1], 555 * self.res[0], 80 * self.res[1],
+                                           fill=self.settings.font_color, width=8)
 
         if len(self.timers) > 0:
             self.timer_len = self.timers[0]
@@ -247,20 +279,21 @@ class BlocksPlayer(CTkCanvas):
         ---------
         None
         """
-        self.pause_on = not self.pause_on
-        self.play_pause.configure(command=None)
-        self.master.app.after(500, lambda: self.play_pause.configure(command=self.start_stop_timer))
+        if len(self.timers) > 0:
+            self.pause_on = not self.pause_on
+            self.play_pause.configure(command=None)
+            self.master.app.after(500, lambda: self.play_pause.configure(command=self.start_stop_timer))
 
-        if self.pause_on:
-            self._change_img("pause")
-            self.timer_len = self.timers[self.current_block]
-            self.vertical_speed = 200 / (self.timer_len * 60)
-            self.horizontal_speed = 1000 / (self.timer_len * 60)
+            if self.pause_on:
+                self._change_img("pause")
+                self.timer_len = self.timers[self.current_block]
+                self.vertical_speed = (200 / (self.timer_len * 60)) * self.res[0]
+                self.horizontal_speed = 1000 / (self.timer_len * 60) * self.res[0]
 
-            if self.current_time == 0:
-                self.count_down(0)
-            else:
-                self.count_down(self.current_time)
+                if self.current_time == 0:
+                    self.count_down(0)
+                else:
+                    self.count_down(self.current_time)
 
     def count_down(self, count):
         """
@@ -279,8 +312,9 @@ class BlocksPlayer(CTkCanvas):
             self.current_timer = f"{int(count / 60)}:{count % 60 if count % 60 > 9 else f'0{count % 60}'}"
             if self.master.app.page == 0:
                 self.itemconfigure(self.time_current, text=self.current_timer)
-                self.master.c_timeline.coords(self.vertical, self.vertical_position, 0, self.vertical_position, 160)
-                self.coords(self.horizontal, 555, 80, self.horizontal_len, 80)
+                self.master.c_timeline.coords(self.vertical, self.vertical_position, 0, self.vertical_position,
+                                              160 * self.res[0])
+                self.coords(self.horizontal, 555 * self.res[0], 80 * self.res[1], self.horizontal_len, 80 * self.res[1])
 
             self.current_time = count + 1
             self.master.app.after(1000, self.count_down, count + 1)
@@ -343,8 +377,9 @@ class BlocksPlayer(CTkCanvas):
         self._value_reset()
         self.itemconfigure(self.end_timer, text=f"{self.timers[self.current_block]}:00")
         self.itemconfigure(self.time_current, text="0:00")
-        self.coords(self.horizontal, 555, 1400, 555, 1400)
-        self.master.c_timeline.coords(self.vertical, self.vertical_position, 0, self.vertical_position, 160)
+        self.coords(self.horizontal, 555 * self.res[0], 1400 * self.res[1], 555 * self.res[0], 1400 * self.res[1])
+        self.master.c_timeline.coords(self.vertical, self.vertical_position, 0,
+                                      self.vertical_position, 160 * self.res[1])
 
     def _change_img(self, file):
         """
@@ -359,7 +394,7 @@ class BlocksPlayer(CTkCanvas):
         ---------
         None
         """
-        img = CTkImage(light_image=Image.open(f"images/timeline/{file}.png"), size=(50, 50))
+        img = CTkImage(light_image=Image.open(f"images/timeline/{file}.png"), size=(int(50 * self.res[0]), int(50 * self.res[0])))
         self.play_pause.configure(image=img)
 
     def _value_reset(self):
@@ -371,10 +406,10 @@ class BlocksPlayer(CTkCanvas):
         None
         """
         self.pause_on = False
-        self.vertical_position = 100 + self.current_block * 200
+        self.vertical_position = (100 + self.current_block * 200)  * self.res[0]
         self._change_img("play")
         self.current_time = 0
-        self.horizontal_len = 555
+        self.horizontal_len = 555  * self.res[0]
 
 
 class TimelineWindow:
@@ -385,6 +420,8 @@ class TimelineWindow:
     ----------
     settings : Settings
         contains settings of the app
+    res : float
+        app resolution multiplier
     app : App
         connection to the main app
     tl_blocks : TimelineBlocks
@@ -399,6 +436,7 @@ class TimelineWindow:
     create_window():
         creates timeline window
     """
+
     def __init__(self, root):
         """
         Constructs essential attributes
@@ -409,6 +447,7 @@ class TimelineWindow:
             access to the main app
         """
         self.settings = Settings()
+        self.res = self.settings.resolution
         self.app = root
 
         self.tl_blocks = None
@@ -426,20 +465,24 @@ class TimelineWindow:
         self.app.page = 2
         self.app.create_c_main()
 
-        self.app.c_main.create_text(1080, 60, text="Create focus timeline", font=self.settings.font,
-                                    fill=self.settings.font_color)
-        self.app.c_main.create_line(870, 100, 1290, 100, fill=self.settings.second_color, width=8)
-        self.app.c_main.create_rectangle(50, 150, 2110, 1000, outline=self.settings.second_color, width=5)
-        self.app.c_main.create_line(800, 150, 800, 1000, fill=self.settings.second_color, width=5)
+        self.app.c_main.create_text(1080 * self.res[0], 60 * self.res[1], text="Create focus timeline",
+                                    font=self.settings.font, fill=self.settings.font_color)
+        self.app.c_main.create_line(870 * self.res[0], 100 * self.res[1], 1290 * self.res[0], 100 * self.res[1],
+                                    fill=self.settings.second_color, width=8)
+        self.app.c_main.create_rectangle(50 * self.res[0], 150 * self.res[1], 2110 * self.res[0], 1000 * self.res[1],
+                                         outline=self.settings.second_color, width=5)
+        self.app.c_main.create_line(800 * self.res[0], 150 * self.res[1], 800 * self.res[0], 1000 * self.res[1],
+                                    fill=self.settings.second_color, width=5)
 
         b_submit = CTkButton(self.app, text="Submit", font=self.settings.font, fg_color=self.settings.second_color,
-                                  hover_color=self.settings.main_color, border_color=self.settings.second_color,
-                                  border_width=5, command=self.app.main.create_main_window)
-        self.app.c_main.create_window(2035, 1295, window=b_submit, width=150, height=50)
+                             hover_color=self.settings.main_color, border_color=self.settings.second_color,
+                             border_width=5, command=self.app.main.create_main_window)
+        self.app.c_main.create_window(2035 * self.res[0], 1295 * self.res[1], window=b_submit, width=150, height=50)
 
-
-        self.pointer = self.app.c_main.create_line(100, 1070, 100, 1270, fill="#155255", width=5, state="hidden")
-        self.tl_add_bg = self.app.c_main.create_rectangle(50, 1120, 2060, 1220, fill=self.settings.main_color, width=0)
+        self.pointer = self.app.c_main.create_line(100 * self.res[0], 1070 * self.res[1], 100 * self.res[0],
+                                                   1270 * self.res[1], fill="#155255", width=5, state="hidden")
+        self.tl_add_bg = self.app.c_main.create_rectangle(50 * self.res[0], 1120 * self.res[1], 2060 * self.res[0],
+                                                          1220 * self.res[1], fill=self.settings.main_color, width=0)
 
         self.tl_blocks = TimelineBlocks(self.app)
         self.rc_blocks = RecentlyBlocks(self.app)
@@ -488,6 +531,8 @@ class Blocks:
         connection to the main app
     settings : Settings
         app's settings
+    res : float
+        app's resolution multiplier
     timeline : TimelineBlocks
         access to timeline blocks
     blocks : list[BLocks]
@@ -531,6 +576,7 @@ class Blocks:
         saves params to the file
 
     """
+
     def __init__(self, root, file_name, startx, width):
         """
         Constructs attributes and creates blocks
@@ -548,6 +594,7 @@ class Blocks:
         """
         self.app = root
         self.settings = Settings()
+        self.res = self.settings.resolution
         self.timeline = self.app.timeline.tl_blocks
         self.blocks = []
         self.width = width
@@ -562,7 +609,8 @@ class Blocks:
         for param in self.params:
             self.add_block(param)
 
-        self.tl_add_text = self.app.c_main.create_text(1055, 1280, font=("Arial", 30), fill=self.settings.font_color,
+        self.tl_add_text = self.app.c_main.create_text(1055 * self.res[0], 1280 * self.res[1], font=("Arial", 30),
+                                                       fill=self.settings.font_color,
                                                        state="hidden", text="Add to the timeline")
 
     def add_block(self, param):
@@ -576,17 +624,19 @@ class Blocks:
         None
         """
         tag_name = f"b{self.width}_{self.pos_counter[1] * 10 + self.pos_counter[0]}_{self.delete}"
-        block_id = self.app.c_main.create_rectangle(self.startx + self.pos_counter[0] * 250,
-                                                    225 + 150 * self.pos_counter[1],
-                                                    self.startx + 200 + self.pos_counter[0] * 250,
-                                                    325 + 150 * self.pos_counter[1], fill=param[1], tags=tag_name,
-                                                    outline=self.settings.second_color, width=5)
+        block_id = self.app.c_main.create_rectangle((self.startx + self.pos_counter[0] * 250) * self.res[0],
+                                                    (225 + 150 * self.pos_counter[1]) * self.res[1],
+                                                    (self.startx + 200 + self.pos_counter[0] * 250) * self.res[0],
+                                                    (325 + 150 * self.pos_counter[1]) * self.res[1], fill=param[1],
+                                                    tags=tag_name, outline=self.settings.second_color, width=5)
         timer = format_time(param[0])
-        timer_id = self.app.c_main.create_text(self.startx + 100 + self.pos_counter[0] * 250,
-                                               275 + self.pos_counter[1] * 150, text=timer, font=self.settings.font,
+        timer_id = self.app.c_main.create_text((self.startx + 100 + self.pos_counter[0] * 250) * self.res[0],
+                                               (275 + self.pos_counter[1] * 150) * self.res[1], text=timer,
+                                               font=self.settings.font,
                                                fill=self.settings.font_color, tags=tag_name)
-        category_id = self.app.c_main.create_text(self.startx + 100 + self.pos_counter[0] * 250,
-                                                  305 + self.pos_counter[1] * 150, text=param[2], tag=tag_name,
+        category_id = self.app.c_main.create_text((self.startx + 100 + self.pos_counter[0] * 250) * self.res[0],
+                                                  (305 + self.pos_counter[1] * 150) * self.res[1], text=param[2],
+                                                  tag=tag_name,
                                                   fill=self.settings.font_color, font=("Arial", 15), anchor="center")
         self.blocks.append(Block(param[1], param[0], param[2], [block_id, timer_id, category_id], tag_name,
                                  [self.startx + self.pos_counter[0] * 250, 225 + 150 * self.pos_counter[1]]))
@@ -630,19 +680,21 @@ class Blocks:
         -------
         None
         """
-        if 1050 < event.y < 1300:
+        if 1050 * self.res[1] < event.y < 1300 * self.res[1]:
 
             self.app.c_main.itemconfigure(self.pointer, state='normal')
-            self.app.c_main.moveto(self.selected_block.element_ids[0], event.x - 100, 1117)
-            self.app.c_main.moveto(self.selected_block.element_ids[1], event.x - 50, 1150)
-            self.app.c_main.coords(self.selected_block.element_ids[2], event.x, 1200)
-
+            self.app.c_main.moveto(self.selected_block.element_ids[0], event.x - (100 * self.res[0]),
+                                   1117 * self.res[1])
+            self.app.c_main.moveto(self.selected_block.element_ids[1], event.x - (50 * self.res[0]), 1150 * self.res[1])
+            self.app.c_main.coords(self.selected_block.element_ids[2], event.x, 1200 * self.res[1])
             self.timeline.get_change(event.x)
 
         else:
-            self.app.c_main.moveto(self.selected_block.element_ids[0], event.x - 100, event.y - 50)
-            self.app.c_main.moveto(self.selected_block.element_ids[1], event.x - 50, event.y - 20)
-            self.app.c_main.coords(self.selected_block.element_ids[2], event.x, event.y + 35)
+            self.app.c_main.moveto(self.selected_block.element_ids[0], event.x - (100 * self.res[0]),
+                                   event.y - (50 * self.res[1]))
+            self.app.c_main.moveto(self.selected_block.element_ids[1], event.x - (50 * self.res[0]),
+                                   event.y - (20 * self.res[1]))
+            self.app.c_main.coords(self.selected_block.element_ids[2], event.x, event.y + (35 * self.res[1]))
             if self.pointer is not None:
                 self.app.c_main.itemconfigure(self.pointer, state='hidden')
 
@@ -669,20 +721,19 @@ class Blocks:
         self.app.c_main.itemconfigure(self.app.timeline.tl_add_bg, fill=self.settings.main_color)
         self.app.c_main.itemconfigure(self.tl_add_text, state="hidden")
 
+        self.app.c_main.moveto(self.selected_block.element_ids[0], self.selected_block.start_pos[0] * self.res[0],
+                               self.selected_block.start_pos[1] * self.res[1])
+        self.app.c_main.moveto(self.selected_block.element_ids[1],
+                               (self.selected_block.start_pos[0] + 50) * self.res[0],
+                               (self.selected_block.start_pos[1] + 30) * self.res[1])
+        self.app.c_main.coords(self.selected_block.element_ids[2],
+                               (self.selected_block.start_pos[0] + 100) * self.res[0],
+                               (self.selected_block.start_pos[1] + 85) * self.res[1])
 
-        self.app.c_main.moveto(self.selected_block.element_ids[0], self.selected_block.start_pos[0],
-                               self.selected_block.start_pos[1])
-        self.app.c_main.moveto(self.selected_block.element_ids[1], self.selected_block.start_pos[0] + 50,
-                               self.selected_block.start_pos[1] + 30)
-        self.app.c_main.coords(self.selected_block.element_ids[2], self.selected_block.start_pos[0] + 100,
-                               self.selected_block.start_pos[1] + 85)
-
-        if 1050 < event.y < 1300 and len(self.timeline.blocks) < 9:
+        if 1050 * self.res[1] < event.y < 1300 * self.res[1] and len(self.timeline.blocks) < 9:
             self.timeline.add([self.selected_block.timer, self.selected_block.color, self.selected_block.text])
-
             element = len(self.timeline.blocks)
             new_pos = 100 + self.timeline.change * 200
-
             poped = self.timeline.blocks.pop(element - 1)
             self.timeline.blocks.insert(self.timeline.change, poped)
 
@@ -715,7 +766,7 @@ class Blocks:
 
         return parameters
 
-    def to_file(self,file_name):
+    def to_file(self, file_name):
         """
         saves params to the file
 
@@ -769,6 +820,7 @@ class RecentlyBlocks(Blocks):
     clock_on_closing():
         after clock was closed
     """
+
     def __init__(self, root):
         """
         constructs attributes and builds upon Blocks
@@ -782,15 +834,20 @@ class RecentlyBlocks(Blocks):
         self.app = root
         self.today_data = Date()
 
-        self.app.c_main.create_text(425, 175, font=("Arial", 30), fill=self.settings.font_color,
+        self.app.c_main.create_text(425 * self.res[0], 175 * self.res[1], font=("Arial", 30),
+                                    fill=self.settings.font_color,
                                     text="Recently created")
-        self.saved_add_bg = self.app.c_main.create_rectangle(800, 150, 2110, 1000, fill=self.settings.main_color,
+        self.saved_add_bg = self.app.c_main.create_rectangle(800 * self.res[0], 150 * self.res[1], 2110 * self.res[0],
+                                                             1000 * self.res[1], fill=self.settings.main_color,
                                                              outline=self.settings.second_color, width=5)
-        self.saved_add_text = self.app.c_main.create_text(1455, 975, font=("Arial", 30), fill=self.settings.font_color,
+        self.saved_add_text = self.app.c_main.create_text(1455 * self.res[0], 975 * self.res[1], font=("Arial", 30),
+                                                          fill=self.settings.font_color,
                                                           state="hidden", text="Drop here to save")
-        b_rc_create = CTkButton(self.app, text="+", font=("Arial", 70), fg_color=self.settings.main_color,
-                                     command=self.rc_add)
-        self.app.c_main.create_window(80, 970, window=b_rc_create, height=50, width=50)
+        b_rc_create = CTkButton(self.app, text="+", font=("Arial", int(70 * self.res[0])),
+                                fg_color=self.settings.main_color,
+                                command=self.rc_add)
+        self.app.c_main.create_window(80 * self.res[0], 970 * self.res[1], window=b_rc_create, height=50 * self.res[0],
+                                      width=50 * self.res[1])
 
         self.clock_window = None
         self.is_clock_window_on = False
@@ -916,7 +973,6 @@ class RecentlyBlocks(Blocks):
                 self.app.c_main.coords(self.blocks[i].element_ids[2], self.blocks[i].start_pos[0] + 100,
                                        self.blocks[i].start_pos[1] + 85)
 
-
             self.delete += 1
 
             self.add_block(self.new_block)
@@ -960,6 +1016,7 @@ class SavedBlocks(Blocks):
     saved_unpress():
         after unpress bind
     """
+
     def __init__(self, root):
         """
         Constructs attributes for the class
@@ -971,9 +1028,11 @@ class SavedBlocks(Blocks):
         """
         super().__init__(root, "saved_blocks.txt", 825, 5)
         self.app = root
-        self.saved_trash = self.app.c_main.create_image(835, 960, image=create_imagetk("images/blocks/trash.png"),
+        self.saved_trash = self.app.c_main.create_image(835 * self.res[0], 960 * self.res[1],
+                                                        image=create_imagetk("images/blocks/trash.png"),
                                                         state="hidden")
-        self.app.c_main.create_text(1425, 175, font=("Arial", 30), fill=self.settings.font_color, text="Saved")
+        self.app.c_main.create_text(1425 * self.res[0], 175 * self.res[1], font=("Arial", 30),
+                                    fill=self.settings.font_color, text="Saved")
         for block in self.blocks:
             self.bind(block.tag)
 
@@ -1040,15 +1099,18 @@ class SavedBlocks(Blocks):
         """
         self.unpress(event)
         self.app.c_main.itemconfigure(self.saved_trash, state='hidden')
-        if 735 < event.x < 935 and 900 < event.y < 1020:
+        if 735 * self.res[0] < event.x < 935 * self.res[0] and 900 * self.res[1] < event.y < 1020 * self.res[1]:
             previous_pos = None
 
             save_pos = None
             for block in self.blocks[self.blocks.index(self.selected_block):]:
                 if previous_pos is not None:
-                    self.app.c_main.moveto(block.element_ids[0], previous_pos[0], previous_pos[1])
-                    self.app.c_main.moveto(block.element_ids[1], previous_pos[0] + 50, previous_pos[1] + 30)
-                    self.app.c_main.coords(block.element_ids[2], previous_pos[0] + 100, previous_pos[1] + 85)
+                    self.app.c_main.moveto(block.element_ids[0], previous_pos[0] * self.res[0],
+                                           previous_pos[1] * self.res[1])
+                    self.app.c_main.moveto(block.element_ids[1], (previous_pos[0] + 50) * self.res[0],
+                                           (previous_pos[1] + 30) * self.res[1])
+                    self.app.c_main.coords(block.element_ids[2], (previous_pos[0] + 100) * self.res[0],
+                                           (previous_pos[1] + 85) * self.res[1])
                     save_pos = previous_pos
                 previous_pos = block.start_pos
                 block.start_pos = save_pos
@@ -1073,6 +1135,8 @@ class TimelineBlocks:
     ----------
     settings : Settings
         contains info about app
+    res : float
+        app's resolution multiplier
     app : App
         connection to the app
     today_data : Date()
@@ -1113,6 +1177,7 @@ class TimelineBlocks:
     to_file():
         saves params to file
     """
+
     def __init__(self, root):
         """
         Constructs attributes necessary for class
@@ -1123,6 +1188,7 @@ class TimelineBlocks:
             connection to the main app
         """
         self.settings = Settings()
+        self.res = self.settings.resolution
         self.app = root
         self.today_data = Date()
 
@@ -1134,15 +1200,22 @@ class TimelineBlocks:
 
         self.pointer = self.app.timeline.pointer
         self.tag_id = 0
-        self.app.c_main.create_line(50, 1120, 2060, 1120, fill=self.settings.second_color, width=5)
-        self.app.c_main.create_line(2010, 1090, 2060, 1120, fill=self.settings.second_color, width=5)
-        self.app.c_main.create_line(2010, 1150, 2060, 1120, fill=self.settings.second_color, width=5)
+        self.app.c_main.create_line(50 * self.res[0], 1120 * self.res[1], 2060 * self.res[0], 1120 * self.res[1],
+                                    fill=self.settings.second_color, width=5)
+        self.app.c_main.create_line(2010 * self.res[0], 1090 * self.res[1], 2060 * self.res[0], 1120 * self.res[1],
+                                    fill=self.settings.second_color, width=5)
+        self.app.c_main.create_line(2010 * self.res[0], 1150 * self.res[1], 2060 * self.res[0], 1120 * self.res[1],
+                                    fill=self.settings.second_color, width=5)
 
-        self.app.c_main.create_line(50, 1220, 2060, 1220, fill=self.settings.second_color, width=5)
-        self.app.c_main.create_line(2010, 1190, 2060, 1220, fill=self.settings.second_color, width=5)
-        self.app.c_main.create_line(2010, 1250, 2060, 1220, fill=self.settings.second_color, width=5)
+        self.app.c_main.create_line(50 * self.res[0], 1220 * self.res[1], 2060 * self.res[0], 1220 * self.res[1],
+                                    fill=self.settings.second_color, width=5)
+        self.app.c_main.create_line(2010 * self.res[0], 1190 * self.res[1], 2060 * self.res[0], 1220 * self.res[1],
+                                    fill=self.settings.second_color, width=5)
+        self.app.c_main.create_line(2010 * self.res[0], 1250 * self.res[1], 2060 * self.res[0], 1220 * self.res[1],
+                                    fill=self.settings.second_color, width=5)
 
-        self.tl_trash = self.app.c_main.create_image(2100, 1170, image=create_imagetk("images/blocks/trash.png"),
+        self.tl_trash = self.app.c_main.create_image(2100 * self.res[0], 1170 * self.res[1],
+                                                     image=create_imagetk("images/blocks/trash.png"),
                                                      state="hidden")
         params = self.from_file()
         for param in params:
@@ -1162,17 +1235,21 @@ class TimelineBlocks:
         None
         """
         tag_name = f"tl{self.tag_id}"
-        block_id = self.app.c_main.create_rectangle(self.timeline_positions[self.current_pos], 1120,
-                                                    self.timeline_positions[self.current_pos] + 200,
-                                                    1220, fill=param[1], outline=self.settings.second_color,
+        block_id = self.app.c_main.create_rectangle(self.timeline_positions[self.current_pos] * self.res[0],
+                                                    1120 * self.res[1],
+                                                    (self.timeline_positions[self.current_pos] + 200) * self.res[0],
+                                                    1220 * self.res[1], fill=param[1],
+                                                    outline=self.settings.second_color,
                                                     width=5,
                                                     tags=tag_name)
 
         timer = format_time(param[0])
-        timer_id = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1170,
+        timer_id = self.app.c_main.create_text((self.timeline_positions[self.current_pos] + 100) * self.res[0],
+                                               1170 * self.res[1],
                                                text=timer, font=self.settings.font, fill=self.settings.font_color,
                                                tags=tag_name)
-        category_id = self.app.c_main.create_text(self.timeline_positions[self.current_pos] + 100, 1200,
+        category_id = self.app.c_main.create_text((self.timeline_positions[self.current_pos] + 100) * self.res[0],
+                                                  1200 * self.res[1],
                                                   text=param[2], font=("Arial", 15), fill=self.settings.font_color,
                                                   tags=tag_name)
 
@@ -1223,11 +1300,12 @@ class TimelineBlocks:
         -------
         None
         """
-        if 1090 < event.y < 1390:
+        if 1090 * self.res[1] < event.y < 1390 * self.res[1]:
             self.app.c_main.itemconfigure(self.pointer, state='normal')
-            self.app.c_main.moveto(self.selected_block.element_ids[0], event.x - 100, 1117)
-            self.app.c_main.moveto(self.selected_block.element_ids[1], event.x - 50, 1150)
-            self.app.c_main.coords(self.selected_block.element_ids[2], event.x, 1200)
+            self.app.c_main.moveto(self.selected_block.element_ids[0], event.x - (100 * self.res[0]),
+                                   1117 * self.res[1])
+            self.app.c_main.moveto(self.selected_block.element_ids[1], event.x - (50 * self.res[0]), 1150 * self.res[1])
+            self.app.c_main.coords(self.selected_block.element_ids[2], event.x, 1200 * self.res[1])
 
             self.get_change(event.x)
 
@@ -1253,7 +1331,8 @@ class TimelineBlocks:
         self.app.c_main.itemconfigure(self.pointer, state='hidden')
         self.app.c_main.itemconfigure(self.selected_block.element_ids[0], outline=self.settings.second_color)
 
-        element = int((self.selected_block.start_pos[0] - 100) / 200)
+        element = int(((self.selected_block.start_pos[0] - 100) * self.res[0]) / (200 * self.res[0]))
+
         if element < self.change:
             self.change -= 1
 
@@ -1261,18 +1340,21 @@ class TimelineBlocks:
         self.blocks.insert(self.change, poped)
 
         if element == self.change:
-            self.app.c_main.coords(self.selected_block.element_ids[0], self.selected_block.start_pos[0], 1120,
-                                   self.selected_block.start_pos[0] + 200, 1220)
-            self.app.c_main.coords(self.selected_block.element_ids[1], self.selected_block.start_pos[0] + 100, 1170)
-            self.app.c_main.coords(self.selected_block.element_ids[2], self.selected_block.start_pos[0] + 100, 1200)
+            self.app.c_main.coords(self.selected_block.element_ids[0], self.selected_block.start_pos[0] * self.res[0],
+                                   1120 * self.res[1],
+                                   (self.selected_block.start_pos[0] + 200) * self.res[0], 1220 * self.res[1])
+            self.app.c_main.coords(self.selected_block.element_ids[1],
+                                   (self.selected_block.start_pos[0] + 100) * self.res[0], 1170 * self.res[1])
+            self.app.c_main.coords(self.selected_block.element_ids[2],
+                                   (self.selected_block.start_pos[0] + 100) * self.res[0], 1200 * self.res[1])
         elif self.change > element:
             new_pos = self.selected_block.start_pos[0]
             self.shift(self.blocks[element:self.change + 1], new_pos)
         else:
-            new_pos = 100 + self.change * 200
+            new_pos = (100 + self.change * 200)
             self.shift(self.blocks[self.change:element + 1], new_pos)
 
-        if event.x > 2000:
+        if event.x > 2000 * self.res[0]:
             self.current_pos -= 1
             self.timeline_positions.pop(-1)
             self.app.c_main.delete(self.selected_block.element_ids[0])
@@ -1290,7 +1372,7 @@ class TimelineBlocks:
         ----------
         arr : list[BLocks]
             list to change
-        start : list[int]
+        start : int
             starting position
 
         Returns
@@ -1299,9 +1381,10 @@ class TimelineBlocks:
         """
         for item in arr:
             item.start_pos[0] = start
-            self.app.c_main.coords(item.element_ids[0], start, 1120, start + 200, 1220)
-            self.app.c_main.coords(item.element_ids[1], start + 100, 1170)
-            self.app.c_main.coords(item.element_ids[2], start + 100, 1200)
+            self.app.c_main.coords(item.element_ids[0], start * self.res[0], 1120 * self.res[1],
+                                   (start + 200) * self.res[0], 1220 * self.res[1])
+            self.app.c_main.coords(item.element_ids[1], (start + 100) * self.res[0], 1170 * self.res[1])
+            self.app.c_main.coords(item.element_ids[2], (start + 100) * self.res[0], 1200 * self.res[1])
             start += 200
 
     def get_change(self, x):
@@ -1318,11 +1401,11 @@ class TimelineBlocks:
         None
         """
         i = 0
+
         for pos in self.timeline_positions:
-            if x - 100 <= pos < x + 100:
-                self.app.c_main.coords(self.pointer, self.timeline_positions[i], 1070,
-                                       self.timeline_positions[i],
-                                       1270)
+            if x - 100 <= pos * self.res[0] < x + 100:
+                self.app.c_main.coords(self.pointer, self.timeline_positions[i] * self.res[0], 1070 * self.res[1],
+                                       self.timeline_positions[i] * self.res[0], 1270 * self.res[1])
                 self.change = i
                 break
 

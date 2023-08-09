@@ -295,6 +295,7 @@ class HabitWindow:
         """
         self.app = root
         self.settings = Settings()
+        self.res = self.settings.resolution
         self.management = HabitManagement()
 
         self.new_checks = []
@@ -321,9 +322,9 @@ class HabitWindow:
         self.habits = self.management.habits
         self.current_widgets = []
 
-        self.app.c_main.create_text(1080, 60, text="Habit Tracker", font=self.settings.font,
+        self.app.c_main.create_text(1080* self.res[0], 60* self.res[1], text="Habit Tracker", font=self.settings.font,
                                     fill=self.settings.font_color)
-        self.app.c_main.create_line(870, 100, 1290, 100, fill=self.settings.second_color, width=8)
+        self.app.c_main.create_line(870* self.res[0], 100* self.res[1], 1290* self.res[0], 100* self.res[1], fill=self.settings.second_color, width=8)
         b_new = CTkButton(self.app, text="New", font=self.settings.font, fg_color=self.settings.second_color,
                           hover_color=self.settings.main_color, border_color=self.settings.second_color,
                           border_width=5, command=self.new_habit)

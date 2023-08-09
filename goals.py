@@ -102,9 +102,8 @@ class GoalsWidget(CTkFrame):
     """
 
     def __init__(self, master):
-        self.settings = Settings()
         super().__init__(master, width=500, height=500)
-
+        self.settings = Settings()
         self.management = GoalsManagement()
         goals_texts = self.management.goals_from_file()
         goals_formated = self.format_goals(goals_texts)
@@ -152,7 +151,6 @@ class GoalsWidget(CTkFrame):
             self.b_arr_down.configure(state="disabled")
         else:
             self.b_arr_down.configure(state="normal")
-
 
         if len(self.display) != 0:
             row = 0
@@ -241,6 +239,8 @@ class GoalsWindow:
     ----------
     settings : Settings
          app settings class
+    res : float
+        app resolution multiplier
     management : GoalsManagement
         goals management class conection
     today_data : Date
@@ -288,6 +288,7 @@ class GoalsWindow:
         binds dots unpress
 
     """
+
     def __init__(self, root):
         """
         Constructs core attributes for class
@@ -299,6 +300,7 @@ class GoalsWindow:
         """
         self.app = root
         self.settings = Settings()
+        self.res = self.settings.resolution
         self.management = GoalsManagement()
         self.today_data = Date()
 
@@ -331,29 +333,31 @@ class GoalsWindow:
             for goal in self.goals_texts:
                 self.show_goal(goal)
 
-        self.app.c_main.create_text(1080, 60, text="Create goals for today", font=self.settings.font,
+        self.app.c_main.create_text(1080 * self.res[0], 60 * self.res[1], text="Create goals for today", font=self.settings.font,
                                     fill=self.settings.font_color)
 
-        self.app.c_main.create_line(870, 100, 1290, 100, fill=self.settings.second_color, width=8)
-        self.app.c_main.create_image(75, 750, image=create_imagetk("images/goals/arrow.png", ))
-        self.app.c_main.create_text(20, 750, text="Importance", font=self.settings.font, fill=self.settings.font_color,
-                                    anchor="nw", angle=90)
+        self.app.c_main.create_line(870 * self.res[0], 100 * self.res[1], 1290 * self.res[0], 100 * self.res[1],
+                                    fill=self.settings.second_color, width=8)
+        self.app.c_main.create_image(75 * self.res[0], 750 * self.res[1],
+                                     image=create_imagetk("images/goals/arrow.png", 50, int(1140 * self.res[1])))
+        self.app.c_main.create_text(20 * self.res[0], 750 * self.res[1], text="Importance", font=self.settings.font,
+                                    fill=self.settings.font_color, anchor="nw", angle=90)
 
         self.e_todo = CTkEntry(self.app, font=("Arial", 20))
         self.e_todo.focus()
-        self.app.c_main.create_window(1030, 1295, window=self.e_todo, width=1760, height=50)
+        self.app.c_main.create_window(1030 * self.res[0], 1295 * self.res[1], window=self.e_todo, width=1760 * self.res[0], height=50)
         b_add = CTkButton(self.app, text="+", font=("Arial", 60), fg_color=self.settings.second_color,
-                               command=self.add_goal, border_width=5, hover_color=self.settings.main_color,
-                               border_color=self.settings.second_color)
-        self.app.c_main.create_window(75, 1295, window=b_add, height=50, width=50)
+                          command=self.add_goal, border_width=5, hover_color=self.settings.main_color,
+                          border_color=self.settings.second_color)
+        self.app.c_main.create_window(75 * self.res[0], 1295 * self.res[1], window=b_add, height=50, width=50)
 
-        b_submit = CTkButton(self.app, text="Submit", font=self.settings.font, fg_color=self.settings.second_color,
-                                  hover_color=self.settings.main_color, border_color=self.settings.second_color,
-                                  border_width=5,
-                                  command=self.app.timeline.create_window)
-        self.app.c_main.create_window(2035, 1295, window=b_submit, width=150, height=50)
+        b_submit = CTkButton(self.app, text="Submit", font=("Arial", 30), fg_color=self.settings.second_color,
+                             hover_color=self.settings.main_color, border_color=self.settings.second_color,
+                             border_width=5,
+                             command=self.app.timeline.create_window)
+        self.app.c_main.create_window(2035 * self.res[0], 1295 * self.res[1], window=b_submit, width=150, height=50)
 
-        self.dots = self.app.c_main.create_image(125, 210, image=create_imagetk("images/goals/dots.png"),
+        self.dots = self.app.c_main.create_image(125, 210, image=create_imagetk("images/goals/dots.png", 50, 50),
                                                  tags=("dots",), state='hidden')
         self.shadow = self.app.c_main.create_text(-100, -100, text="", font=("Arial", 20), fill="grey")
         self.app.c_main.itemconfigure(self.shadow, state='hidden')
@@ -383,7 +387,7 @@ class GoalsWindow:
         None
         """
         i = len(self.goals_widgets) + 1
-        goal = self.app.c_main.create_text(150, 140 + i * 60, text=f"{text}",
+        goal = self.app.c_main.create_text(150 * self.res[0], (140 + i * 60) * self.res[1], text=f"{text}",
                                            font=("Arial", 20),
                                            fill=self.settings.font_color, anchor="w", tags=f"todo{i}")
         self.goals_widgets.append(goal)
@@ -436,7 +440,7 @@ class GoalsWindow:
         self.goal_widgets_yposes.pop()
 
         if len(self.goals_widgets) != 0:
-            self.app.c_main.moveto(self.dots, 100, self.goal_widgets_yposes[-1] - 25)
+            self.app.c_main.moveto(self.dots, 100 * self.res[0], (self.goal_widgets_yposes[-1] - 25) * self.res[0])
 
         self.goals_texts = []
         for i in range(len(self.goals_widgets)):
@@ -490,13 +494,14 @@ class GoalsWindow:
         flag = 0
         y = 0
         for posy in self.goal_widgets_yposes:
-            if posy - 25 < event.y < posy + 25 and 110 < event.x < 140:
+            if (posy - 25) * self.res[1] < event.y < (posy + 25) * self.res[1] and 110 * self.res[0] < event.x < 140 * \
+                    self.res[1]:
                 y = posy
                 flag = 1
 
-        if flag == 1 and y - 14 < event.y < y + 14:
+        if flag == 1 and (y - 14) * self.res[0] < event.y < (y + 14) * self.res[1]:
             self.app.c_main.itemconfigure(self.dots, state='normal')
-            self.app.c_main.moveto(self.dots, 100, y - 25)
+            self.app.c_main.moveto(self.dots, 100 * self.res[0], (y - 25) * self.res[0])
         else:
             self.app.c_main.itemconfigure(self.dots, state='hidden')
 
@@ -518,7 +523,7 @@ class GoalsWindow:
         self.goal = 0
         self.app.c_main.itemconfigure(self.line, state='normal')
         for posy in self.goal_widgets_yposes:
-            if posy - 25 < event.y < posy + 25:
+            if (posy - 25) * self.res[0] < event.y < (posy + 25) * self.res[1]:
                 text = self.app.c_main.itemcget(self.goals_widgets[self.goal], 'text')
                 flag = 1
             elif flag == 0:
@@ -541,18 +546,19 @@ class GoalsWindow:
         """
         self.app.c_main.itemconfigure(self.shadow, state="normal")
 
-        if event.y < 200:
+        if event.y < 200 * self.res[1]:
             self.shadow_line_position = 0
-        elif event.y > self.goal_widgets_yposes[-1]:
+        elif event.y > self.goal_widgets_yposes[-1] * self.res[0]:
             self.shadow_line_position = len(self.goal_widgets_yposes)
         else:
-            self.shadow_line_position = int((event.y - 110) / 60) - 1
+            self.shadow_line_position = int((event.y - 110 * self.res[1]) / (60 * self.res[0])) - 1
+            print(self.shadow_line_position)
 
-        self.app.c_main.moveto(self.line, 150, 150 + self.shadow_line_position * 60)
+        self.app.c_main.moveto(self.line, 150 * self.res[0], (150 + self.shadow_line_position * 60) * self.res[1])
 
-        if 200 < event.y < self.goal_widgets_yposes[-1]:
-            self.app.c_main.moveto(self.dots, 100, event.y - 25)
-            self.app.c_main.moveto(self.shadow, 150, event.y - 20)
+        if 200 * self.res[1] < event.y < self.goal_widgets_yposes[-1] * self.res[1]:
+            self.app.c_main.moveto(self.dots, 100 * self.res[0], (event.y - 25))
+            self.app.c_main.moveto(self.shadow, 150 * self.res[0], (event.y - 20))
 
     def unpress_dots(self, *_):
         """

@@ -766,13 +766,13 @@ class ButtonDeleteLine(CTkButton):
         if self.is_on:
             self.delete_buttons = []
             self.configure(fg_color="red", text="cancel")
-
+            print("start", self.blocks.lines_middle)
             for i in range(len(self.blocks.lines_middle)):
+                middle = [(self.blocks.lines_middle[i][0]), (self.blocks.lines_middle[i][1])]
+                print("middle", middle)
                 b_delete = CTkButton(self.master, text="×", font=("Arial", 90), fg_color=self.settings.second_color,
-                                     command=lambda x=i: self.delete_line(self.blocks.lines[x]))
-                self.c_bg.create_window(int(self.blocks.lines_middle[i][0]), int(self.blocks.lines_middle[i][1]),
-                                        window=b_delete,
-                                        height=50, width=50)
+                                     command=lambda x=i, mid=middle: self.delete_line(self.blocks.lines[x], mid))
+                self.c_bg.create_window(int(middle[0]), int(middle[1]), window=b_delete, height=50, width=50)
                 self.delete_buttons.append(b_delete)
         else:
             self.configure(fg_color=self.settings.second_color, text="Delete line")
@@ -780,7 +780,7 @@ class ButtonDeleteLine(CTkButton):
                 b_delete.destroy()
                 self.blocks.create_blocks()
 
-    def delete_line(self, line):
+    def delete_line(self, line, middle):
         """
         deletes given line and destroys buttons
 
@@ -788,12 +788,16 @@ class ButtonDeleteLine(CTkButton):
         ----------
         line : int (widget_id)
             constains line to delete
+        middle : list[int]
+            middle point [x, y] position of lines
         Returns
         --------
         None
         """
         self.c_bg.delete(line[0])
         self.blocks.blocks[line[2] - 1].foreign_ids.remove(line[1])
+        self.blocks.lines_middle.remove(middle)
+
         self.blocks.blocks_to_file()
 
         for b_delete in self.delete_buttons:

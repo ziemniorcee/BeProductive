@@ -1,10 +1,11 @@
 from actions import *
 from settings import *
 from customtkinter import *
-from Data import Date, Weather
+from Data import Date, WeatherWidget, Weather
 from habit import HabitsWidget
 from goals import GoalsWidget
 from timeline import TimelineWidget
+
 
 class Start_window:
     """
@@ -29,6 +30,7 @@ class Start_window:
         build start button
 
     """
+
     def __init__(self, root):
         """
         Constructs essential attributes
@@ -55,23 +57,19 @@ class Start_window:
         self.app.page = 0
         self.app.create_c_main()
 
-        self.app.c_main.create_image(1080, 250, image=create_imagetk(self.weather_data.image, 500, 500))
-        self.app.c_main.create_text(1080, 220, text=f" {self.weather_data.temperature[0]}", font=self.settings.font,
-                                    fill=self.settings.font_color)
-        self.app.c_main.create_text(1080, 260, text=f"Feels like: {self.weather_data.temperature[1]}",
-                                    font=("Arial", 15),
-                                    fill=self.settings.font_color)
-        self.b_start_make()
-
-
         habits_widget = HabitsWidget(self.app)
-        self.app.c_main.create_window(1760, 185, window=habits_widget, anchor="n")
+        self.app.c_main.create_window(1830 * self.settings.resolution[0], 185 * self.settings.resolution[1],
+                                      window=habits_widget, anchor="n")
         goals_widget = GoalsWidget(self.app)
-        self.app.c_main.create_window(400, 185, window=goals_widget, anchor="n")
+        self.app.c_main.create_window(470 * self.settings.resolution[0], 185 * self.settings.resolution[1],
+                                      window=goals_widget, anchor="n")
         timeline_widget = TimelineWidget(self.app)
-        self.app.c_main.create_window(1055, 1090, window=timeline_widget, anchor="n")
-
-
+        self.app.c_main.create_window(1150 * self.settings.resolution[0], 1090 * self.settings.resolution[1],
+                                      window=timeline_widget, anchor="n")
+        weather_widget = WeatherWidget(self.app)
+        self.app.c_main.create_window(1150 * self.settings.resolution[0], 0 * self.settings.resolution[1],
+                                      window=weather_widget, anchor="n")
+        self.b_start_make()
 
     def b_start_make(self):
         """
@@ -90,8 +88,11 @@ class Start_window:
         #     option = 1
         # elif len(self.app.setup2.tl_blocks) == 0:
         #     option = 2
-        b_start = CTkButton(self.app, text=texts[option], fg_color=self.settings.main_color, font=("Arial", 50),
-                                 border_width=12, border_color=self.settings.second_color,
-                                 text_color=self.settings.font_color, command=self.app.goals.create_window,
-                                 corner_radius=100, hover_color=self.settings.second_color)
-        self.app.c_main.create_window(1080, 800, window=b_start, width=400, height=150)
+        b_start = CTkButton(self.app, text=texts[option], fg_color=self.settings.main_color,
+                            font=("Arial", int(50 * self.settings.resolution[0])),
+                            border_width=int(12 * self.settings.resolution[0]), border_color=self.settings.second_color,
+                            text_color=self.settings.font_color, command=self.app.goals.create_window,
+                            corner_radius=100, hover_color=self.settings.second_color)
+        self.app.c_main.create_window(1150 * self.settings.resolution[0], 800 * self.settings.resolution[1],
+                                      window=b_start, width=400 * self.settings.resolution[0],
+                                      height=150 * self.settings.resolution[1])
