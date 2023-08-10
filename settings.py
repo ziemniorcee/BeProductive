@@ -168,11 +168,11 @@ class SettingsButton(CTkToplevel):
         -------
         None
         """
+        print("xd")
         images = ["/weather/wi-cloud.png", "/weather/wi-day-sunny.png", "/weather/wi-dust.png",
                   "/weather/wi-night-clear.png", "/weather/wi-rain.png", "/weather/wi-snow.png",
                   "/weather/wi-thunderstorm.png", "/habits/checked.png", "/habits/unchecked.png", "/goals/arrow.png",
                   "/clock/clock.png", "/clock/hand2.png"]
-
         rgb = ImageColor.getcolor(self.color, "RGB")
         for image in images:
             last_index = 0

@@ -310,6 +310,7 @@ class BlocksPlayer(CTkCanvas):
         """
         if count <= self.timer_len * 60 and self.pause_on:
             self.current_timer = f"{int(count / 60)}:{count % 60 if count % 60 > 9 else f'0{count % 60}'}"
+            print(self.master.app.page, self.time_current)
             if self.master.app.page == 0:
                 self.itemconfigure(self.time_current, text=self.current_timer)
                 self.master.c_timeline.coords(self.vertical, self.vertical_position, 0, self.vertical_position,

@@ -66,6 +66,7 @@ class Start_window:
         timeline_widget = TimelineWidget(self.app)
         self.app.c_main.create_window(1150 * self.settings.resolution[0], 1090 * self.settings.resolution[1],
                                       window=timeline_widget, anchor="n")
+
         weather_widget = WeatherWidget(self.app)
         self.app.c_main.create_window(1150 * self.settings.resolution[0], 0 * self.settings.resolution[1],
                                       window=weather_widget, anchor="n")
