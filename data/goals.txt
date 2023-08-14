@@ -1,2 +1,3 @@
-2023-08-01
-I have done entire documentation
+2023-08-14
+Create timeline compressed widget
+Make timeline player work

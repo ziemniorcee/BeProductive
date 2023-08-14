@@ -42,7 +42,7 @@ class Start_window:
         """
         self.settings = Settings()
         self.app = root
-
+        self.res = self.settings.resolution
         self.today_data = Date()
         self.weather_data = Weather()
 
@@ -58,18 +58,16 @@ class Start_window:
         self.app.create_c_main()
 
         habits_widget = HabitsWidget(self.app)
-        self.app.c_main.create_window(1830 * self.settings.resolution[0], 185 * self.settings.resolution[1],
-                                      window=habits_widget, anchor="n")
+        self.app.c_main.create_window(1830 * self.res[0], 185 * self.res[1], window=habits_widget, anchor="n")
+
         goals_widget = GoalsWidget(self.app)
-        self.app.c_main.create_window(470 * self.settings.resolution[0], 185 * self.settings.resolution[1],
-                                      window=goals_widget, anchor="n")
+        self.app.c_main.create_window(470 * self.res[0], 185 * self.res[1], window=goals_widget, anchor="n")
+
         timeline_widget = TimelineWidget(self.app)
-        self.app.c_main.create_window(1150 * self.settings.resolution[0], 1090 * self.settings.resolution[1],
-                                      window=timeline_widget, anchor="n")
+        self.app.c_main.create_window(1150 * self.res[0], 1090 * self.res[1], window=timeline_widget, anchor="n")
 
         weather_widget = WeatherWidget(self.app)
-        self.app.c_main.create_window(1150 * self.settings.resolution[0], 0 * self.settings.resolution[1],
-                                      window=weather_widget, anchor="n")
+        self.app.c_main.create_window(1150 * self.res[0], 0 * self.res[1], window=weather_widget, anchor="n")
         self.b_start_make()
 
     def b_start_make(self):
@@ -90,10 +88,9 @@ class Start_window:
         # elif len(self.app.setup2.tl_blocks) == 0:
         #     option = 2
         b_start = CTkButton(self.app, text=texts[option], fg_color=self.settings.main_color,
-                            font=("Arial", int(50 * self.settings.resolution[0])),
-                            border_width=int(12 * self.settings.resolution[0]), border_color=self.settings.second_color,
-                            text_color=self.settings.font_color, command=self.app.goals.create_window,
-                            corner_radius=100, hover_color=self.settings.second_color)
-        self.app.c_main.create_window(1150 * self.settings.resolution[0], 800 * self.settings.resolution[1],
-                                      window=b_start, width=400 * self.settings.resolution[0],
-                                      height=150 * self.settings.resolution[1])
+                            font=("Arial", int(50 * self.res[0])), border_width=int(12 * self.res[0]),
+                            border_color=self.settings.second_color, text_color=self.settings.font_color,
+                            command=self.app.goals.create_window, corner_radius=100,
+                            hover_color=self.settings.second_color)
+        self.app.c_main.create_window(1150 * self.res[0], 800 * self.res[1], window=b_start, width=400 * self.res[0],
+                                      height=150 * self.res[1])

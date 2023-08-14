@@ -90,7 +90,6 @@ class HabitManagement:
         --------
         None
         """
-        print("new_checks", new_checks)
         with open("data/habits.txt", "w+") as file:
             file.write(f"{self.today_data.formatted_date}\n")
             file.write(''.join(map(str, new_checks)))
@@ -146,7 +145,7 @@ class HabitsWidget(CTkFrame):
             stores connection to the main app
         """
         self.settings = Settings()
-        super().__init__(master, width=420, height=500)
+        super().__init__(master, width=500, height=250)
 
         self.management = HabitManagement()
         self.page = 1
@@ -155,21 +154,21 @@ class HabitsWidget(CTkFrame):
         self.last_habit = self.management.new_checks
         self.habits = self.management.habits
 
-        self.c_frame = CTkCanvas(self, width=420, height=500, bg=self.settings.main_color, highlightthickness=0)
+        self.c_frame = CTkCanvas(self, width=500, height=250, bg=self.settings.main_color, highlightthickness=0)
         self.c_frame.grid(row=0, column=0)
 
-        self.c_frame.create_text(210, 25, text="Habits Tracker", font=("Arial", 30), fill=self.settings.font_color)
-        self.c_frame.create_line(60, 50, 370, 50, fill=self.settings.second_color, width=5)
+        self.c_frame.create_text(250, 25, text="Habits Tracker", font=("Arial", 30), fill=self.settings.font_color)
+        self.c_frame.create_line(90, 50, 410, 50, fill=self.settings.second_color, width=5)
 
         img = CTkImage(light_image=Image.open("images/goals/up2.png"), size=(50, 50))
         self.b_arr_up = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                                   hover_color=self.settings.second_color, command=lambda: self.change_page(-1))
-        self.c_frame.create_window(385, 30, window=self.b_arr_up, width=70, height=60)
+        self.c_frame.create_window(425, 30, window=self.b_arr_up, width=70, height=55)
 
         img = CTkImage(light_image=Image.open("images/goals/down2.png"), size=(50, 50))
         self.b_arr_down = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                                     hover_color=self.settings.second_color, command=lambda: self.change_page(1))
-        self.c_frame.create_window(35, 30, window=self.b_arr_down, width=70, height=60)
+        self.c_frame.create_window(75, 30, window=self.b_arr_down, width=70, height=55)
 
         self.show_habits()
 

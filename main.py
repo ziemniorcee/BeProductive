@@ -6,8 +6,8 @@ from start import Start_window
 from habit import HabitWindow
 from strategy import Strategy
 from goals import GoalsWindow
-from timeline import TimelineWindow
-
+from timeline import TimelineWindow, TimelineWidget
+from floatbar import FloatBar
 
 class SidebarCanvas(CTkCanvas):
     """
@@ -51,8 +51,13 @@ class SidebarCanvas(CTkCanvas):
                                bg_color=self.settings.second_color, hover_color="black",
                                border_color=self.settings.second_color,
                                border_width=10, command=self.master.strategy.create_strategy_window)
-
         self.create_window(175, 350, window=b_strategy, width=250, height=100)
+
+        b_float_bar = CTkButton(self, text="Float bar", font=("Arial", 30), fg_color=self.settings.second_color,
+                               bg_color=self.settings.second_color, hover_color="black",
+                               border_color=self.settings.second_color,
+                               border_width=10, command=self.master.create_float_bar)
+        self.create_window(175, 1150, window=b_float_bar, width=250, height=100)
 
         self.create_line(30, 1230 * self.res[1], 320, 1230 * self.res[1], fill=self.settings.second_color, width=5)
         self.create_text(230, 1300 * self.res[1], text=f" {self.master.today_data.formatted_date} ",
@@ -174,8 +179,6 @@ class App(CTk):
         self.c_sidebar = SidebarCanvas(self)
         self.c_sidebar.grid(row=0, column=0)
 
-        self.c_main = MainCanvas(self)
-        self.c_main.grid(row=0, column=1)
         self.main.create_main_window()
 
     def create_c_main(self):
@@ -186,11 +189,15 @@ class App(CTk):
         -------
         None
         """
+
         if self.c_main is not None:
+            print("xd")
             self.c_main.destroy()
         self.c_main = MainCanvas(self)
         self.c_main.grid(row=0, column=1)
 
+    def create_float_bar(self):
+        self.float_bar = FloatBar(self)
 
 if __name__ == "__main__":
     app = App()

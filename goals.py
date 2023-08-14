@@ -102,7 +102,7 @@ class GoalsWidget(CTkFrame):
     """
 
     def __init__(self, master):
-        super().__init__(master, width=500, height=500)
+        super().__init__(master, width=500, height=400)
         self.settings = Settings()
         self.management = GoalsManagement()
         goals_texts = self.management.goals_from_file()
@@ -120,12 +120,12 @@ class GoalsWidget(CTkFrame):
         img = CTkImage(light_image=Image.open("images/goals/up2.png"), size=(50, 50))
         self.b_arr_up = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                                   hover_color=self.settings.second_color, command=lambda: self.show_goals(-1))
-        self.c_frame.create_window(425, 30, window=self.b_arr_up, width=70, height=60)
+        self.c_frame.create_window(425, 30, window=self.b_arr_up, width=70, height=55)
 
         img = CTkImage(light_image=Image.open("images/goals/down2.png"), size=(50, 50))
         self.b_arr_down = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                                     hover_color=self.settings.second_color, command=lambda: self.show_goals(1))
-        self.c_frame.create_window(75, 30, window=self.b_arr_down, width=70, height=60)
+        self.c_frame.create_window(75, 30, window=self.b_arr_down, width=70, height=55)
 
         self.show_goals()
 
