@@ -3,6 +3,7 @@ from CTkColorPicker import AskColor
 from customtkinter import CTkCanvas, CTkButton, CTkFrame, CTkEntry, CTkToplevel, CTkLabel
 from settings import *
 from settings import Settings
+from templates import MainCanvas
 
 
 class Block:
@@ -60,7 +61,7 @@ class Block:
         self.width = (ImageFont.truetype("arial.ttf", 30).getbbox(self.text)[2] * 1.5)
 
 
-class Strategy:
+class Strategy(MainCanvas):
     """A class to represent a block.
 
     ...
@@ -86,9 +87,20 @@ class Strategy:
         root :  '__main__.App'
             access to main app
         """
+        super().__init__(root)
         self.settings = Settings()
         self.app = root
         self.background = None
+
+        self.create_strategy_window()
+
+    def build_window(self):
+        self.app.c_start.grid_remove()
+        self.app.c_habit.grid_remove()
+        self.app.c_timeline.grid_remove()
+        self.app.c_goals.grid_remove()
+        self.app.c_strategy.grid()
+
 
     def create_strategy_window(self):
         """
@@ -98,15 +110,13 @@ class Strategy:
         -------
         None
         """
-        self.app.create_c_main()
         self.app.page = 4
 
-        self.app.c_main.create_text(1080, 60, text="Life Strategy", font=self.settings.font,
-                                    fill=self.settings.font_color)
-        self.app.c_main.create_line(870, 100, 1290, 100, fill=self.settings.second_color, width=8)
+        self.create_text(1080, 60, text="Life Strategy", font=self.settings.font, fill=self.settings.font_color)
+        self.create_line(870, 100, 1290, 100, fill=self.settings.second_color, width=8)
 
         self.background = Background(self.app)
-        self.background.grid(row=0, column=1)
+        self.create_window(50, 150, window=self.background, anchor="nw")
 
 
 class Background(CTkFrame):

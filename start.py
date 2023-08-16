@@ -5,9 +5,9 @@ from Data import Date, WeatherWidget, Weather
 from habit import HabitsWidget
 from goals import GoalsWidget
 from timeline import TimelineWidget
+from templates import MainCanvas
 
-
-class Start_window:
+class Start_window(MainCanvas):
     """
     A class for the main window of the app
 
@@ -41,10 +41,13 @@ class Start_window:
             connection to the app
         """
         self.settings = Settings()
-        self.app = root
         self.res = self.settings.resolution
+        super().__init__(root)
+        self.app = root
         self.today_data = Date()
         self.weather_data = Weather()
+        self.display_window()
+        self.b_start_make()
 
     def create_main_window(self):
         """
@@ -55,20 +58,33 @@ class Start_window:
         None
         """
         self.app.page = 0
-        self.app.create_c_main()
+        self.app.c_habit.grid_remove()
+        self.app.c_goals.grid_remove()
+        self.app.c_timeline.grid_remove()
+        self.app.c_strategy.grid_remove()
+        self.app.c_start.grid()
+        self.habits_widget.update_checks()
 
-        habits_widget = HabitsWidget(self.app)
-        self.app.c_main.create_window(1830 * self.res[0], 185 * self.res[1], window=habits_widget, anchor="n")
 
-        goals_widget = GoalsWidget(self.app)
-        self.app.c_main.create_window(470 * self.res[0], 185 * self.res[1], window=goals_widget, anchor="n")
+    def goals_update(self):
+        self.goals_widget.destroy()
+        self.goals_widget = GoalsWidget(self.app)
+        self.create_window(470 * self.res[0], 185 * self.res[1], window=self.goals_widget, anchor="n")
 
-        timeline_widget = TimelineWidget(self.app)
-        self.app.c_main.create_window(1150 * self.res[0], 1090 * self.res[1], window=timeline_widget, anchor="n")
+    def timeline_update(self):
+        self.timeline_widget.destroy()
+        self.timeline_widget = TimelineWidget(self.app)
+        self.create_window(1150 * self.res[0], 1090 * self.res[1], window=self.timeline_widget, anchor="n")
 
-        weather_widget = WeatherWidget(self.app)
-        self.app.c_main.create_window(1150 * self.res[0], 0 * self.res[1], window=weather_widget, anchor="n")
-        self.b_start_make()
+    def display_window(self):
+        self.habits_widget = HabitsWidget(self.app)
+        self.create_window(1830 * self.res[0], 185 * self.res[1], window=self.habits_widget, anchor="n")
+        self.goals_widget = GoalsWidget(self.app)
+        self.create_window(470 * self.res[0], 185 * self.res[1], window=self.goals_widget, anchor="n")
+        self.timeline_widget = TimelineWidget(self.app)
+        self.create_window(1150 * self.res[0], 1090 * self.res[1], window=self.timeline_widget, anchor="n")
+        self.weather_widget = WeatherWidget(self.app)
+        self.create_window(1150 * self.res[0], 0 * self.res[1], window=self.weather_widget, anchor="n")
 
     def b_start_make(self):
         """
@@ -90,7 +106,7 @@ class Start_window:
         b_start = CTkButton(self.app, text=texts[option], fg_color=self.settings.main_color,
                             font=("Arial", int(50 * self.res[0])), border_width=int(12 * self.res[0]),
                             border_color=self.settings.second_color, text_color=self.settings.font_color,
-                            command=self.app.goals.create_window, corner_radius=100,
+                            command=self.app.c_goals.create_goal_window, corner_radius=100,
                             hover_color=self.settings.second_color)
-        self.app.c_main.create_window(1150 * self.res[0], 800 * self.res[1], window=b_start, width=400 * self.res[0],
+        self.create_window(1150 * self.res[0], 800 * self.res[1], window=b_start, width=400 * self.res[0],
                                       height=150 * self.res[1])
