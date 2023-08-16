@@ -42,13 +42,14 @@ class Weather:
 
     def get_weather(self):
         """getting weather. In comment Api version"""
-        response = requests.get(self.OMW_Endpoint, params=self.weather_params)
-        self.info = response.json()["current"]
-        # self.info = {'dt': 1681561339, 'sunrise': 1681530929, 'sunset': 1681580932, 'temp': 9.88, 'feels_like': 9.47,
-        #              'pressure': 1007, 'humidity': 92, 'dew_point': 8.64, 'uvi': 0.28, 'clouds': 100,
-        #              'visibility': 10000, 'wind_speed': 1.54, 'wind_deg': 150,
-        #              'weather': [{'id': 501, 'main': 'Rain', 'description': 'moderate rain', 'icon': '10d'}],
-        #              'rain': {'1h': 1.06}}
+        # response = requests.get(self.OMW_Endpoint, params=self.weather_params)
+        #
+        # self.info = response.json()["current"]
+        self.info = {'dt': 1681561339, 'sunrise': 1681530929, 'sunset': 1681580932, 'temp': 9.88, 'feels_like': 9.47,
+                     'pressure': 1007, 'humidity': 92, 'dew_point': 8.64, 'uvi': 0.28, 'clouds': 100,
+                     'visibility': 10000, 'wind_speed': 1.54, 'wind_deg': 150,
+                     'weather': [{'id': 501, 'main': 'Rain', 'description': 'moderate rain', 'icon': '10d'}],
+                     'rain': {'1h': 1.06}}
 
         temp, temp_f = self.info["temp"], self.info["feels_like"]
         self.temperature = [f"{round(temp)}{self.degree_sign}", f"{round(temp_f)}{self.degree_sign}"]

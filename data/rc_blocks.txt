@@ -1,3 +1,9 @@
+17
+#ff73a5
+asfd
+21
+#ff7f98
+xd
 30
 #ff4783
 xdxd
@@ -28,12 +34,6 @@ test
 60
 #570e65
 Project
-120
-#0d9e06
-Gym
-120
-#0d9e06
-Gym
 120
 #0d9e06
 Gym
