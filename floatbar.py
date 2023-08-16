@@ -9,19 +9,19 @@ from goals import GoalsWindow, GoalsWidget
 from timeline import ShortTimelineWidget
 from customtkinter import CTkCanvas
 
+
 class FloatBar(CTkCanvas):
     def __init__(self, master):
         self.app = master
         self.settings = Settings()
-        super().__init__(master,width=100, height=400, bg=self.settings.main_color, highlightthickness=0)
+        super().__init__(master, width=100, height=450, bg=self.settings.main_color, highlightthickness=0)
 
-        self.previous_pos = [2450, 400]
+        self.previous_pos = [2450, 450]
         self.bar_height = 100
         self.sidebar = None
 
-
         self.laurels = self.create_image(0, 0, image=create_imagetk("images/floatbar/laura.png", 100, 100),
-                                                     anchor="nw", tag="laurels")
+                                         anchor="nw", tag="laurels")
         self.b_goals = GoalsButton(self)
         self.create_window(50, 150, window=self.b_goals, height=100, width=150, anchor="center")
 
@@ -31,9 +31,20 @@ class FloatBar(CTkCanvas):
         self.b_habit = HabitsButton(self)
         self.create_window(50, 350, window=self.b_habit, height=100, width=150, anchor="center")
 
-        frame_goal = self.create_rectangle(0, 0, 99, 399, outline="#f4ca3e", tags="framegold")
-        self.create_line(0, 99, 99, 99, fill="#f4ca3e")
-        self.tag_raise(frame_goal)
+        img = CTkImage(light_image=Image.open("images/floatbar/return.png"), size=(47, 47))
+        self.b_return = CTkButton(self, image=img, bg_color=self.settings.main_color, text="",
+                                  hover_color="#f4ca3e", fg_color=self.settings.main_color, width=100,
+                                  border_color="#f4ca3e", border_width=1, command=self.back)
+        self.create_window(25, 425, window=self.b_return, width=50, height=50)
+
+        img = CTkImage(light_image=Image.open("images/floatbar/exit.png"), size=(50, 50))
+        self.b_exit = CTkButton(self, image=img, bg_color=self.settings.main_color, text="",
+                                hover_color="#f4ca3e", fg_color=self.settings.main_color, width=100,
+                                border_color="#f4ca3e", border_width=1, command=lambda: self.app.destroy())
+        self.create_window(75, 425, window=self.b_exit, width=50, height=50)
+
+        frame_goal = self.create_rectangle(0, 0, 99, 99, outline="#f4ca3e", tags="framegold")
+
         self.tag_bind("laurels", "<Button-1>", self.laurels_press1)
         self.tag_bind("laurels", "<B1-Motion>", self.laurels_move)
         self.tag_bind("laurels", "<ButtonRelease-1>", self.laurels_unpress)
@@ -47,16 +58,15 @@ class FloatBar(CTkCanvas):
         self.app.attributes('-topmost', True)
         self.app.state("normal")
         self.app.overrideredirect(True)
-        self.app.geometry('%dx%d+%d+%d' % (100, 100, 2450, 400))
+        self.app.geometry('%dx%d+%d+%d' % (100, 100, 2450, 450))
 
-        self.app.c_sidebar.destroy()
+        self.app.c_sidebar.grid_remove()
         self.app.c_habit.grid_remove()
         self.app.c_goals.grid_remove()
         self.app.c_timeline.grid_remove()
         self.app.c_strategy.grid_remove()
         self.app.c_start.grid_remove()
         self.app.c_floatbar.grid()
-
 
     def laurels_press1(self, e):
         self.itemconfigure(self.laurels, image=create_imagetk("images/floatbar/laura2.png", 100, 100))
@@ -91,13 +101,31 @@ class FloatBar(CTkCanvas):
                 self.b_habit.press()
             if self.b_timeline.state:
                 self.b_timeline.press()
-        elif e.y > self.r_start_pos[1] + 20 and self.bar_height != 400:
-            self.app.geometry('%dx%d+%d+%d' % (100, 400, self.previous_pos[0], self.previous_pos[1]))
-            self.bar_height = 400
-
+        elif e.y > self.r_start_pos[1] + 20 and self.bar_height != 450:
+            self.app.geometry('%dx%d+%d+%d' % (100, 450, self.previous_pos[0], self.previous_pos[1]))
+            self.bar_height = 450
 
         self.itemconfigure(self.laurels, image=create_imagetk("images/floatbar/laura.png", 100, 100))
 
+    def back(self):
+        self.app.overrideredirect(False)
+        self.app.after(0, lambda: self.app.state('zoomed'))
+        self.app.attributes('-topmost', False)
+        self.bar_height = 100
+        if self.b_goals.state:
+            self.b_goals.press()
+        if self.b_habit.state:
+            self.b_habit.press()
+        if self.b_timeline.state:
+            self.b_timeline.press()
+
+        self.app.c_habit.grid_remove()
+        self.app.c_goals.grid_remove()
+        self.app.c_timeline.grid_remove()
+        self.app.c_strategy.grid_remove()
+        self.app.c_sidebar.grid()
+        self.app.c_start.grid()
+        self.app.c_floatbar.grid_remove()
 
 class SideBar(CTkToplevel):
     def __init__(self, root):
@@ -107,7 +135,7 @@ class SideBar(CTkToplevel):
         self.geometry("0x0")
         self.attributes('-topmost', True)
         self.overrideredirect(True)
-        self.previous_pos = [1950, 400]
+        self.previous_pos = [1950, 450]
         self.middle = [2200, 600]
         self.current_state = [0, 0]
 
@@ -148,7 +176,7 @@ class GoalsButton(CTkButton):
         img = CTkImage(light_image=Image.open("images/floatbar/goal0.png"), size=(95, 95))
         super().__init__(master.app, text="", image=img, fg_color=self.settings.second_color, height=110, width=150,
                          border_width=0, border_spacing=0, bg_color=self.settings.second_color,
-                         hover_color=self.settings.second_color, border_color="blue", command=self.press )
+                         hover_color=self.settings.second_color, border_color="blue", command=self.press)
         self.app = master
         self.state = False
 
@@ -173,7 +201,7 @@ class HabitsButton(CTkButton):
         img = CTkImage(light_image=Image.open("images/floatbar/habit0.png"), size=(95, 95))
         super().__init__(master.app, text="", image=img, fg_color=self.settings.second_color, height=110, width=150,
                          border_width=0, border_spacing=0, bg_color=self.settings.second_color,
-                         hover_color=self.settings.second_color, border_color="blue", command=self.press )
+                         hover_color=self.settings.second_color, border_color="blue", command=self.press)
         self.app = master
         self.state = False
 
@@ -198,7 +226,7 @@ class TimelineButton(CTkButton):
         img = CTkImage(light_image=Image.open("images/floatbar/timeline0.png"), size=(95, 95))
         super().__init__(master.app, text="", image=img, fg_color=self.settings.second_color, height=110, width=150,
                          border_width=0, border_spacing=0, bg_color=self.settings.second_color,
-                         hover_color=self.settings.second_color, border_color="blue", command=self.press )
+                         hover_color=self.settings.second_color, border_color="blue", command=self.press)
         self.app = master
         self.state = False
 

@@ -236,7 +236,7 @@ class BlocksPlayer(CTkCanvas):
         None
         """
 
-        img = CTkImage(light_image=Image.open("images/timeline/play.png"), size=(50 * self.res[0], 50 * self.res[1]))
+        img = CTkImage(light_image=Image.open("images/timeline/play0.png"), size=(50 * self.res[0], 50 * self.res[1]))
         self.play_pause = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                                     hover_color=self.settings.second_color, command=self.start_stop_timer)
         self.create_window(1055 * self.res[0], 30 * self.res[1], window=self.play_pause, width=70 * self.res[0],
@@ -286,7 +286,9 @@ class BlocksPlayer(CTkCanvas):
             self.master.app.after(500, lambda: self.play_pause.configure(command=self.start_stop_timer))
 
             if self.pause_on:
-                self._change_img("pause")
+                img = CTkImage(light_image=Image.open(f"images/timeline/play{int(self.pause_on)}.png"),
+                               size=(int(50 * self.res[0]), int(50 * self.res[0])))
+                self.play_pause.configure(image=img)
                 self.timer_len = self.timers[self.current_block]
                 self.vertical_speed = (200 / (self.timer_len * 60)) * self.res[0]
                 self.horizontal_speed = 1000 / (self.timer_len * 60) * self.res[0]
@@ -318,13 +320,16 @@ class BlocksPlayer(CTkCanvas):
             self.coords(self.horizontal, 555 * self.res[0], 80 * self.res[1], self.horizontal_len, 80 * self.res[1])
 
             self.current_time = count + 1
+
             self.master.app.after(1000, self.count_down, count + 1)
             self.vertical_position += self.vertical_speed
             self.horizontal_len += self.horizontal_speed
         elif not count < self.timer_len * 60:
             self.next_block()
         else:
-            self._change_img("play")
+            img = CTkImage(light_image=Image.open(f"images/timeline/play{int(self.pause_on)}.png"),
+                           size=(int(50 * self.res[0]), int(50 * self.res[0])))
+            self.play_pause.configure(image=img)
 
     def next_block(self):
         """
@@ -338,7 +343,7 @@ class BlocksPlayer(CTkCanvas):
         self.master.app.after(800, lambda: self.play_pause.configure(command=self.start_stop_timer))
         if len(self.timers) - 1 > self.current_block:
             self.current_block += 1
-            print("toto", self.current_block)
+
             self.reset()
 
     def prev_block(self):
@@ -383,23 +388,6 @@ class BlocksPlayer(CTkCanvas):
         self.master.c_timeline.coords(self.vertical, self.vertical_position, 0,
                                       self.vertical_position, 160 * self.res[1])
 
-    def _change_img(self, file):
-        """
-        changes play_pause button image
-
-        Parameters
-        ----------
-        file : str
-            file name
-
-        Returns
-        ---------
-        None
-        """
-        img = CTkImage(light_image=Image.open(f"images/timeline/{file}.png"),
-                       size=(int(50 * self.res[0]), int(50 * self.res[0])))
-        self.play_pause.configure(image=img)
-
     def _value_reset(self):
         """
         resets player values
@@ -410,7 +398,9 @@ class BlocksPlayer(CTkCanvas):
         """
         self.pause_on = False
         self.vertical_position = (100 + self.current_block * 200) * self.res[0]
-        self._change_img("play")
+        img = CTkImage(light_image=Image.open(f"images/timeline/play{int(self.pause_on)}.png"),
+                       size=(int(50 * self.res[0]), int(50 * self.res[0])))
+        self.play_pause.configure(image=img)
         self.current_time = 0
         self.horizontal_len = 555 * self.res[0]
         self.current_timer = "0:00"
@@ -423,115 +413,110 @@ class ShortTimelineWidget(CTkFrame):
         super().__init__(master, width=500, height=400, fg_color=self.settings.main_color)
         self.app = master
         self.current_block = 0
+
         self.c_frame = CTkCanvas(self, width=500, height=500, bg=self.settings.main_color, highlightthickness=0)
         self.c_frame.grid(row=0, column=0)
-
-        self.c_frame.create_text(250, 25, text="Focus Blocks", font=("Arial", 30), fill=self.settings.font_color)
-        self.c_frame.create_line(90, 50, 410, 50, fill=self.settings.second_color, width=5)
-
         self.timeline_widget = self.app.app.c_start.timeline_widget
         self.c_player = self.timeline_widget.c_player
+        self.current_id = 0
+        self._create_view()
+        self._create_player()
+
+        self.timer_update(self.current_id)
+
+    def _create_view(self):
+        self.c_frame.create_text(250, 25, text="Focus Blocks", font=("Arial", 30), fill=self.settings.font_color)
+        self.c_frame.create_line(90, 50, 410, 50, fill=self.settings.second_color, width=5)
+        self.c_frame.create_image(50, 350, image=create_imagetk("images/floatbar/next.png", 50, 50))
 
         block = self.timeline_widget.blocks[self.current_block]
-        self.block1 = self.c_frame.create_rectangle(150, 75, 350, 175, fill=block[1],
-                                                    outline=self.settings.second_color, width=5)
-        timer = format_time(block[0])
+        self.block1 = self.c_frame.create_rectangle(150, 75, 350, 175, fill=block[1], width=5,
+                                                    outline=self.settings.second_color)
         self.timer1 = self.c_frame.create_text(250, 125, fill=self.settings.font_color, font=self.settings.font,
-                                               anchor="center",
-                                               text=timer)
+                                               anchor="center", text=format_time(block[0]))
         self.category1 = self.c_frame.create_text(250, 155, fill=self.settings.font_color, font=("Arial", 15),
-                                                  anchor="center",
-                                                  text=block[2])
+                                                  anchor="center", text=block[2])
+
+        block = self.timeline_widget.blocks[self.current_block + 1]
+        self.block2 = self.c_frame.create_rectangle(100, 325, 200, 375, fill=block[1],
+                                                    outline=self.settings.second_color, width=3)
+        self.timer2 = self.c_frame.create_text(150, 340, fill=self.settings.font_color, font=("Arial", 15),
+                                               anchor="center", text=format_time(block[0]))
+        self.category2 = self.c_frame.create_text(150, 360, fill=self.settings.font_color, font=("Arial", 15),
+                                                  anchor="center", text=block[2])
+
+    def _create_player(self):
         self.c_frame.create_line(100, 215, 400, 215, fill=self.settings.font_color, width=5)
         self.current_line = self.c_frame.create_line(100, 215, 100, 215, fill=self.settings.second_color, width=5)
-
         self.time_current = self.c_frame.create_text(50, 215, text=self.c_player.current_timer, font=("Arial", 20),
                                                      fill=self.settings.font_color)
         self.end_timer = self.c_frame.create_text(450, 215, text=f"{self.c_player.timer_len}:00", font=("Arial", 20),
                                                   fill=self.settings.font_color)
-
-        img = CTkImage(light_image=Image.open("images/timeline/play.png"), size=(50 * self.res[0], 50 * self.res[1]))
+        img = CTkImage(light_image=Image.open(f"images/timeline/play{int(self.c_player.pause_on)}.png"),
+                       size=(50 * self.res[0], 50 * self.res[1]))
         self.play_pause = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                                     hover_color=self.settings.second_color, command=self.start_stop_timer)
         self.c_frame.create_window(250 * self.res[0], 275 * self.res[1], window=self.play_pause, width=70 * self.res[0],
                                    height=60 * self.res[1])
-
-        if self.c_player.pause_on:
-            self._change_img("pause")
-
         img = CTkImage(light_image=Image.open("images/timeline/next.png"), size=(25 * self.res[0], 25 * self.res[1]))
         self.next = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                               hover_color=self.settings.second_color, command=self.next_block)
         self.c_frame.create_window(350 * self.res[0], 275 * self.res[1], window=self.next, width=40 * self.res[0],
                                    height=40 * self.res[1])
-
         img = CTkImage(light_image=Image.open("images/timeline/previous.png"),
                        size=(25 * self.res[0], 25 * self.res[1]))
-        self.previous = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
-                                  hover_color=self.settings.second_color, command=self.prev_block)
+        self.previous = CTkButton(self, image=img, text="", fg_color=self.settings.main_color, command=self.prev_block,
+                                  hover_color=self.settings.second_color)
         self.c_frame.create_window(150 * self.res[0], 275 * self.res[1], window=self.previous, width=40 * self.res[0],
                                    height=40 * self.res[1])
 
-        self.c_frame.create_image(50, 350, image=create_imagetk("images/floatbar/next.png", 50, 50))
-        block = self.timeline_widget.blocks[self.current_block + 1]
-        self.block2 = self.c_frame.create_rectangle(100, 325, 200, 375, fill=block[1],
-                                                    outline=self.settings.second_color, width=3)
-        timer = format_time(block[0])
-        self.timer2 = self.c_frame.create_text(150, 340, fill=self.settings.font_color, font=("Arial", 15),
-                                               anchor="center", text=timer)
-        self.category2 = self.c_frame.create_text(150, 360, fill=self.settings.font_color, font=("Arial", 15),
-                                               anchor="center", text=block[2])
-
-
-        self.timer_update()
-
-    def timer_update(self):
-        print(self.app.app.c_floatbar.b_timeline.state)
-        if self.app.app.c_floatbar.b_timeline.state and self.c_player.pause_on:
-            self.app.app.after(1000, self.timer_update)
+    def timer_update(self, block_id):
+        print(block_id, self.current_id)
+        if (self.app.app.c_floatbar.b_timeline.state and self.c_player.pause_on and block_id == self.current_id
+                and self.c_player.current_time <= self.c_player.timer_len * 60):
+            self.app.app.after(1000, self.timer_update, block_id)
             if self.c_frame.winfo_exists():
                 self.c_frame.itemconfigure(self.time_current, text=self.c_player.current_timer)
-                print(self.c_player.current_time, self.c_player.timer_len*60)
-                self.c_frame.coords(self.current_line, 100, 215, 100 + (self.c_player.current_time/(self.c_player.timer_len*60)*300), 215)
+
+                self.c_frame.coords(self.current_line, 100, 215,
+                                    100 + (self.c_player.current_time / (self.c_player.timer_len * 60) * 300), 215)
+        elif not self.c_player.current_time < self.c_player.timer_len * 60:
+            self.next_block()
 
     def start_stop_timer(self):
         self.c_player.start_stop_timer()
         self.play_pause.configure(command=None)
         self.app.app.after(500, lambda: self.play_pause.configure(command=self.start_stop_timer))
 
+        self._change_img()
         if self.c_player.pause_on:
-            self._change_img("pause")
-            self.timer_update()
-        else:
-            self._change_img("play")
+            self.current_id += 1
+            self.timer_update(self.current_id)
 
     def next_block(self):
         self.c_player.next_block()
-
+        self.reset()
         if len(self.c_player.timers) - 1 > self.current_block:
-            self.skip()
             self.current_block += 1
-            self.c_frame.coords(self.current_line, 100, 215, 100, 215)
+            self.skip()
 
     def prev_block(self):
-        self.c_player.prev_block()
-        if self.current_block > 0 and self.c_player.current_time == 0:
-            self.skip()
-            self.current_block -= 1
         self.reset()
+        if self.current_block > 0 and self.c_player.current_time == 0:
+            self.current_block -= 1
+            self.skip()
+        self.c_player.prev_block()
 
     def skip(self):
-        self._change_img("play")
-        self.c_frame.itemconfigure(self.time_current, text="0:00")
-        block = self.timeline_widget.blocks[self.c_player.current_block]
+        block = self.timeline_widget.blocks[self.current_block]
         self.c_frame.itemconfigure(self.block1, fill=block[1])
         self.c_frame.itemconfigure(self.timer1, text=format_time(block[0]))
         self.c_frame.itemconfigure(self.category1, text=block[2])
 
         self.c_frame.itemconfigure(self.end_timer, text=f"{block[0]}:00")
 
-        if len(self.timeline_widget.blocks) - 1 >= self.c_player.current_block + 1:
-            block = self.timeline_widget.blocks[self.c_player.current_block + 1]
+        if len(self.timeline_widget.blocks) - 1 >= self.current_block + 1:
+            block = self.timeline_widget.blocks[self.current_block + 1]
             self.c_frame.itemconfigure(self.block2, fill=block[1])
             self.c_frame.itemconfigure(self.timer2, text=format_time(block[0]), fill=self.settings.font_color)
             self.c_frame.itemconfigure(self.category2, text=block[2], fill=self.settings.font_color)
@@ -541,28 +526,15 @@ class ShortTimelineWidget(CTkFrame):
             self.c_frame.itemconfigure(self.category2, text="Finish", fill=self.settings.second_color)
 
     def reset(self):
+        self.c_player.pause_on = False
         self.c_frame.itemconfigure(self.time_current, text="0:00")
-
+        self._change_img()
         self.c_frame.coords(self.current_line, 100, 215, 100, 215)
-        self._change_img("play")
 
-    def _change_img(self, file):
-        """
-        changes play_pause button image
-
-        Parameters
-        ----------
-        file : str
-            file name
-
-        Returns
-        ---------
-        None
-        """
-        img = CTkImage(light_image=Image.open(f"images/timeline/{file}.png"),
+    def _change_img(self):
+        img = CTkImage(light_image=Image.open(f"images/timeline/play{int(self.c_player.pause_on)}.png"),
                        size=(int(50 * self.res[0]), int(50 * self.res[0])))
         self.play_pause.configure(image=img)
-
 
 class TimelineWindow(MainCanvas):
     """
@@ -893,7 +865,7 @@ class Blocks:
         if 1050 * self.res[1] < event.y < 1300 * self.res[1] and len(self.timeline.blocks) < 9:
             self.timeline.add([self.selected_block.timer, self.selected_block.color, self.selected_block.text])
             element = len(self.timeline.blocks)
-            print(self.timeline.change)
+
             new_pos = 100 + self.timeline.change * 200
             poped = self.timeline.blocks.pop(element - 1)
             self.timeline.blocks.insert(self.timeline.change, poped)
