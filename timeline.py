@@ -419,10 +419,11 @@ class ShortTimelineWidget(CTkFrame):
         self.timeline_widget = self.app.app.c_start.timeline_widget
         self.c_player = self.timeline_widget.c_player
         self.current_id = 0
-        self._create_view()
-        self._create_player()
+        if len(self.c_player.timers) > 0:
+            self._create_view()
+            self._create_player()
 
-        self.timer_update(self.current_id)
+            self.timer_update(self.current_id)
 
     def _create_view(self):
         self.c_frame.create_text(250, 25, text="Focus Blocks", font=("Arial", 30), fill=self.settings.font_color)
@@ -536,6 +537,7 @@ class ShortTimelineWidget(CTkFrame):
                        size=(int(50 * self.res[0]), int(50 * self.res[0])))
         self.play_pause.configure(image=img)
 
+
 class TimelineWindow(MainCanvas):
     """
     A class for timeline window
@@ -579,6 +581,8 @@ class TimelineWindow(MainCanvas):
         self.rc_blocks = None
         self.saved_blocks = None
 
+        self.create_timeline_window()
+
     def build_timeline(self):
         self.app.page = 2
         self.app.c_habit.grid_remove()
@@ -586,7 +590,6 @@ class TimelineWindow(MainCanvas):
         self.app.c_start.grid_remove()
         self.app.c_strategy.grid_remove()
         self.app.c_timeline.grid()
-        self.create_timeline_window()
 
     def create_timeline_window(self):
         """
@@ -616,9 +619,9 @@ class TimelineWindow(MainCanvas):
         self.tl_add_bg = self.create_rectangle(50 * self.res[0], 1120 * self.res[1], 2060 * self.res[0],
                                                1220 * self.res[1], fill=self.settings.main_color, width=0)
 
-        self.tl_blocks = TimelineBlocks(self.app)
-        self.rc_blocks = RecentlyBlocks(self.app)
-        self.saved_blocks = SavedBlocks(self.app)
+        self.tl_blocks = TimelineBlocks(self.app, self)
+        self.rc_blocks = RecentlyBlocks(self.app, self)
+        self.saved_blocks = SavedBlocks(self.app, self)
 
         self.tag_raise(self.pointer)
 
@@ -709,7 +712,7 @@ class Blocks:
 
     """
 
-    def __init__(self, root, file_name, startx, width):
+    def __init__(self, root, canvas, file_name, startx, width):
         """
         Constructs attributes and creates blocks
 
@@ -727,7 +730,7 @@ class Blocks:
         self.app = root
         self.settings = Settings()
         self.res = self.settings.resolution
-        self.timeline = self.app.c_timeline.tl_blocks
+        self.timeline = canvas.tl_blocks
         self.blocks = []
         self.width = width
         self.startx = startx
@@ -735,10 +738,10 @@ class Blocks:
         self.selected_block = None
         self.current_pos = 0
         self.change = 0
-        self.pointer = self.app.c_timeline.pointer
+        self.pointer = canvas.pointer
         self.pos_counter = [0, 0]
         self.params = self.from_file(file_name)
-        self.c_timeline = self.app.c_timeline
+        self.c_timeline = canvas
         for param in self.params:
             self.add_block(param)
         self.tl_add_text = self.c_timeline.create_text(1055 * self.res[0], 1280 * self.res[1], font=("Arial", 30),
@@ -954,7 +957,7 @@ class RecentlyBlocks(Blocks):
         after clock was closed
     """
 
-    def __init__(self, root):
+    def __init__(self, root, canvas):
         """
         constructs attributes and builds upon Blocks
 
@@ -963,22 +966,20 @@ class RecentlyBlocks(Blocks):
         root : App
             access to the main app
         """
-        super().__init__(root, "rc_blocks.txt", 75, 3)
+        super().__init__(root, canvas, "rc_blocks.txt", 75, 3)
         self.app = root
         self.today_data = Date()
-        self.c_timeline = self.app.c_timeline
+        self.c_timeline = canvas
         self.c_timeline.create_text(425 * self.res[0], 175 * self.res[1], font=("Arial", 30),
-                                    fill=self.settings.font_color,
-                                    text="Recently created")
+                                    fill=self.settings.font_color, text="Recently created")
         self.saved_add_bg = self.c_timeline.create_rectangle(800 * self.res[0], 150 * self.res[1], 2110 * self.res[0],
                                                              1000 * self.res[1], fill=self.settings.main_color,
                                                              outline=self.settings.second_color, width=5)
         self.saved_add_text = self.c_timeline.create_text(1455 * self.res[0], 975 * self.res[1], font=("Arial", 30),
-                                                          fill=self.settings.font_color,
-                                                          state="hidden", text="Drop here to save")
+                                                          fill=self.settings.font_color, state="hidden",
+                                                          text="Drop here to save")
         b_rc_create = CTkButton(self.app, text="+", font=("Arial", int(70 * self.res[0])),
-                                fg_color=self.settings.main_color,
-                                command=self.rc_add)
+                                fg_color=self.settings.main_color, command=self.rc_add)
         self.c_timeline.create_window(80 * self.res[0], 970 * self.res[1], window=b_rc_create, height=50 * self.res[0],
                                       width=50 * self.res[1])
 
@@ -1065,9 +1066,9 @@ class RecentlyBlocks(Blocks):
             self.c_timeline.itemconfigure(self.selected_block.element_ids[0], outline=self.settings.second_color)
             params = [self.selected_block.timer, self.selected_block.color, self.selected_block.text]
 
-            self.app.timeline.saved_blocks.add_block(params)
-            self.app.timeline.saved_blocks.bind(self.app.timeline.saved_blocks.blocks[-1].tag)
-            self.app.timeline.saved_blocks.to_file("saved_blocks.txt")
+            self.c_timeline.saved_blocks.add_block(params)
+            self.c_timeline.saved_blocks.bind(self.c_timeline.saved_blocks.blocks[-1].tag)
+            self.c_timeline.saved_blocks.to_file("saved_blocks.txt")
 
     def rc_add(self):
         """
@@ -1109,6 +1110,7 @@ class RecentlyBlocks(Blocks):
             self.delete += 1
 
             self.add_block(self.new_block)
+            self.bind(self.blocks[-1].tag)
             self.blocks[-1].start_pos = start_pos
             self.c_timeline.moveto(self.blocks[-1].element_ids[0], start_pos[0], start_pos[1])
             self.c_timeline.moveto(self.blocks[-1].element_ids[1], start_pos[0] + 50, start_pos[1] + 30)
@@ -1149,8 +1151,7 @@ class SavedBlocks(Blocks):
     saved_unpress():
         after unpress bind
     """
-
-    def __init__(self, root):
+    def __init__(self, root, canvas):
         """
         Constructs attributes for the class
 
@@ -1159,11 +1160,10 @@ class SavedBlocks(Blocks):
         root : App
             connection to the app
         """
-        super().__init__(root, "saved_blocks.txt", 825, 5)
+        super().__init__(root, canvas, "saved_blocks.txt", 825, 5)
         self.app = root
-        self.saved_trash = self.c_timeline.create_image(835 * self.res[0], 960 * self.res[1],
-                                                        image=create_imagetk("images/blocks/trash.png"),
-                                                        state="hidden")
+        self.saved_trash = self.c_timeline.create_image(835 * self.res[0], 960 * self.res[1],state="hidden",
+                                                        image=create_imagetk("images/blocks/trash.png"))
         self.c_timeline.create_text(1425 * self.res[0], 175 * self.res[1], font=("Arial", 30),
                                     fill=self.settings.font_color, text="Saved")
         for block in self.blocks:
@@ -1311,7 +1311,7 @@ class TimelineBlocks:
         saves params to file
     """
 
-    def __init__(self, root):
+    def __init__(self, root, canvas):
         """
         Constructs attributes necessary for class
 
@@ -1330,8 +1330,8 @@ class TimelineBlocks:
         self.current_pos = 0
         self.change = None
         self.selected_block = None
-        self.c_timeline = self.app.c_timeline
-        self.pointer = self.app.c_timeline.pointer
+        self.c_timeline = canvas
+        self.pointer = canvas.pointer
         self.tag_id = 0
         self.c_timeline.create_line(50 * self.res[0], 1120 * self.res[1], 2060 * self.res[0], 1120 * self.res[1],
                                     fill=self.settings.second_color, width=5)

@@ -103,6 +103,7 @@ class App(CTk):
         self.strategy = Strategy(self)
 
         self.page = 0
+        self.c_timeline = None
         self.c_timeline = TimelineWindow(self)
         self.c_timeline.grid(row=0, column=1)
         self.c_timeline.grid_remove()
