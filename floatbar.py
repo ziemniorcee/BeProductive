@@ -118,7 +118,7 @@ class FloatBar(CTkCanvas):
             self.b_habit.press()
         if self.b_timeline.state:
             self.b_timeline.press()
-
+        self.app.c_start.habits_update()
         self.app.c_habit.grid_remove()
         self.app.c_goals.grid_remove()
         self.app.c_timeline.grid_remove()
@@ -173,7 +173,7 @@ class SideBar(CTkToplevel):
 class GoalsButton(CTkButton):
     def __init__(self, master):
         self.settings = Settings()
-        img = CTkImage(light_image=Image.open("images/floatbar/goal0.png"), size=(95, 95))
+        img = CTkImage(light_image=Image.open(f"images/floatbar/goal0{self.settings.theme}.png"), size=(95, 95))
         super().__init__(master.app, text="", image=img, fg_color=self.settings.second_color, height=110, width=150,
                          border_width=0, border_spacing=0, bg_color=self.settings.second_color,
                          hover_color=self.settings.second_color, border_color="blue", command=self.press)
@@ -182,7 +182,7 @@ class GoalsButton(CTkButton):
 
     def press(self):
         self.state = not self.state
-        img = CTkImage(light_image=Image.open(f"images/floatbar/goal{int(self.state)}.png"), size=(95, 95))
+        img = CTkImage(light_image=Image.open(f"images/floatbar/goal{int(self.state)}{self.settings.theme}.png"), size=(95, 95))
         self.configure(image=img)
         if self.state:
             if self.app.b_habit.state:
@@ -198,7 +198,7 @@ class GoalsButton(CTkButton):
 class HabitsButton(CTkButton):
     def __init__(self, master):
         self.settings = Settings()
-        img = CTkImage(light_image=Image.open("images/floatbar/habit0.png"), size=(95, 95))
+        img = CTkImage(light_image=Image.open(f"images/floatbar/habit0{self.settings.theme}.png"), size=(95, 95))
         super().__init__(master.app, text="", image=img, fg_color=self.settings.second_color, height=110, width=150,
                          border_width=0, border_spacing=0, bg_color=self.settings.second_color,
                          hover_color=self.settings.second_color, border_color="blue", command=self.press)
@@ -207,7 +207,7 @@ class HabitsButton(CTkButton):
 
     def press(self):
         self.state = not self.state
-        img = CTkImage(light_image=Image.open(f"images/floatbar/habit{int(self.state)}.png"), size=(95, 95))
+        img = CTkImage(light_image=Image.open(f"images/floatbar/habit{int(self.state)}{self.settings.theme}.png"), size=(95, 95))
         self.configure(image=img)
         if self.state:
             if self.app.b_goals.state:
@@ -223,7 +223,7 @@ class HabitsButton(CTkButton):
 class TimelineButton(CTkButton):
     def __init__(self, master):
         self.settings = Settings()
-        img = CTkImage(light_image=Image.open("images/floatbar/timeline0.png"), size=(95, 95))
+        img = CTkImage(light_image=Image.open(f"images/floatbar/timeline0{self.settings.theme}.png"), size=(95, 95))
         super().__init__(master.app, text="", image=img, fg_color=self.settings.second_color, height=110, width=150,
                          border_width=0, border_spacing=0, bg_color=self.settings.second_color,
                          hover_color=self.settings.second_color, border_color="blue", command=self.press)
@@ -232,7 +232,7 @@ class TimelineButton(CTkButton):
 
     def press(self):
         self.state = not self.state
-        img = CTkImage(light_image=Image.open(f"images/floatbar/timeline{int(self.state)}.png"), size=(95, 95))
+        img = CTkImage(light_image=Image.open(f"images/floatbar/timeline{int(self.state)}{self.settings.theme}.png"), size=(95, 95))
         self.configure(image=img)
         if self.state:
             if self.app.b_goals.state:

@@ -1,4 +1,5 @@
 from customtkinter import CTkCanvas, CTkImage, CTkButton, CTk
+import customtkinter
 from Data import Date, Weather
 from actions import *
 from settings import Settings, SettingsButton
@@ -33,37 +34,38 @@ class SidebarCanvas(CTkCanvas):
         """
         self.settings = Settings()
         self.res = self.settings.resolution
-        super().__init__(master, width=350, height=1440 * self.res[0], bg="#202020", highlightthickness=0)
+        bg_colors = ["#F7F7F5", "#202020"]
+        super().__init__(master, width=350, height=1440 * self.res[0], bg=bg_colors[self.settings.theme],
+                         highlightthickness=0)
 
         b_dayinfo = CTkButton(self, text="Day info", font=("Arial", 30), fg_color=self.settings.second_color,
-                              bg_color=self.settings.second_color, hover_color="black",
-                              border_color=self.settings.second_color,
+                              bg_color=self.settings.second_color, hover_color=self.settings.main_color,
+                              border_color=self.settings.second_color, text_color=self.settings.font_color,
                               border_width=10, command=self.master.c_start.create_main_window)
         self.create_window(175, 100, window=b_dayinfo, width=250, height=100)
 
         b_habit_tracker = CTkButton(self, text="Habit Tracker", font=("Arial", 30),
                                     fg_color=self.settings.second_color,
-                                    bg_color=self.settings.second_color, hover_color="black",
-                                    border_color=self.settings.second_color,
+                                    bg_color=self.settings.second_color, hover_color=self.settings.main_color,
+                                    border_color=self.settings.second_color, text_color=self.settings.font_color,
                                     border_width=10, command=self.master.c_habit.create_habit_window)
         self.create_window(175, 225, window=b_habit_tracker, width=250, height=100)
 
         b_strategy = CTkButton(self, text="Life Strategy", font=("Arial", 30), fg_color=self.settings.second_color,
-                               bg_color=self.settings.second_color, hover_color="black",
-                               border_color=self.settings.second_color,
+                               bg_color=self.settings.second_color, hover_color=self.settings.main_color,
+                               border_color=self.settings.second_color, text_color=self.settings.font_color,
                                border_width=10, command=self.master.c_strategy.build_window)
         self.create_window(175, 350, window=b_strategy, width=250, height=100)
 
         b_float_bar = CTkButton(self, text="Float bar", font=("Arial", 30), fg_color=self.settings.second_color,
-                                bg_color=self.settings.second_color, hover_color="black",
-                                border_color=self.settings.second_color,
+                                bg_color=self.settings.second_color, hover_color=self.settings.main_color,
+                                border_color=self.settings.second_color, text_color=self.settings.font_color,
                                 border_width=10, command=self.master.c_floatbar.build_floatbar)
         self.create_window(175, 1150, window=b_float_bar, width=250, height=100)
 
         self.create_line(30, 1230 * self.res[1], 320, 1230 * self.res[1], fill=self.settings.second_color, width=5)
         self.create_text(230, 1300 * self.res[1], text=f" {self.master.today_data.formatted_date} ",
-                         font=self.settings.font,
-                         fill=self.settings.font_color)
+                         font=self.settings.font, fill=self.settings.font_color)
         self.create_image(70, 1300 * self.res[1], image=create_imagetk(self.master.weather_data.image, 125, 125))
 
 
@@ -124,13 +126,12 @@ class App(CTk):
         self.c_strategy.grid_remove()
 
         self.c_floatbar = FloatBar(self)
-        self.c_floatbar.grid(row=0,column=0)
+        self.c_floatbar.grid(row=0, column=0)
         self.c_floatbar.grid_remove()
 
         self.c_sidebar = SidebarCanvas(self)
         self.c_sidebar.grid(row=0, column=0)
         self.c_start.create_main_window()
-
 
 
 if __name__ == "__main__":

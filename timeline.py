@@ -236,19 +236,21 @@ class BlocksPlayer(CTkCanvas):
         None
         """
 
-        img = CTkImage(light_image=Image.open("images/timeline/play0.png"), size=(50 * self.res[0], 50 * self.res[1]))
+        img = CTkImage(light_image=Image.open(f"images/timeline/play0{self.settings.theme}.png"),
+                       size=(50 * self.res[0], 50 * self.res[1]))
         self.play_pause = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                                     hover_color=self.settings.second_color, command=self.start_stop_timer)
         self.create_window(1055 * self.res[0], 30 * self.res[1], window=self.play_pause, width=70 * self.res[0],
                            height=60 * self.res[1])
 
-        img = CTkImage(light_image=Image.open("images/timeline/next.png"), size=(25 * self.res[0], 25 * self.res[1]))
+        img = CTkImage(light_image=Image.open(f"images/timeline/next{self.settings.theme}.png"),
+                       size=(25 * self.res[0], 25 * self.res[1]))
         self.next = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                               hover_color=self.settings.second_color, command=self.next_block)
         self.create_window(1155 * self.res[0], 30 * self.res[1], window=self.next, width=40 * self.res[0],
                            height=40 * self.res[1])
 
-        img = CTkImage(light_image=Image.open("images/timeline/previous.png"),
+        img = CTkImage(light_image=Image.open(f"images/timeline/previous{self.settings.theme}.png"),
                        size=(25 * self.res[0], 25 * self.res[1]))
         self.previous = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                                   hover_color=self.settings.second_color, command=self.prev_block)
@@ -286,8 +288,9 @@ class BlocksPlayer(CTkCanvas):
             self.master.app.after(500, lambda: self.play_pause.configure(command=self.start_stop_timer))
 
             if self.pause_on:
-                img = CTkImage(light_image=Image.open(f"images/timeline/play{int(self.pause_on)}.png"),
-                               size=(int(50 * self.res[0]), int(50 * self.res[0])))
+                img = CTkImage(
+                    light_image=Image.open(f"images/timeline/play{int(self.pause_on)}{self.settings.theme}.png"),
+                    size=(int(50 * self.res[0]), int(50 * self.res[0])))
                 self.play_pause.configure(image=img)
                 self.timer_len = self.timers[self.current_block]
                 self.vertical_speed = (200 / (self.timer_len * 60)) * self.res[0]
@@ -327,7 +330,7 @@ class BlocksPlayer(CTkCanvas):
         elif not count < self.timer_len * 60:
             self.next_block()
         else:
-            img = CTkImage(light_image=Image.open(f"images/timeline/play{int(self.pause_on)}.png"),
+            img = CTkImage(light_image=Image.open(f"images/timeline/play{int(self.pause_on)}{self.settings.theme}.png"),
                            size=(int(50 * self.res[0]), int(50 * self.res[0])))
             self.play_pause.configure(image=img)
 
@@ -398,7 +401,7 @@ class BlocksPlayer(CTkCanvas):
         """
         self.pause_on = False
         self.vertical_position = (100 + self.current_block * 200) * self.res[0]
-        img = CTkImage(light_image=Image.open(f"images/timeline/play{int(self.pause_on)}.png"),
+        img = CTkImage(light_image=Image.open(f"images/timeline/play{int(self.pause_on)}{self.settings.theme}.png"),
                        size=(int(50 * self.res[0]), int(50 * self.res[0])))
         self.play_pause.configure(image=img)
         self.current_time = 0
@@ -419,6 +422,9 @@ class ShortTimelineWidget(CTkFrame):
         self.timeline_widget = self.app.app.c_start.timeline_widget
         self.c_player = self.timeline_widget.c_player
         self.current_id = 0
+        self.c_frame.create_text(250, 25, text="Focus Blocks", font=("Arial", 30), fill=self.settings.font_color)
+        self.c_frame.create_line(90, 50, 410, 50, fill=self.settings.second_color, width=5)
+
         if len(self.c_player.timers) > 0:
             self._create_view()
             self._create_player()
@@ -426,8 +432,6 @@ class ShortTimelineWidget(CTkFrame):
             self.timer_update(self.current_id)
 
     def _create_view(self):
-        self.c_frame.create_text(250, 25, text="Focus Blocks", font=("Arial", 30), fill=self.settings.font_color)
-        self.c_frame.create_line(90, 50, 410, 50, fill=self.settings.second_color, width=5)
         self.c_frame.create_image(50, 350, image=create_imagetk("images/floatbar/next.png", 50, 50))
 
         block = self.timeline_widget.blocks[self.current_block]
@@ -438,13 +442,14 @@ class ShortTimelineWidget(CTkFrame):
         self.category1 = self.c_frame.create_text(250, 155, fill=self.settings.font_color, font=("Arial", 15),
                                                   anchor="center", text=block[2])
 
-        block = self.timeline_widget.blocks[self.current_block + 1]
-        self.block2 = self.c_frame.create_rectangle(100, 325, 200, 375, fill=block[1],
-                                                    outline=self.settings.second_color, width=3)
-        self.timer2 = self.c_frame.create_text(150, 340, fill=self.settings.font_color, font=("Arial", 15),
-                                               anchor="center", text=format_time(block[0]))
-        self.category2 = self.c_frame.create_text(150, 360, fill=self.settings.font_color, font=("Arial", 15),
-                                                  anchor="center", text=block[2])
+        if len(self.c_player.timers) - 1 > self.current_block + 1:
+            block = self.timeline_widget.blocks[self.current_block + 1]
+            self.block2 = self.c_frame.create_rectangle(100, 325, 200, 375, fill=block[1],
+                                                        outline=self.settings.second_color, width=3)
+            self.timer2 = self.c_frame.create_text(150, 340, fill=self.settings.font_color, font=("Arial", 15),
+                                                   anchor="center", text=format_time(block[0]))
+            self.category2 = self.c_frame.create_text(150, 360, fill=self.settings.font_color, font=("Arial", 15),
+                                                      anchor="center", text=block[2])
 
     def _create_player(self):
         self.c_frame.create_line(100, 215, 400, 215, fill=self.settings.font_color, width=5)
@@ -453,18 +458,20 @@ class ShortTimelineWidget(CTkFrame):
                                                      fill=self.settings.font_color)
         self.end_timer = self.c_frame.create_text(450, 215, text=f"{self.c_player.timer_len}:00", font=("Arial", 20),
                                                   fill=self.settings.font_color)
-        img = CTkImage(light_image=Image.open(f"images/timeline/play{int(self.c_player.pause_on)}.png"),
-                       size=(50 * self.res[0], 50 * self.res[1]))
+        img = CTkImage(
+            light_image=Image.open(f"images/timeline/play{int(self.c_player.pause_on)}{self.settings.theme}.png"),
+            size=(50 * self.res[0], 50 * self.res[1]))
         self.play_pause = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                                     hover_color=self.settings.second_color, command=self.start_stop_timer)
         self.c_frame.create_window(250 * self.res[0], 275 * self.res[1], window=self.play_pause, width=70 * self.res[0],
                                    height=60 * self.res[1])
-        img = CTkImage(light_image=Image.open("images/timeline/next.png"), size=(25 * self.res[0], 25 * self.res[1]))
+        img = CTkImage(light_image=Image.open(f"images/timeline/next{self.settings.theme}.png"),
+                       size=(25 * self.res[0], 25 * self.res[1]))
         self.next = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
                               hover_color=self.settings.second_color, command=self.next_block)
         self.c_frame.create_window(350 * self.res[0], 275 * self.res[1], window=self.next, width=40 * self.res[0],
                                    height=40 * self.res[1])
-        img = CTkImage(light_image=Image.open("images/timeline/previous.png"),
+        img = CTkImage(light_image=Image.open(f"images/timeline/previous{self.settings.theme}.png"),
                        size=(25 * self.res[0], 25 * self.res[1]))
         self.previous = CTkButton(self, image=img, text="", fg_color=self.settings.main_color, command=self.prev_block,
                                   hover_color=self.settings.second_color)
@@ -533,8 +540,9 @@ class ShortTimelineWidget(CTkFrame):
         self.c_frame.coords(self.current_line, 100, 215, 100, 215)
 
     def _change_img(self):
-        img = CTkImage(light_image=Image.open(f"images/timeline/play{int(self.c_player.pause_on)}.png"),
-                       size=(int(50 * self.res[0]), int(50 * self.res[0])))
+        img = CTkImage(
+            light_image=Image.open(f"images/timeline/play{int(self.c_player.pause_on)}{self.settings.theme}.png"),
+            size=(int(50 * self.res[0]), int(50 * self.res[0])))
         self.play_pause.configure(image=img)
 
 
@@ -1151,6 +1159,7 @@ class SavedBlocks(Blocks):
     saved_unpress():
         after unpress bind
     """
+
     def __init__(self, root, canvas):
         """
         Constructs attributes for the class
@@ -1162,7 +1171,7 @@ class SavedBlocks(Blocks):
         """
         super().__init__(root, canvas, "saved_blocks.txt", 825, 5)
         self.app = root
-        self.saved_trash = self.c_timeline.create_image(835 * self.res[0], 960 * self.res[1],state="hidden",
+        self.saved_trash = self.c_timeline.create_image(835 * self.res[0], 960 * self.res[1], state="hidden",
                                                         image=create_imagetk("images/blocks/trash.png"))
         self.c_timeline.create_text(1425 * self.res[0], 175 * self.res[1], font=("Arial", 30),
                                     fill=self.settings.font_color, text="Saved")
