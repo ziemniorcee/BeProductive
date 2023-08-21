@@ -35,7 +35,7 @@ class SidebarCanvas(CTkCanvas):
         self.settings = Settings()
         self.res = self.settings.resolution
         bg_colors = ["#F7F7F5", "#202020"]
-        super().__init__(master, width=350, height=1440 * self.res[0], bg=bg_colors[self.settings.theme],
+        super().__init__(master, width=350, height=1440 * self.res[1], bg=bg_colors[self.settings.theme],
                          highlightthickness=0)
 
         b_dayinfo = CTkButton(self, text="Day info", font=("Arial", 30), fg_color=self.settings.second_color,
@@ -61,7 +61,7 @@ class SidebarCanvas(CTkCanvas):
                                 bg_color=self.settings.second_color, hover_color=self.settings.main_color,
                                 border_color=self.settings.second_color, text_color=self.settings.font_color,
                                 border_width=10, command=self.master.c_floatbar.build_floatbar)
-        self.create_window(175, 1150, window=b_float_bar, width=250, height=100)
+        self.create_window(175 , 1150 * self.res[1], window=b_float_bar, width=250, height=100)
 
         self.create_line(30, 1230 * self.res[1], 320, 1230 * self.res[1], fill=self.settings.second_color, width=5)
         self.create_text(230, 1300 * self.res[1], text=f" {self.master.today_data.formatted_date} ",
@@ -90,14 +90,14 @@ class App(CTk):
         Constructs all needed attributes and objects
 
         """
-        self.settings = Settings()
         super().__init__()
+        self.settings = Settings(self)
         self.title("Better Tomorrow")
-        width, height = self.winfo_screenwidth(), self.winfo_screenheight()
 
-        # self.geometry("1920x1080")
-        self.geometry(f"{width}dx{height}+0+0")
-        self.after(0, lambda: self.state('zoomed'))
+        self.geometry(f"{self.settings.resolution_w_h[0]}dx{self.settings.resolution_w_h[1]}+0+0")
+
+        if self.winfo_screenwidth() <= self.settings.resolution_w_h[0]:
+            self.after(0, lambda: self.state('zoomed'))
 
         self.today_data = Date()
         self.weather_data = Weather()

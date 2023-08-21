@@ -25,16 +25,19 @@ class Settings:
         gets color from file
     """
 
-    def __init__(self):
+    def __init__(self, root=None):
         """
         Constructs necessary settings
         """
+        self.app = root
         self.themes = ["light", "dark"]
         self.main_color = None
         self.second_color = None
         self.font_color = None
+        self.block_font_color = "#D4D4D4"
         self.theme = None
-        self.resolution = []
+        self.resolution = [1,1]
+        self.resolution_w_h = []
         self.get_settings()
 
         self.font = ("Arial", int(30 * self.resolution[0]))
@@ -55,9 +58,26 @@ class Settings:
             self.second_color = lines[0].strip()
             self.theme = int(lines[1].strip())
             self.resolution = [float(lines[2].strip()), float(lines[3].strip())]
+            self.first_time = int(lines[4].strip())
         customtkinter.set_appearance_mode(self.themes[self.theme])
         self.main_color = main_colors[self.theme]
         self.font_color = font_colors[self.theme]
+        if self.app is not None:
+            if self.first_time == 0:
+                self.resolution_w_h = [self.app.winfo_screenwidth(), self.app.winfo_screenheight()]
+                self.first_time = 1
+                if self.resolution_w_h[0] == 1920:
+                    self.resolution = [0.7105,0.7375]
+                else:
+                    self.resolution = [1,1]
+                with open("data/settings.txt", "w+") as file:
+                    file.write(f"{self.second_color}\n")
+                    file.write(f"{self.theme}\n")
+                    file.write(f"{self.resolution[0]}\n")
+                    file.write(f"{self.resolution[1]}\n")
+                    file.write(f"1\n")
+            else:
+                self.resolution_w_h = [int(self.resolution[0] * 2210 + 350), int(self.resolution[1] * 1370 + 70)]
 
 class SettingsButton(CTkToplevel):
     """
@@ -182,6 +202,7 @@ class SettingsButton(CTkToplevel):
             file.write(f"{self.settings.theme}\n")
             file.write(f"{self.current_resolution[0]}\n")
             file.write(f"{self.current_resolution[1]}\n")
+            file.write(f"{self.settings.first_time}\n")
 
         self.master.destroy()
         os.system("python main.py")
