@@ -15,8 +15,15 @@ class FloatBar(CTkCanvas):
         self.app = master
         self.settings = Settings()
         super().__init__(master, width=100, height=450, bg=self.settings.main_color, highlightthickness=0)
+        self.res = self.settings.resolution
 
-        self.previous_pos = [2450, 450]
+        if self.res[0] == 1:
+            self.previous_pos = [2450, 450]
+            self.sidebar_pos = [1950, 450]
+        else:
+            self.previous_pos = [1818, 450]
+            self.sidebar_pos = [1317, 450]
+
         self.bar_height = 100
         self.sidebar = None
 
@@ -43,7 +50,7 @@ class FloatBar(CTkCanvas):
                                 border_color="#f4ca3e", border_width=1, command=lambda: self.app.destroy())
         self.create_window(75, 425, window=self.b_exit, width=50, height=50)
 
-        frame_goal = self.create_rectangle(0, 0, 99, 99, outline="#f4ca3e", tags="framegold")
+        self.create_rectangle(0, 0, 99, 99, outline="#f4ca3e", tags="framegold")
 
         self.tag_bind("laurels", "<Button-1>", self.laurels_press1)
         self.tag_bind("laurels", "<B1-Motion>", self.laurels_move)
@@ -53,12 +60,13 @@ class FloatBar(CTkCanvas):
         self.tag_bind("laurels", "<ButtonRelease-3>", self.laurels_unpress2)
 
     def build_floatbar(self):
-        self.sidebar = SideBar(self.app)
+        self.sidebar = SideBar(self.app, self)
 
         self.app.attributes('-topmost', True)
         self.app.state("normal")
         self.app.overrideredirect(True)
-        self.app.geometry('%dx%d+%d+%d' % (100, 100, 2450, 450))
+        self.app.geometry('%dx%d+%d+%d' % (100, 100, self.previous_pos[0], self.previous_pos[1]))
+
 
         self.app.c_sidebar.grid_remove()
         self.app.c_habit.grid_remove()
@@ -78,11 +86,11 @@ class FloatBar(CTkCanvas):
         self.app.geometry('%dx%d+%d+%d' % (100, self.bar_height, current_pos[0], current_pos[1]))
         self.previous_pos = current_pos
 
-        sidebar_pos = [e.x + self.sidebar.previous_pos[0] - self.sidebar.middle[0],
+        self.sidebar_pos = [e.x + self.sidebar.previous_pos[0] - self.sidebar.middle[0],
                        e.y + self.sidebar.previous_pos[1] - self.sidebar.middle[1]]
         self.sidebar.geometry('%dx%d+%d+%d' % (
-            self.sidebar.current_state[0], self.sidebar.current_state[1], sidebar_pos[0], sidebar_pos[1]))
-        self.sidebar.previous_pos = sidebar_pos
+            self.sidebar.current_state[0], self.sidebar.current_state[1], self.sidebar_pos[0], self.sidebar_pos[1]))
+        self.sidebar.previous_pos = self.sidebar_pos
 
     def laurels_unpress(self, e):
         self.itemconfigure(self.laurels, image=create_imagetk("images/floatbar/laura.png", 100, 100))
@@ -128,24 +136,27 @@ class FloatBar(CTkCanvas):
         self.app.c_floatbar.grid_remove()
 
 class SideBar(CTkToplevel):
-    def __init__(self, root):
+    def __init__(self, root, floatbar):
         super().__init__()
         self.settings = Settings()
+        self.res = self.settings.resolution
         self.app = root
+        self.floatbar = floatbar
         self.geometry("0x0")
         self.attributes('-topmost', True)
         self.overrideredirect(True)
-        self.previous_pos = [1950, 450]
-        self.middle = [2200, 600]
+        self.previous_pos = self.floatbar.sidebar_pos
+        self.middle = [2200  * self.res[0], 600 * self.res[1]]
         self.current_state = [0, 0]
 
         self.goal_widget = None
         self.habit_widget = None
 
     def create_goals(self):
-        self.middle = [2200, 600]
+        self.middle = [2200 * self.res[0], 600 * self.res[1]]
         self.current_state = [500, 400]
-        self.geometry('%dx%d+%d+%d' % (500, 400, self.previous_pos[0], self.previous_pos[1]))
+        print(self.floatbar.sidebar_pos)
+        self.geometry('%dx%d+%d+%d' % (500, 400, int(self.floatbar.sidebar_pos[0]), self.floatbar.sidebar_pos[1]))
         self.goal_widget = GoalsWidget(self)
         self.goal_widget.grid(row=0, column=0)
         self.goal_widget.c_frame.create_rectangle(0, 0, 499, 399, outline=self.settings.second_color, width=1)
@@ -153,7 +164,7 @@ class SideBar(CTkToplevel):
     def create_habits(self):
         self.middle = [2200, 525]
         self.current_state = [500, 250]
-        self.geometry('%dx%d+%d+%d' % (500, 250, self.previous_pos[0], self.previous_pos[1]))
+        self.geometry('%dx%d+%d+%d' % (500, 250, self.floatbar.sidebar_pos[0], self.floatbar.sidebar_pos[1]))
         self.habit_widget = HabitsWidget(self)
         self.habit_widget.grid(row=0, column=0)
         self.habit_widget.c_frame.create_rectangle(0, 0, 499, 249, outline=self.settings.second_color, width=1)
@@ -161,7 +172,7 @@ class SideBar(CTkToplevel):
     def create_timeline(self):
         self.middle = [2200, 600]
         self.current_state = [500, 400]
-        self.geometry('%dx%d+%d+%d' % (500, 400, self.previous_pos[0], self.previous_pos[1]))
+        self.geometry('%dx%d+%d+%d' % (500, 400, self.floatbar.sidebar_pos[0], self.floatbar.sidebar_pos[1]))
         self.timeline_widget = ShortTimelineWidget(self)
         self.timeline_widget.grid(row=0, column=0)
 

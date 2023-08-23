@@ -56,6 +56,7 @@ class HabitManagement:
                 if len(lines) != 0:
                     data = lines[0].strip()
                     saved = lines[1].strip()
+                    print(saved)
                     new_day = 0
                     if data != str(self.today_data.formatted_date):
                         new_day = 1

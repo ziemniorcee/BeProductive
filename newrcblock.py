@@ -3,7 +3,7 @@ from customtkinter import *
 from settings import *
 from actions import *
 from CTkColorPicker import *
-from CTkMessagebox import *
+from CTkMessagebox import CTkMessagebox
 
 
 class NewRCBlock(CTkToplevel):

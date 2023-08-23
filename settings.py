@@ -1,6 +1,6 @@
 from PIL import ImageFont, Image, ImageColor
 from customtkinter import *
-from CTkColorPicker import *
+from CTkColorPicker import AskColor
 import customtkinter
 
 
@@ -116,6 +116,7 @@ class SettingsButton(CTkToplevel):
         self.settings = Settings()
         super().__init__()
         self.settings_on = True
+        self.res = self.settings.resolution
         self.main = root
         self.current_resolution = self.settings.resolution
         self.color = self.settings.second_color
@@ -132,7 +133,7 @@ class SettingsButton(CTkToplevel):
         self.title("Settings")
         self.resizable(False, False)
 
-        self.geometry('%dx%d+%d+%d' % (300, 600, 2250, 100))
+        self.geometry('%dx%d+%d+%d' % (300, 600, int(2250 * self.res[0]), 100))
         self.c_settings = CTkCanvas(self, width=300, height=600, bg=self.settings.main_color, highlightthickness=0)
         self.c_settings.grid(row=0, column=0)
 
@@ -141,8 +142,7 @@ class SettingsButton(CTkToplevel):
                                      border_color=self.settings.second_color, command=self.ask_color,
                                      bg_color=self.settings.main_color, text_color=self.settings.font_color)
         self.c_settings.create_window(150, 50, window=self.b_set_color, width=250, height=50)
-        self.t_color = self.c_settings.create_text(90, 100, font=("Arial", 20), fill=self.settings.font_color,
-                                                   text="#")
+        self.t_color = self.c_settings.create_text(90, 100, font=("Arial", 20), fill=self.settings.font_color, text="#")
         self.e_color = CTkEntry(self, font=("Arial", 20), width=6, bg_color=self.settings.main_color,
                                 fg_color=self.settings.main_color, text_color=self.settings.font_color)
         self.e_color.insert(0, self.color[1:])
@@ -205,7 +205,7 @@ class SettingsButton(CTkToplevel):
             file.write(f"{self.settings.first_time}\n")
 
         self.master.destroy()
-        os.system("python main.py")
+        # os.system("python main.py")
 
     def change_images(self):
         """

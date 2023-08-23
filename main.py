@@ -93,7 +93,6 @@ class App(CTk):
         super().__init__()
         self.settings = Settings(self)
         self.title("Better Tomorrow")
-
         self.geometry(f"{self.settings.resolution_w_h[0]}dx{self.settings.resolution_w_h[1]}+0+0")
 
         if self.winfo_screenwidth() <= self.settings.resolution_w_h[0]:

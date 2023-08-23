@@ -620,7 +620,7 @@ class TimelineWindow(MainCanvas):
 
         b_submit = CTkButton(self.app, text="Submit", font=self.settings.font, fg_color=self.settings.second_color,
                              hover_color=self.settings.main_color, border_color=self.settings.second_color,
-                             border_width=5, )
+                             border_width=5, command=self.submit_timeline)
         self.create_window(2035 * self.res[0], 1295 * self.res[1], window=b_submit, width=150, height=50)
 
         self.pointer = self.create_line(100 * self.res[0], 1070 * self.res[1], 100 * self.res[0],
@@ -633,6 +633,9 @@ class TimelineWindow(MainCanvas):
         self.saved_blocks = SavedBlocks(self.app, self)
 
         self.tag_raise(self.pointer)
+
+    def submit_timeline(self):
+        self.app.c_start.create_main_window()
 
 
 @dataclass(frozen=False)
@@ -1101,7 +1104,11 @@ class RecentlyBlocks(Blocks):
         -------
         None
         """
-        start_pos = self.blocks[0].start_pos
+        if len(self.blocks) > 0:
+            start_pos = self.blocks[0].start_pos
+        else:
+            start_pos = [75, 225]
+        print(start_pos)
         if self.new_block is not None:
             for i in range(len(self.blocks)):
                 if i < len(self.blocks) - 1:
