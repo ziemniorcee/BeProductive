@@ -119,13 +119,15 @@ class GoalsWidget(CTkFrame):
         self.c_frame.create_text(250, 25, text="Goals for Today", font=("Arial", 30), fill=self.settings.font_color)
         self.c_frame.create_line(90, 50, 410, 50, fill=self.settings.second_color, width=5)
 
-        img = CTkImage(light_image=Image.open("images/goals/up2.png"), size=(50, 50))
+        img = CTkImage(light_image=Image.open(f"images/goals/up{self.settings.theme}.png"), size=(50, 50))
         self.b_arr_up = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
+                                  bg_color=self.settings.main_color,
                                   hover_color=self.settings.second_color, command=lambda: self.show_goals(-1))
         self.c_frame.create_window(425, 30, window=self.b_arr_up, width=70, height=55)
 
-        img = CTkImage(light_image=Image.open("images/goals/down2.png"), size=(50, 50))
+        img = CTkImage(light_image=Image.open(f"images/goals/down{self.settings.theme}.png"), size=(50, 50))
         self.b_arr_down = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
+                                    bg_color=self.settings.main_color,
                                     hover_color=self.settings.second_color, command=lambda: self.show_goals(1))
         self.c_frame.create_window(75, 30, window=self.b_arr_down, width=70, height=55)
 
@@ -383,8 +385,6 @@ class GoalsWindow(MainCanvas):
         reg = self.app.register(lambda input1: (ImageFont.truetype("arial.ttf", 20).getbbox(input1)[2] < 1500))
         self.e_todo.configure(validate="key", validatecommand=(reg, '%P'))
 
-
-
     def show_goal(self, text):
         """
         builds and shows goal
@@ -460,6 +460,7 @@ class GoalsWindow(MainCanvas):
             self.goals_texts.append(self.itemcget(self.goals_widgets[i], 'text'))
         self.management.save_goals_to_file(self.goals_texts)
         self.app.c_start.goals_update()
+
     # binds for adding goals
     def strike_on(self, event):
         """

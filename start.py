@@ -63,7 +63,6 @@ class Start_window(MainCanvas):
         self.app.c_timeline.grid_remove()
         self.app.c_strategy.grid_remove()
         self.app.c_start.grid()
-        self.habits_widget.update_checks()
 
 
     def goals_update(self):
@@ -71,6 +70,10 @@ class Start_window(MainCanvas):
         self.goals_widget = GoalsWidget(self.app)
         self.create_window(470 * self.res[0], 185 * self.res[1], window=self.goals_widget, anchor="n")
 
+    def habits_update(self):
+        self.habits_widget.destroy()
+        self.habits_widget = HabitsWidget(self.app)
+        self.create_window(1830 * self.res[0], 185 * self.res[1], window=self.habits_widget, anchor="n")
     def timeline_update(self):
         self.timeline_widget.destroy()
         self.timeline_widget = TimelineWidget(self.app)
@@ -103,10 +106,10 @@ class Start_window(MainCanvas):
         #     option = 1
         # elif len(self.app.setup2.tl_blocks) == 0:
         #     option = 2
-        b_start = CTkButton(self.app, text=texts[option], fg_color=self.settings.main_color,
+        b_start = CTkButton(self.app, text=texts[option], fg_color=self.settings.second_color,
                             font=("Arial", int(50 * self.res[0])), border_width=int(12 * self.res[0]),
                             border_color=self.settings.second_color, text_color=self.settings.font_color,
                             command=self.app.c_goals.create_goal_window, corner_radius=100,
-                            hover_color=self.settings.second_color)
+                            hover_color=self.settings.main_color, bg_color=self.settings.main_color,)
         self.create_window(1150 * self.res[0], 800 * self.res[1], window=b_start, width=400 * self.res[0],
                                       height=150 * self.res[1])

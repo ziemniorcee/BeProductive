@@ -112,11 +112,11 @@ class Strategy(MainCanvas):
         """
         self.app.page = 4
 
-        self.create_text(1080, 60, text="Life Strategy", font=self.settings.font, fill=self.settings.font_color)
-        self.create_line(870, 100, 1290, 100, fill=self.settings.second_color, width=8)
+        self.create_text(1080*self.res[0], 60*self.res[1], text="Life Strategy", font=self.settings.font, fill=self.settings.font_color)
+        self.create_line(870*self.res[0], 100*self.res[1], 1290*self.res[0], 100*self.res[1], fill=self.settings.second_color, width=8)
 
         self.background = Background(self.app)
-        self.create_window(50, 150, window=self.background, anchor="nw")
+        self.create_window(50*self.res[0], 150*self.res[1], window=self.background, anchor="nw")
 
 
 class Background(CTkFrame):
@@ -153,14 +153,15 @@ class Background(CTkFrame):
             stores connection to the main app
         """
         self.settings = Settings()
-        super().__init__(master, width=2060, height=1170)
+        self.res = self.settings.resolution
+        super().__init__(master, width=2060*self.res[0], height=1170*self.res[1])
 
         self.move_start = []
         self.move_diff = []
 
-        self.c_bg = CTkCanvas(self, width=2060, height=1170, bg=self.settings.main_color)
+        self.c_bg = CTkCanvas(self, width=2060*self.res[0], height=1170*self.res[1], bg=self.settings.main_color)
         self.c_bg.grid(row=0, column=0)
-        self.c_bg.create_rectangle(0, 0, 2060, 1170, fill=self.settings.main_color, tags="background")
+        self.c_bg.create_rectangle(0, 0, 2060*self.res[0], 1170*self.res[1], fill=self.settings.main_color, tags="background")
         self.c_bg.tag_bind("background", "<Button-1>", self.bg_press)
         self.c_bg.tag_bind("background", "<B1-Motion>", self.bg_move)
         self.c_bg.tag_bind("background", "<ButtonRelease-1>", self.bg_unpress)
@@ -168,13 +169,13 @@ class Background(CTkFrame):
         self.blocks = Blocks(self)
 
         self.b_new_block = ButtonNewBlock(self)
-        self.c_bg.create_window(102, 1142, window=self.b_new_block, height=60, width=200)
+        self.c_bg.create_window(102*self.res[0], 1142*self.res[1], window=self.b_new_block, height=60*self.res[0], width=200*self.res[1])
         self.b_delete_block = ButtonDeleteBlock(self)
-        self.c_bg.create_window(302, 1142, window=self.b_delete_block, height=60, width=200)
+        self.c_bg.create_window(302*self.res[0], 1142*self.res[1], window=self.b_delete_block, height=60*self.res[0], width=200*self.res[1])
         self.b_new_line = ButtonNewLine(self)
-        self.c_bg.create_window(502, 1142, window=self.b_new_line, height=60, width=200)
+        self.c_bg.create_window(502*self.res[0], 1142*self.res[1], window=self.b_new_line, height=60*self.res[0], width=200*self.res[1])
         self.b_delete_line = ButtonDeleteLine(self)
-        self.c_bg.create_window(702, 1142, window=self.b_delete_line, height=60, width=200)
+        self.c_bg.create_window(702*self.res[0], 1142*self.res[1], window=self.b_delete_line, height=60*self.res[0], width=200*self.res[1])
 
     def bg_press(self, event):
         """
@@ -536,7 +537,7 @@ class ButtonNewBlock(CTkButton):
             stores connection to the background frame
         """
         self.settings = Settings()
-        super().__init__(master, text="New block", fg_color=self.settings.second_color, font=("Arial", 30),
+        super().__init__(master, text="New block", fg_color=self.settings.second_color, font=self.settings.font,
                          command=self.create_new_block,
                          border_color="white", border_width=1)
         self.master = master
@@ -605,9 +606,8 @@ class ButtonDeleteBlock(CTkButton):
             stores connection to the background frame
         """
         self.settings = Settings()
-        super().__init__(master, text="Delete block", font=("Arial", 30), fg_color=self.settings.second_color,
-                         border_color="white",
-                         command=self.change_delete_block, border_width=1)
+        super().__init__(master, text="Delete block", font=self.settings.font, fg_color=self.settings.second_color,
+                         border_color="white", command=self.change_delete_block, border_width=1)
         self.is_on = False
         self.c_bg = master.c_bg
         self.blocks = master.blocks
@@ -669,7 +669,7 @@ class ButtonNewLine(CTkButton):
              stores connection to the background frame
         """
         self.settings = Settings()
-        super().__init__(master, text="New line", font=("Arial", 30), fg_color=self.settings.second_color,
+        super().__init__(master, text="New line", font=self.settings.font, fg_color=self.settings.second_color,
                          border_color="white", command=self.change_new_line, border_width=1)
         self.is_on = False
         self.state = 0
@@ -754,7 +754,7 @@ class ButtonDeleteLine(CTkButton):
             stores connection to the background frame
         """
         self.settings = Settings()
-        super().__init__(master, text="Delete line", font=("Arial", 30), fg_color=self.settings.second_color,
+        super().__init__(master, text="Delete line", font=self.settings.font, fg_color=self.settings.second_color,
                          border_color="white",
                          command=self.change_delete_line, border_width=1)
         self.master = master

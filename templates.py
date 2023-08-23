@@ -39,8 +39,7 @@ class MainCanvas(CTkCanvas):
 
         img = CTkImage(light_image=Image.open("images/settings.png"), size=(50 * self.res[0], 50 * self.res[1]))
         b_settings = CTkButton(self, image=img, text="", fg_color=self.settings.main_color,
-                               hover_color=self.settings.second_color,
-                               command=self.open_settings)
+                               hover_color=self.settings.second_color, command=self.open_settings)
         self.create_window(2170 * self.res[0], 30 * self.res[1], window=b_settings, height=50 * self.res[0],
                            width=70 * self.res[1])
 
